@@ -8,36 +8,29 @@ import {
   Plus, X, Check, Search, ChevronLeft, ChevronRight,
   Trash2, Pencil, Printer, Palette, ListChecks,
   LayoutDashboard, CalendarDays, BookOpen, BarChart3, LogOut,
+  Clock, Settings,
 } from "lucide-react";
 import { supabase } from "./lib/supabase";
 
 /* ─────────────────────────────── types ─────────────────────────────── */
 
-/**
- * How we store subjects — purely in localStorage, since there's no subjects
- * table in the backend (subjects are free text on tasks).
- */
 interface Subject {
   id: string;
   name: string;
   color: string;
 }
 
-/**
- * Frontend task model. We map to/from the Supabase tasks table on read/write.
- * `topics` and `completedAt` live in localStorage (not in the backend schema).
- */
 interface FrontendTask {
-  id: string;          // uuid
-  subjectId: string;   // maps to subject name via subjects array
+  id: string;
+  subjectId: string;
   title: string;
-  type: string;        // "assignment" | "exam"
-  dueDate: string;     // "YYYY-MM-DD"
+  type: string;
+  dueDate: string;
   status: "pending" | "completed";
-  completedAt: string | null;   // localStorage only
+  completedAt: string | null;
   customColor: string | null;
   customIcon: string | null;
-  topics: Topic[];              // localStorage only
+  topics: Topic[];
   createdAt: string;
   rescheduledFrom: string | null;
 }
@@ -46,6 +39,25 @@ interface Topic {
   id: string;
   name: string;
   done: boolean;
+}
+
+interface RoutineEntry {
+  id: string;
+  user_id: string;
+  day_of_week: number;   // 0=Sun … 6=Sat
+  subject: string;
+  start_time: string;
+  end_time: string | null;
+  location: string | null;
+  notes: string | null;
+}
+
+interface UserProfile {
+  id: string;
+  timezone: string;
+  reminder_mode: string;
+  daily_digest_time: string;
+  display_name: string | null;
 }
 
 /* ─────────────────────────── DB row types ───────────────────────────── */
@@ -94,6 +106,7 @@ const THEMES = {
   lilac:  { label: "Lilac Dream",  css: "linear-gradient(135deg, #F6F1FC 0%, #EDE1F7 50%, #E3D6F0 100%)" },
 };
 
+const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const TYPE_ICON: Record<string, string> = { assignment: "📝", exam: "📖" };
 const CREATURES = ["🦌", "🐉", "🐱", "🦋", "🌸"];
 
@@ -102,10 +115,7 @@ const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(
 /* ─────────────────────────── date helpers ───────────────────────────── */
 
 function fmtDate(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 function todayStr() { return fmtDate(new Date()); }
 function daysBetween(a: string, b: string) {
@@ -131,10 +141,6 @@ function monthGrid(year: number, month: number): (number | null)[] {
 
 /* ─────────────────── Supabase ↔ frontend mapping ───────────────────── */
 
-/**
- * Map a DB task row + localStorage extras → FrontendTask.
- * `subjects` is the localStorage subjects list; we match by name.
- */
 function dbToFrontend(
   row: DbTask,
   subjects: Subject[],
@@ -158,14 +164,7 @@ function dbToFrontend(
   };
 }
 
-/**
- * Map a FrontendTask → DB upsert payload.
- */
-function frontendToDb(
-  t: FrontendTask,
-  subjects: Subject[],
-  userId: string
-): Omit<DbTask, "created_at"> {
+function frontendToDb(t: FrontendTask, subjects: Subject[], userId: string): Omit<DbTask, "created_at"> {
   const subject = subjects.find((s) => s.id === t.subjectId);
   return {
     id: t.id,
@@ -216,11 +215,8 @@ function EmptyState({ emoji, text }: { emoji: string; text: string }) {
 /* ─────────────────────────── task card ─────────────────────────────── */
 
 function TaskCard({ task, subject, onToggle, onEdit, onDelete }: {
-  task: FrontendTask;
-  subject: Subject | undefined;
-  onToggle: (id: string) => void;
-  onEdit: (t: FrontendTask) => void;
-  onDelete: (id: string) => void;
+  task: FrontendTask; subject: Subject | undefined;
+  onToggle: (id: string) => void; onEdit: (t: FrontendTask) => void; onDelete: (id: string) => void;
 }) {
   const urgency = task.status === "completed" ? null : urgencyOf(task.dueDate);
   const overdue = task.status !== "completed" && daysBetween(task.dueDate, todayStr()) < 0;
@@ -244,10 +240,7 @@ function TaskCard({ task, subject, onToggle, onEdit, onDelete }: {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className="text-base">{task.customIcon || TYPE_ICON[task.type] || "📝"}</span>
-            <span
-              className={`font-semibold text-sm ${task.status === "completed" ? "line-through opacity-50" : ""}`}
-              style={{ fontFamily: "Quicksand, sans-serif" }}
-            >
+            <span className={`font-semibold text-sm ${task.status === "completed" ? "line-through opacity-50" : ""}`} style={{ fontFamily: "Quicksand, sans-serif" }}>
               {task.title}
             </span>
             <span className="text-[11px] px-2 py-0.5 rounded-full" style={{ background: color + "33", color: "#5B4B6D" }}>
@@ -255,11 +248,9 @@ function TaskCard({ task, subject, onToggle, onEdit, onDelete }: {
             </span>
             {urgency && <UrgencyDot level={overdue ? "red" : urgency} />}
           </div>
-          <div className="text-xs mt-0.5 opacity-70" style={{ fontFamily: "Quicksand, sans-serif" }}>
-            {task.status === "completed"
-              ? `Done · was due ${niceDate(task.dueDate)}`
-              : overdue
-              ? `Overdue since ${niceDate(task.dueDate)}`
+          <div className="text-xs mt-0.5 opacity-70">
+            {task.status === "completed" ? `Done · was due ${niceDate(task.dueDate)}`
+              : overdue ? `Overdue since ${niceDate(task.dueDate)}`
               : `Due ${niceDate(task.dueDate)} · ${daysBetween(task.dueDate, todayStr())}d left`}
             {totalTopics > 0 && ` · ${doneTopics}/${totalTopics} topics`}
           </div>
@@ -276,10 +267,8 @@ function TaskCard({ task, subject, onToggle, onEdit, onDelete }: {
 /* ─────────────────────────── task form ─────────────────────────────── */
 
 function TaskForm({ initial, subjects, onSave, onClose }: {
-  initial: Partial<FrontendTask> | null;
-  subjects: Subject[];
-  onSave: (t: FrontendTask) => void;
-  onClose: () => void;
+  initial: Partial<FrontendTask> | null; subjects: Subject[];
+  onSave: (t: FrontendTask) => void; onClose: () => void;
 }) {
   const [subjectId, setSubjectId] = useState(initial?.subjectId || subjects[0]?.id || "");
   const [title, setTitle] = useState(initial?.title || "");
@@ -299,40 +288,24 @@ function TaskForm({ initial, subjects, onSave, onClose }: {
   const save = () => {
     if (!title.trim() || !subjectId) return;
     onSave({
-      id: initial?.id || uid(),
-      subjectId,
-      title: title.trim(),
-      type,
-      dueDate,
-      status: initial?.status || "pending",
-      completedAt: initial?.completedAt || null,
-      customColor: customColor || null,
-      customIcon: customIcon || null,
+      id: initial?.id || uid(), subjectId, title: title.trim(), type, dueDate,
+      status: initial?.status || "pending", completedAt: initial?.completedAt || null,
+      customColor: customColor || null, customIcon: customIcon || null,
       topics: type === "exam" ? topics : [],
       createdAt: initial?.createdAt || new Date().toISOString(),
-      rescheduledFrom:
-        initial?.dueDate && initial.dueDate !== dueDate
-          ? (initial.rescheduledFrom || initial.dueDate)
-          : (initial?.rescheduledFrom || null),
+      rescheduledFrom: initial?.dueDate && initial.dueDate !== dueDate ? (initial.rescheduledFrom || initial.dueDate) : (initial?.rescheduledFrom || null),
     });
   };
 
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div
-        className="bg-white rounded-3xl p-5 w-full max-w-md max-h-[85vh] overflow-y-auto shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-        style={{ fontFamily: "Quicksand, sans-serif" }}
-      >
+      <div className="bg-white rounded-3xl p-5 w-full max-w-md max-h-[85vh] overflow-y-auto shadow-xl" onClick={(e) => e.stopPropagation()} style={{ fontFamily: "Quicksand, sans-serif" }}>
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>
-            {initial?.id ? "Edit task" : "Add a task"}
-          </h3>
+          <h3 className="text-lg font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>{initial?.id ? "Edit task" : "Add a task"}</h3>
           <button onClick={onClose}><X size={20} /></button>
         </div>
-
         {subjects.length === 0 ? (
-          <p className="text-sm opacity-70 mb-3">Add a subject first from the Subjects tab 🌸</p>
+          <p className="text-sm opacity-70 mb-3">Add a subject first from the Tasks tab 🌸</p>
         ) : (
           <div className="space-y-3">
             <div>
@@ -353,7 +326,6 @@ function TaskForm({ initial, subjects, onSave, onClose }: {
               <label className="text-xs font-semibold opacity-70">Due date</label>
               <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="w-full mt-1 p-2 rounded-xl border" />
             </div>
-
             {type === "exam" && (
               <div className="p-3 rounded-xl bg-purple-50/60">
                 <label className="text-xs font-semibold opacity-70 flex items-center gap-1"><ListChecks size={14} /> Syllabus topics</label>
@@ -372,7 +344,6 @@ function TaskForm({ initial, subjects, onSave, onClose }: {
                 </div>
               </div>
             )}
-
             <details className="text-sm">
               <summary className="text-xs font-semibold opacity-70 cursor-pointer">Custom look (optional)</summary>
               <div className="flex gap-1 flex-wrap mt-2">
@@ -383,7 +354,6 @@ function TaskForm({ initial, subjects, onSave, onClose }: {
               </div>
               <input value={customIcon} onChange={(e) => setCustomIcon(e.target.value.slice(0, 2))} placeholder="🌸 emoji" className="w-20 mt-2 p-1.5 rounded-lg border text-sm" />
             </details>
-
             <button onClick={save} className="w-full mt-2 p-2.5 rounded-xl font-semibold text-white" style={{ background: "#C9B6E4", fontFamily: "Fredoka, sans-serif" }}>
               {initial?.id ? "Save changes" : "Add task"}
             </button>
@@ -394,11 +364,272 @@ function TaskForm({ initial, subjects, onSave, onClose }: {
   );
 }
 
+/* ─────────────────────────── routine form ───────────────────────────── */
+
+const EMPTY_ROUTINE: Omit<RoutineEntry, "id" | "user_id"> = {
+  day_of_week: 1,
+  subject: "",
+  start_time: "08:00",
+  end_time: "",
+  location: "",
+  notes: "",
+};
+
+function RoutineForm({ initial, onSave, onClose }: {
+  initial?: Partial<RoutineEntry>; onSave: (r: Omit<RoutineEntry, "id" | "user_id">) => void; onClose: () => void;
+}) {
+  const [form, setForm] = useState({
+    day_of_week: initial?.day_of_week ?? 1,
+    subject: initial?.subject ?? "",
+    start_time: initial?.start_time ?? "08:00",
+    end_time: initial?.end_time ?? "",
+    location: initial?.location ?? "",
+    notes: initial?.notes ?? "",
+  });
+
+  const save = () => {
+    if (!form.subject.trim() || !form.start_time) return;
+    onSave({
+      day_of_week: Number(form.day_of_week),
+      subject: form.subject.trim(),
+      start_time: form.start_time,
+      end_time: form.end_time || null,
+      location: form.location || null,
+      notes: form.notes || null,
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div className="bg-white rounded-3xl p-5 w-full max-w-md shadow-xl" onClick={(e) => e.stopPropagation()} style={{ fontFamily: "Quicksand, sans-serif" }}>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>{initial?.id ? "Edit class" : "Add class"}</h3>
+          <button onClick={onClose}><X size={20} /></button>
+        </div>
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs font-semibold opacity-70">Day</label>
+            <select value={form.day_of_week} onChange={(e) => setForm({ ...form, day_of_week: Number(e.target.value) })} className="w-full mt-1 p-2 rounded-xl border bg-white">
+              {DAY_NAMES.map((name, i) => <option key={i} value={i}>{name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs font-semibold opacity-70">Subject</label>
+            <input value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} placeholder="e.g. Math 101" className="w-full mt-1 p-2 rounded-xl border" />
+          </div>
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <label className="text-xs font-semibold opacity-70">Start time</label>
+              <input type="time" value={form.start_time} onChange={(e) => setForm({ ...form, start_time: e.target.value })} className="w-full mt-1 p-2 rounded-xl border" />
+            </div>
+            <div className="flex-1">
+              <label className="text-xs font-semibold opacity-70">End time</label>
+              <input type="time" value={form.end_time} onChange={(e) => setForm({ ...form, end_time: e.target.value })} className="w-full mt-1 p-2 rounded-xl border" />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-semibold opacity-70">Location</label>
+            <input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="e.g. Room 201" className="w-full mt-1 p-2 rounded-xl border" />
+          </div>
+          <div>
+            <label className="text-xs font-semibold opacity-70">Notes</label>
+            <input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="optional" className="w-full mt-1 p-2 rounded-xl border" />
+          </div>
+          <button onClick={save} className="w-full mt-2 p-2.5 rounded-xl font-semibold text-white" style={{ background: "#A8D5BA", fontFamily: "Fredoka, sans-serif" }}>
+            {initial?.id ? "Save changes" : "Add class"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────── routine view ───────────────────────────── */
+
+function RoutineView({ routineEntries, onAdd, onEdit, onDelete }: {
+  routineEntries: RoutineEntry[];
+  onAdd: (r: Omit<RoutineEntry, "id" | "user_id">) => void;
+  onEdit: (id: string, r: Omit<RoutineEntry, "id" | "user_id">) => void;
+  onDelete: (id: string) => void;
+}) {
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingEntry, setEditingEntry] = useState<RoutineEntry | null>(null);
+
+  const grouped = useMemo(() => {
+    const map: Record<number, RoutineEntry[]> = {};
+    routineEntries.forEach((e) => {
+      (map[e.day_of_week] = map[e.day_of_week] || []).push(e);
+    });
+    return map;
+  }, [routineEntries]);
+
+  return (
+    <div>
+      <button
+        onClick={() => { setEditingEntry(null); setFormOpen(true); }}
+        className="w-full mb-4 p-3 rounded-2xl text-white font-semibold flex items-center justify-center gap-1.5"
+        style={{ background: "#A8D5BA", fontFamily: "Fredoka, sans-serif" }}
+      >
+        <Plus size={16} /> Add a class
+      </button>
+
+      {routineEntries.length === 0 ? (
+        <Sticker className="p-4" rotate={0.2}>
+          <EmptyState emoji="📅" text="No classes yet — add your weekly schedule above" />
+        </Sticker>
+      ) : (
+        DAY_NAMES.map((dayName, dow) => {
+          const entries = grouped[dow];
+          if (!entries || entries.length === 0) return null;
+          return (
+            <Sticker key={dow} className="p-4 mb-3" rotate={dow % 2 === 0 ? 0.2 : -0.2}>
+              <h3 className="font-bold mb-2 flex items-center gap-1.5" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>
+                <Clock size={15} /> {dayName}
+              </h3>
+              {[...entries].sort((a, b) => a.start_time.localeCompare(b.start_time)).map((entry) => (
+                <div key={entry.id} className="flex items-center gap-2 mb-2 p-2.5 rounded-xl bg-white/70 border border-black/5">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-sm">{entry.subject}</div>
+                    <div className="text-xs opacity-60">
+                      {entry.start_time.slice(0, 5)}{entry.end_time ? ` – ${entry.end_time.slice(0, 5)}` : ""}
+                      {entry.location ? ` · ${entry.location}` : ""}
+                      {entry.notes ? ` · ${entry.notes}` : ""}
+                    </div>
+                  </div>
+                  <button onClick={() => { setEditingEntry(entry); setFormOpen(true); }} className="p-1.5 rounded-lg hover:bg-black/5"><Pencil size={13} /></button>
+                  <button onClick={() => onDelete(entry.id)} className="p-1.5 rounded-lg hover:bg-black/5"><Trash2 size={13} /></button>
+                </div>
+              ))}
+            </Sticker>
+          );
+        })
+      )}
+
+      {formOpen && (
+        <RoutineForm
+          initial={editingEntry || undefined}
+          onSave={(r) => {
+            if (editingEntry) { onEdit(editingEntry.id, r); }
+            else { onAdd(r); }
+            setFormOpen(false); setEditingEntry(null);
+          }}
+          onClose={() => { setFormOpen(false); setEditingEntry(null); }}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ─────────────────────────── settings view ─────────────────────────── */
+
+function SettingsView({ profile, onSave, onSignOut }: {
+  profile: UserProfile | null;
+  onSave: (updates: { reminder_mode: string; daily_digest_time: string }) => Promise<void>;
+  onSignOut: () => void;
+}) {
+  const [reminderMode, setReminderMode] = useState(profile?.reminder_mode || "urgent");
+  const [digestTime, setDigestTime] = useState((profile?.daily_digest_time || "08:00:00").slice(0, 5));
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (profile) {
+      setReminderMode(profile.reminder_mode);
+      setDigestTime(profile.daily_digest_time.slice(0, 5));
+    }
+  }, [profile]);
+
+  const save = async () => {
+    setSaving(true);
+    await onSave({ reminder_mode: reminderMode, daily_digest_time: digestTime });
+    setSaving(false);
+  };
+
+  if (!profile) return <div className="p-4 text-center opacity-60">Loading profile...</div>;
+
+  return (
+    <div className="space-y-4">
+      <Sticker className="p-4" rotate={-0.2}>
+        <h3 className="font-bold mb-3" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>⚙️ Reminder Settings</h3>
+        <p className="text-xs opacity-60 mb-3">These control how and when the backend sends reminder emails to your inbox.</p>
+
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs font-semibold opacity-70 block mb-1">Reminder mode</label>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setReminderMode("urgent")}
+                className={`flex-1 p-3 rounded-xl border text-sm text-left transition-colors ${reminderMode === "urgent" ? "bg-pink-50 border-pink-300" : "bg-white border-gray-200"}`}
+              >
+                <div className="font-semibold">⚡ Urgent</div>
+                <div className="text-xs opacity-60 mt-0.5">Emails at 48h, 24h, 2h before deadline + when overdue</div>
+              </button>
+              <button
+                onClick={() => setReminderMode("daily")}
+                className={`flex-1 p-3 rounded-xl border text-sm text-left transition-colors ${reminderMode === "daily" ? "bg-purple-50 border-purple-300" : "bg-white border-gray-200"}`}
+              >
+                <div className="font-semibold">📋 Daily digest</div>
+                <div className="text-xs opacity-60 mt-0.5">One email per day listing all pending tasks</div>
+              </button>
+            </div>
+          </div>
+
+          {reminderMode === "daily" && (
+            <div>
+              <label className="text-xs font-semibold opacity-70 block mb-1">Digest time (your local time)</label>
+              <input
+                type="time"
+                value={digestTime}
+                onChange={(e) => setDigestTime(e.target.value)}
+                className="p-2 rounded-xl border w-40"
+              />
+            </div>
+          )}
+
+          <button
+            onClick={save}
+            disabled={saving}
+            className="w-full p-2.5 rounded-xl font-semibold text-white"
+            style={{ background: saving ? "#C9B6E4AA" : "#C9B6E4", fontFamily: "Fredoka, sans-serif" }}
+          >
+            {saving ? "Saving..." : "Save reminder settings"}
+          </button>
+        </div>
+      </Sticker>
+
+      <Sticker className="p-4" rotate={0.2}>
+        <h3 className="font-bold mb-3" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>🧾 Account</h3>
+        <div className="space-y-2 text-sm">
+          <div className="flex justify-between py-1.5 border-b border-black/5">
+            <span className="opacity-60">Timezone</span>
+            <span className="font-semibold">{profile.timezone}</span>
+          </div>
+          <div className="flex justify-between py-1.5 border-b border-black/5">
+            <span className="opacity-60">Reminder mode</span>
+            <span className="font-semibold capitalize">{profile.reminder_mode}</span>
+          </div>
+          <div className="flex justify-between py-1.5">
+            <span className="opacity-60">Digest time</span>
+            <span className="font-semibold">{profile.daily_digest_time.slice(0, 5)}</span>
+          </div>
+        </div>
+        <button
+          onClick={onSignOut}
+          className="mt-4 w-full p-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm"
+          style={{ background: "#FEE2E2", color: "#B91C1C", fontFamily: "Fredoka, sans-serif" }}
+        >
+          <LogOut size={15} /> Sign out
+        </button>
+      </Sticker>
+    </div>
+  );
+}
+
 /* ─────────────────────────── calendar view ─────────────────────────── */
 
-function CalendarView({ tasks, subjects, dayBackgrounds, onSetBackground, onClearBackground, onQuickAdd }: {
+function CalendarView({ tasks, subjects, routineEntries, dayBackgrounds, onSetBackground, onClearBackground, onQuickAdd }: {
   tasks: FrontendTask[];
   subjects: Subject[];
+  routineEntries: RoutineEntry[];
   dayBackgrounds: Record<string, string>;
   onSetBackground: (date: string, url: string) => void;
   onClearBackground: (date: string) => void;
@@ -420,6 +651,12 @@ function CalendarView({ tasks, subjects, dayBackgrounds, onSetBackground, onClea
 
   const selectedTasks = selected ? (tasksByDate[selected] || []) : [];
   const selectedBg = selected ? dayBackgrounds[selected] : null;
+
+  // Routine entries for the selected date's day-of-week
+  const selectedDow = selected ? new Date(selected + "T00:00:00").getDay() : null;
+  const selectedRoutine = selectedDow !== null
+    ? [...routineEntries].filter((r) => r.day_of_week === selectedDow).sort((a, b) => a.start_time.localeCompare(b.start_time))
+    : [];
 
   return (
     <div>
@@ -463,22 +700,51 @@ function CalendarView({ tasks, subjects, dayBackgrounds, onSetBackground, onClea
       {selected && (
         <Sticker className="mt-4 p-4" rotate={-0.4}>
           <div className="flex justify-between items-start mb-2">
-            <h4 className="font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>{niceDate(selected)}</h4>
+            <h4 className="font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>
+              {niceDate(selected)} <span className="text-sm font-normal opacity-60">({DAY_NAMES[selectedDow!]})</span>
+            </h4>
             <button onClick={() => setSelected(null)}><X size={16} /></button>
           </div>
-          {selectedTasks.length === 0
-            ? <p className="text-sm opacity-60 mb-2">Nothing due this day 🌿</p>
-            : selectedTasks.map((t) => (
-                <div key={t.id} className="text-sm flex items-center gap-1.5 mb-1">
-                  <span>{TYPE_ICON[t.type] || "📝"}</span>
-                  <span className="font-semibold">{t.type === "exam" ? "Exam" : "Assignment"}</span>
-                  <span>— {subjById[t.subjectId]?.name}: {t.title}</span>
-                </div>
-              ))}
-          <button onClick={() => onQuickAdd(selected)} className="text-sm mt-2 px-3 py-1.5 rounded-xl bg-pink-100 flex items-center gap-1">
+
+          {/* Day background preview */}
+          {selectedBg && (
+            <img src={selectedBg} alt="Day background" className="w-full h-24 object-cover rounded-xl mb-3" />
+          )}
+
+          {/* Tasks due this day */}
+          <div className="mb-3">
+            <h5 className="text-xs font-bold opacity-60 uppercase tracking-wide mb-1.5">📝 Tasks due</h5>
+            {selectedTasks.length === 0
+              ? <p className="text-sm opacity-50">Nothing due this day 🌿</p>
+              : selectedTasks.map((t) => (
+                  <div key={t.id} className="text-sm flex items-center gap-1.5 mb-1">
+                    <span>{TYPE_ICON[t.type] || "📝"}</span>
+                    <span className={t.status === "completed" ? "line-through opacity-50" : ""}>{t.title}</span>
+                    <span className="opacity-50">— {subjById[t.subjectId]?.name}</span>
+                  </div>
+                ))}
+          </div>
+
+          {/* Routine for this day-of-week */}
+          <div className="mb-3">
+            <h5 className="text-xs font-bold opacity-60 uppercase tracking-wide mb-1.5">🗓️ Classes ({DAY_NAMES[selectedDow!]})</h5>
+            {selectedRoutine.length === 0
+              ? <p className="text-sm opacity-50">No classes scheduled 📚</p>
+              : selectedRoutine.map((r) => (
+                  <div key={r.id} className="text-sm flex items-center gap-1.5 mb-1">
+                    <span className="font-semibold">{r.start_time.slice(0, 5)}{r.end_time ? `–${r.end_time.slice(0, 5)}` : ""}</span>
+                    <span>{r.subject}</span>
+                    {r.location && <span className="opacity-50">@ {r.location}</span>}
+                  </div>
+                ))}
+          </div>
+
+          <button onClick={() => onQuickAdd(selected)} className="text-sm mb-3 px-3 py-1.5 rounded-xl bg-pink-100 flex items-center gap-1">
             <Plus size={14} /> Add task on this day
           </button>
-          <div className="mt-3 pt-3 border-t border-black/5">
+
+          {/* Day background */}
+          <div className="pt-3 border-t border-black/5">
             <label className="text-xs font-semibold opacity-70">Background for this day (paste image URL)</label>
             <div className="flex gap-1.5 mt-1">
               <input value={bgInput} onChange={(e) => setBgInput(e.target.value)} placeholder="https://..." className="flex-1 p-1.5 rounded-lg border text-xs" />
@@ -495,16 +761,13 @@ function CalendarView({ tasks, subjects, dayBackgrounds, onSetBackground, onClea
 /* ─────────────────────────── stats view ────────────────────────────── */
 
 function StatsView({ tasks }: { tasks: FrontendTask[] }) {
-  const data = useMemo(() => {
-    return tasks
+  const data = useMemo(() =>
+    tasks
       .filter((t) => t.status === "completed" && t.completedAt)
       .sort((a, b) => new Date(a.completedAt!).getTime() - new Date(b.completedAt!).getTime())
-      .map((t, i) => ({
-        name: `#${i + 1}`,
-        delta: daysBetween(t.dueDate, fmtDate(new Date(t.completedAt!))),
-        title: t.title,
-      }));
-  }, [tasks]);
+      .map((t, i) => ({ name: `#${i + 1}`, delta: daysBetween(t.dueDate, fmtDate(new Date(t.completedAt!))), title: t.title })),
+    [tasks]
+  );
 
   return (
     <div>
@@ -535,17 +798,18 @@ function StatsView({ tasks }: { tasks: FrontendTask[] }) {
 export default function StudyDen({ session }: { session: Session }) {
   const userId = session.user.id;
 
-  // ── local-only state (localStorage) ──────────────────────────────────
+  // localStorage-only
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [theme, setTheme] = useState<keyof typeof THEMES>("bloom");
-  /** completedAt + topics + rescheduledFrom, keyed by task ID */
   const [taskExtras, setTaskExtras] = useState<Record<string, { completedAt: string | null; topics: Topic[]; rescheduledFrom: string | null }>>({});
 
-  // ── Supabase-backed state ─────────────────────────────────────────────
+  // Supabase-backed
   const [tasks, setTasks] = useState<FrontendTask[]>([]);
   const [dayBackgrounds, setDayBackgrounds] = useState<Record<string, string>>({});
+  const [routineEntries, setRoutineEntries] = useState<RoutineEntry[]>([]);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
 
-  // ── UI state ──────────────────────────────────────────────────────────
+  // UI
   const [loaded, setLoaded] = useState(false);
   const [tab, setTab] = useState("dashboard");
   const [formOpen, setFormOpen] = useState(false);
@@ -558,9 +822,8 @@ export default function StudyDen({ session }: { session: Session }) {
   const [search, setSearch] = useState("");
   const [thisWeekOnly, setThisWeekOnly] = useState(false);
 
-  // ── bootstrap ─────────────────────────────────────────────────────────
+  /* ── bootstrap ── */
   useEffect(() => {
-    // Load localStorage
     const savedSettings = localStorage.getItem(`halo-settings-${userId}`);
     if (savedSettings) {
       const p = JSON.parse(savedSettings);
@@ -568,67 +831,53 @@ export default function StudyDen({ session }: { session: Session }) {
       setTheme(p.theme || "bloom");
       setTaskExtras(p.taskExtras || {});
     }
-
-    // Load Supabase data
-    Promise.all([fetchTasks(), fetchDayBackgrounds()]).finally(() => setLoaded(true));
+    Promise.all([fetchTasks(), fetchDayBackgrounds(), fetchRoutineEntries(), fetchProfile()])
+      .finally(() => setLoaded(true));
   }, [userId]);
 
-  // Save localStorage whenever subjects/theme/extras change (after load)
   useEffect(() => {
     if (!loaded) return;
     localStorage.setItem(`halo-settings-${userId}`, JSON.stringify({ subjects, theme, taskExtras }));
   }, [subjects, theme, taskExtras, loaded, userId]);
 
-  // ── fetch from Supabase ───────────────────────────────────────────────
-  const fetchTasks = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("tasks")
-      .select("*")
-      .eq("user_id", userId)
-      .order("due_date", { ascending: true });
-    if (error) { console.error("fetchTasks:", error.message); return; }
+  /* ── fetchers ── */
+  const getLocalSettings = () => {
+    const raw = localStorage.getItem(`halo-settings-${userId}`);
+    return raw ? JSON.parse(raw) : { subjects: [], taskExtras: {} };
+  };
 
-    // We need subjects to map, but subjects come from localStorage.
-    // Use a closure over the current subjects value at fetch time.
-    // After load, re-derive when subjects change too.
-    setTasks((prev) => {
-      // Keep existing extras
-      const currentExtras = JSON.parse(localStorage.getItem(`halo-settings-${userId}`) || "{}").taskExtras || {};
-      const currentSubjects: Subject[] = JSON.parse(localStorage.getItem(`halo-settings-${userId}`) || "{}").subjects || [];
-      return (data as DbTask[]).map((row) => dbToFrontend(row, currentSubjects, currentExtras));
-    });
+  const fetchTasks = useCallback(async () => {
+    const { data, error } = await supabase.from("tasks").select("*").eq("user_id", userId).order("due_date", { ascending: true });
+    if (error) { console.error("fetchTasks:", error.message); return; }
+    const s = getLocalSettings();
+    setTasks((data as DbTask[]).map((row) => dbToFrontend(row, s.subjects || [], s.taskExtras || {})));
   }, [userId]);
 
   const fetchDayBackgrounds = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("day_backgrounds")
-      .select("*")
-      .eq("user_id", userId);
+    const { data, error } = await supabase.from("day_backgrounds").select("*").eq("user_id", userId);
     if (error) { console.error("fetchDayBackgrounds:", error.message); return; }
     const map: Record<string, string> = {};
     (data as DbDayBackground[]).forEach((row) => { map[row.date] = row.image_url; });
     setDayBackgrounds(map);
   }, [userId]);
 
-  // Re-derive tasks when subjects change (colors/names update)
-  useEffect(() => {
-    if (!loaded) return;
-    setTasks((prev) =>
-      prev.map((t) => {
-        const dbSubject = subjects.find((s) => s.id === t.subjectId);
-        return dbSubject ? { ...t } : t; // subjects are already mapped; just trigger re-render
-      })
-    );
-  }, [subjects, loaded]);
+  const fetchRoutineEntries = useCallback(async () => {
+    const { data, error } = await supabase.from("routine_entries").select("*").eq("user_id", userId).order("day_of_week").order("start_time");
+    if (error) { console.error("fetchRoutineEntries:", error.message); return; }
+    setRoutineEntries(data as RoutineEntry[]);
+  }, [userId]);
 
-  // ── derived ───────────────────────────────────────────────────────────
+  const fetchProfile = useCallback(async () => {
+    const { data, error } = await supabase.from("profiles").select("id, timezone, reminder_mode, daily_digest_time, display_name").eq("id", userId).single();
+    if (error) { console.error("fetchProfile:", error.message); return; }
+    setProfile(data as UserProfile);
+  }, [userId]);
+
+  /* ── derived ── */
   const subjById = useMemo(() => Object.fromEntries(subjects.map((s) => [s.id, s])), [subjects]);
 
   const upcoming = useMemo(() =>
-    [...tasks]
-      .filter((t) => t.status !== "completed")
-      .sort((a, b) => daysBetween(a.dueDate, todayStr()) - daysBetween(b.dueDate, todayStr()))
-      .slice(0, 6),
+    [...tasks].filter((t) => t.status !== "completed").sort((a, b) => daysBetween(a.dueDate, todayStr()) - daysBetween(b.dueDate, todayStr())).slice(0, 6),
     [tasks]
   );
 
@@ -653,22 +902,13 @@ export default function StudyDen({ session }: { session: Session }) {
     return map;
   }, [filtered, groupBy, subjById]);
 
-  // ── task CRUD ─────────────────────────────────────────────────────────
+  /* ── task CRUD ── */
   const saveTask = async (t: FrontendTask) => {
     const payload = frontendToDb(t, subjects, userId);
     const { error } = await supabase.from("tasks").upsert(payload, { onConflict: "id" });
     if (error) { alert("Save failed: " + error.message); return; }
-
-    // Save extras (completedAt, topics, rescheduledFrom) to localStorage
-    setTaskExtras((prev) => ({
-      ...prev,
-      [t.id]: { completedAt: t.completedAt, topics: t.topics, rescheduledFrom: t.rescheduledFrom },
-    }));
-
-    setTasks((prev) => {
-      const exists = prev.some((x) => x.id === t.id);
-      return exists ? prev.map((x) => x.id === t.id ? t : x) : [...prev, t];
-    });
+    setTaskExtras((prev) => ({ ...prev, [t.id]: { completedAt: t.completedAt, topics: t.topics, rescheduledFrom: t.rescheduledFrom } }));
+    setTasks((prev) => { const exists = prev.some((x) => x.id === t.id); return exists ? prev.map((x) => x.id === t.id ? t : x) : [...prev, t]; });
     setFormOpen(false); setEditingTask(null);
   };
 
@@ -677,10 +917,8 @@ export default function StudyDen({ session }: { session: Session }) {
     if (!task) return;
     const nowCompleted = task.status !== "completed";
     const completedAt = nowCompleted ? new Date().toISOString() : null;
-
     const { error } = await supabase.from("tasks").update({ completed: nowCompleted }).eq("id", id);
     if (error) { alert("Toggle failed: " + error.message); return; }
-
     setTaskExtras((prev) => ({ ...prev, [id]: { ...(prev[id] || { topics: [], rescheduledFrom: null }), completedAt } }));
     setTasks((prev) => prev.map((t) => t.id === id ? { ...t, status: nowCompleted ? "completed" : "pending", completedAt } : t));
   };
@@ -693,7 +931,7 @@ export default function StudyDen({ session }: { session: Session }) {
     setTaskExtras((prev) => { const n = { ...prev }; delete n[id]; return n; });
   };
 
-  // ── subject CRUD (localStorage only) ─────────────────────────────────
+  /* ── subject CRUD (localStorage) ── */
   const addSubject = () => {
     if (!subjectDraft.name.trim()) return;
     setSubjects((prev) => [...prev, { id: uid(), name: subjectDraft.name.trim(), color: subjectDraft.color }]);
@@ -701,52 +939,62 @@ export default function StudyDen({ session }: { session: Session }) {
   };
 
   const deleteSubject = (id: string) => {
-    if (!confirm("Delete subject and all its tasks?")) return;
-    const name = subjects.find((s) => s.id === id)?.name;
+    if (!confirm("Delete subject? Tasks with this subject will still exist in the DB.")) return;
     setSubjects((prev) => prev.filter((s) => s.id !== id));
-    // Also delete tasks with this subjectId from Supabase
-    if (name) {
-      supabase.from("tasks").delete().eq("user_id", userId).eq("subject", name)
-        .then(({ error }) => { if (!error) fetchTasks(); });
-    }
   };
 
-  // ── day backgrounds CRUD ──────────────────────────────────────────────
+  /* ── routine CRUD ── */
+  const addRoutineEntry = async (r: Omit<RoutineEntry, "id" | "user_id">) => {
+    const { data, error } = await supabase.from("routine_entries").insert({ ...r, user_id: userId }).select().single();
+    if (error) { alert("Failed to add class: " + error.message); return; }
+    setRoutineEntries((prev) => [...prev, data as RoutineEntry]);
+  };
+
+  const editRoutineEntry = async (id: string, r: Omit<RoutineEntry, "id" | "user_id">) => {
+    const { error } = await supabase.from("routine_entries").update(r).eq("id", id);
+    if (error) { alert("Failed to update class: " + error.message); return; }
+    setRoutineEntries((prev) => prev.map((e) => e.id === id ? { ...e, ...r } : e));
+  };
+
+  const deleteRoutineEntry = async (id: string) => {
+    if (!confirm("Delete this class?")) return;
+    const { error } = await supabase.from("routine_entries").delete().eq("id", id);
+    if (error) { alert("Failed to delete: " + error.message); return; }
+    setRoutineEntries((prev) => prev.filter((e) => e.id !== id));
+  };
+
+  /* ── day backgrounds ── */
   const setDayBackground = async (date: string, url: string) => {
     if (!url.trim()) return;
-    const { error } = await supabase.from("day_backgrounds")
-      .upsert({ user_id: userId, date, image_url: url.trim() }, { onConflict: "user_id,date" });
+    const { error } = await supabase.from("day_backgrounds").upsert({ user_id: userId, date, image_url: url.trim() }, { onConflict: "user_id,date" });
     if (error) { alert("Failed to save background: " + error.message); return; }
     setDayBackgrounds((prev) => ({ ...prev, [date]: url.trim() }));
   };
 
   const clearDayBackground = async (date: string) => {
-    const { error } = await supabase.from("day_backgrounds")
-      .delete().eq("user_id", userId).eq("date", date);
-    if (error) { alert("Failed to clear background: " + error.message); return; }
+    const { error } = await supabase.from("day_backgrounds").delete().eq("user_id", userId).eq("date", date);
+    if (error) { alert("Failed to clear: " + error.message); return; }
     setDayBackgrounds((prev) => { const n = { ...prev }; delete n[date]; return n; });
   };
 
-  const pendingPrintList = [...tasks]
-    .filter((t) => t.status !== "completed")
-    .sort((a, b) => daysBetween(a.dueDate, todayStr()) - daysBetween(b.dueDate, todayStr()));
+  /* ── profile settings ── */
+  const saveProfile = async (updates: { reminder_mode: string; daily_digest_time: string }) => {
+    const { error } = await supabase.from("profiles").update(updates).eq("id", userId);
+    if (error) { alert("Save failed: " + error.message); return; }
+    setProfile((prev) => prev ? { ...prev, ...updates } : prev);
+    alert("Settings saved ✅");
+  };
+
+  const pendingPrintList = [...tasks].filter((t) => t.status !== "completed").sort((a, b) => daysBetween(a.dueDate, todayStr()) - daysBetween(b.dueDate, todayStr()));
 
   if (!loaded) {
-    return (
-      <div className="p-10 text-center" style={{ fontFamily: "Quicksand, sans-serif", background: THEMES[theme].css, minHeight: "100vh" }}>
-        Loading your den... 🦌
-      </div>
-    );
+    return <div className="p-10 text-center" style={{ fontFamily: "Quicksand, sans-serif", background: THEMES[theme].css, minHeight: "100vh" }}>Loading your den... 🦌</div>;
   }
 
   /* ─── render ─── */
   return (
     <div className="min-h-screen p-4 md:p-6" style={{ background: THEMES[theme].css, fontFamily: "Quicksand, sans-serif" }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@400;500;600;700&display=swap');
-        @media print { .no-print { display: none !important; } .print-only { display: block !important; } }
-        .print-only { display: none; }
-      `}</style>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@400;500;600;700&display=swap'); @media print { .no-print { display: none !important; } .print-only { display: block !important; } } .print-only { display: none; }`}</style>
 
       <div className="max-w-3xl mx-auto">
         {/* header */}
@@ -762,17 +1010,18 @@ export default function StudyDen({ session }: { session: Session }) {
               {Object.entries(THEMES).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
             </select>
             <button onClick={() => window.print()} className="p-2 rounded-xl bg-white/70 hover:bg-white"><Printer size={16} /></button>
-            <button onClick={() => supabase.auth.signOut()} className="p-2 rounded-xl bg-white/70 hover:bg-white" title="Sign out"><LogOut size={16} /></button>
           </div>
         </div>
 
         {/* tabs */}
         <div className="flex gap-1.5 mb-5 no-print flex-wrap">
           {[
-            { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-            { id: "calendar",  label: "Calendar",  icon: CalendarDays },
-            { id: "subjects",  label: "Subjects & Tasks", icon: BookOpen },
-            { id: "stats",     label: "Stats",     icon: BarChart3 },
+            { id: "dashboard", label: "Dashboard",  icon: LayoutDashboard },
+            { id: "calendar",  label: "Calendar",   icon: CalendarDays },
+            { id: "tasks",     label: "Tasks",       icon: BookOpen },
+            { id: "routine",   label: "Routine",     icon: Clock },
+            { id: "stats",     label: "Stats",       icon: BarChart3 },
+            { id: "settings",  label: "Settings",    icon: Settings },
           ].map((t) => (
             <button
               key={t.id}
@@ -802,12 +1051,11 @@ export default function StudyDen({ session }: { session: Session }) {
 
             <Sticker className="p-4" rotate={0.2}>
               <div className="flex justify-between items-center mb-2">
-                <h3 className="font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>All pending tasks</h3>
+                <h3 className="font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>All tasks</h3>
                 <button onClick={() => setGroupBy(groupBy === "subject" ? "type" : "subject")} className="text-xs px-2.5 py-1 rounded-lg bg-black/5">
                   Group by: {groupBy === "subject" ? "Subject" : "Type"}
                 </button>
               </div>
-
               <div className="flex gap-1.5 mb-3 flex-wrap">
                 <div className="flex items-center gap-1 bg-white rounded-lg px-2 flex-1 min-w-[140px]">
                   <Search size={13} className="opacity-50" />
@@ -829,17 +1077,16 @@ export default function StudyDen({ session }: { session: Session }) {
                 </select>
                 <button onClick={() => setThisWeekOnly(!thisWeekOnly)} className={`text-xs px-2.5 py-1 rounded-lg ${thisWeekOnly ? "bg-pink-200" : "bg-black/5"}`}>This week</button>
               </div>
-
               {filterStatus === "pending" && Object.keys(grouped).length === 0
                 ? <EmptyState emoji="🐱" text="No tasks match your filters" />
                 : filterStatus !== "pending"
                 ? filtered.map((t) => <TaskCard key={t.id} task={t} subject={subjById[t.subjectId]} onToggle={toggleTask} onEdit={(t) => { setEditingTask(t); setFormOpen(true); }} onDelete={deleteTask} />)
                 : Object.entries(grouped).map(([key, list]) => (
-                  <div key={key} className="mb-3">
-                    <div className="text-xs font-bold opacity-60 mb-1 uppercase tracking-wide">{groupBy === "type" ? (TYPE_ICON[key] || "📝") + " " + key : key}</div>
-                    {list.map((t) => <TaskCard key={t.id} task={t} subject={subjById[t.subjectId]} onToggle={toggleTask} onEdit={(t) => { setEditingTask(t); setFormOpen(true); }} onDelete={deleteTask} />)}
-                  </div>
-                ))}
+                    <div key={key} className="mb-3">
+                      <div className="text-xs font-bold opacity-60 mb-1 uppercase tracking-wide">{groupBy === "type" ? (TYPE_ICON[key] || "📝") + " " + key : key}</div>
+                      {list.map((t) => <TaskCard key={t.id} task={t} subject={subjById[t.subjectId]} onToggle={toggleTask} onEdit={(t) => { setEditingTask(t); setFormOpen(true); }} onDelete={deleteTask} />)}
+                    </div>
+                  ))}
             </Sticker>
           </div>
         )}
@@ -849,8 +1096,8 @@ export default function StudyDen({ session }: { session: Session }) {
           <div className="no-print">
             <Sticker className="p-4" rotate={-0.2}>
               <CalendarView
-                tasks={tasks}
-                subjects={subjects}
+                tasks={tasks} subjects={subjects}
+                routineEntries={routineEntries}
                 dayBackgrounds={dayBackgrounds}
                 onSetBackground={setDayBackground}
                 onClearBackground={clearDayBackground}
@@ -860,12 +1107,12 @@ export default function StudyDen({ session }: { session: Session }) {
           </div>
         )}
 
-        {/* subjects & tasks */}
-        {tab === "subjects" && (
+        {/* tasks + subjects */}
+        {tab === "tasks" && (
           <div className="no-print">
             <Sticker className="p-4 mb-4" rotate={0.3}>
               <h3 className="font-bold mb-2 flex items-center gap-1.5" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}><Palette size={16} /> Subjects</h3>
-              <p className="text-xs opacity-60 mb-2">Subjects are local to this browser. They map task colors and grouping — the backend stores the subject name directly on each task.</p>
+              <p className="text-xs opacity-60 mb-2">Subjects are stored locally in your browser for color-coding. The subject name is saved with each task in the database.</p>
               <div className="flex flex-wrap gap-2 mb-3">
                 {subjects.map((s) => (
                   <div key={s.id} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl" style={{ background: s.color + "33" }}>
@@ -901,8 +1148,31 @@ export default function StudyDen({ session }: { session: Session }) {
           </div>
         )}
 
+        {/* routine */}
+        {tab === "routine" && (
+          <div className="no-print">
+            <RoutineView
+              routineEntries={routineEntries}
+              onAdd={addRoutineEntry}
+              onEdit={editRoutineEntry}
+              onDelete={deleteRoutineEntry}
+            />
+          </div>
+        )}
+
         {/* stats */}
         {tab === "stats" && <div className="no-print"><StatsView tasks={tasks} /></div>}
+
+        {/* settings */}
+        {tab === "settings" && (
+          <div className="no-print">
+            <SettingsView
+              profile={profile}
+              onSave={saveProfile}
+              onSignOut={() => supabase.auth.signOut()}
+            />
+          </div>
+        )}
 
         {/* print view */}
         <div className="print-only">

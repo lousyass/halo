@@ -47,9 +47,14 @@ function LoginScreen() {
       options: { redirectTo: window.location.origin },
     })
     if (error) {
-      alert('Login failed: ' + error.message)
+      if (error.message.includes('provider')) {
+        alert('Google sign-in is not enabled yet.\n\nGo to your Supabase Dashboard → Authentication → Providers → Google, and enable it with your Google Cloud OAuth credentials.')
+      } else {
+        alert('Login failed: ' + error.message)
+      }
       setLoading(false)
     }
+    // If no error: browser redirects to Google — no need to setLoading(false)
   }
 
   return (
