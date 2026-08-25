@@ -288,7 +288,7 @@ function TaskForm({ initial, subjects, onSave, onClose }: {
   const save = () => {
     if (!title.trim() || !subjectId) return;
     onSave({
-      id: initial?.id || uid(), subjectId, title: title.trim(), type, dueDate,
+      id: initial?.id || crypto.randomUUID(), subjectId, title: title.trim(), type, dueDate,
       status: initial?.status || "pending", completedAt: initial?.completedAt || null,
       customColor: customColor || null, customIcon: customIcon || null,
       topics: type === "exam" ? topics : [],
