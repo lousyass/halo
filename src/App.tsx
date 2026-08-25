@@ -74,7 +74,7 @@ function LoginScreen() {
         width: '100%',
       }}>
         <h1 style={{ fontFamily: 'Fredoka, sans-serif', color: '#5B4B6D', fontSize: '2.2rem', marginBottom: '0.25rem' }}>
-          Study Den 🌸
+          Halo 🌸
         </h1>
         <p style={{ color: '#9B8BAD', fontSize: '0.95rem', marginBottom: '2rem' }}>your cozy deadline tracker</p>
         <button

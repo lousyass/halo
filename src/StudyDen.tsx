@@ -753,7 +753,7 @@ export default function StudyDen({ session }: { session: Session }) {
         <div className="flex items-center justify-between mb-5 no-print">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>
-              Study Den <span>{CREATURES[new Date().getDate() % CREATURES.length]}</span>
+              Halo <span>{CREATURES[new Date().getDate() % CREATURES.length]}</span>
             </h1>
             <p className="text-xs opacity-60">{session.user.email}</p>
           </div>
