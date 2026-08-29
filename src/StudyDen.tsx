@@ -8,9 +8,11 @@ import {
   Plus, X, Check, Search, ChevronLeft, ChevronRight,
   Trash2, Pencil, Printer, Palette, ListChecks,
   LayoutDashboard, CalendarDays, BookOpen, BarChart3, LogOut,
-  Clock, Settings,
+  Clock, Settings, NotebookPen,
 } from "lucide-react";
 import { supabase } from "./lib/supabase";
+import { SUPPORT_CONTACT } from "./lib/contact";
+import JournalView from "./JournalView";
 
 /* ─────────────────────────────── types ─────────────────────────────── */
 
@@ -266,8 +268,9 @@ function TaskCard({ task, subject, onToggle, onEdit, onDelete }: {
 
 /* ─────────────────────────── task form ─────────────────────────────── */
 
-function TaskForm({ initial, subjects, onSave, onClose }: {
+function TaskForm({ initial, subjects, typeSuggestions, onSave, onClose }: {
   initial: Partial<FrontendTask> | null; subjects: Subject[];
+  typeSuggestions: string[];
   onSave: (t: FrontendTask) => void; onClose: () => void;
 }) {
   const [subjectId, setSubjectId] = useState(initial?.subjectId || subjects[0]?.id || "");
@@ -319,8 +322,19 @@ function TaskForm({ initial, subjects, onSave, onClose }: {
               <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Activity 5" className="w-full mt-1 p-2 rounded-xl border" />
             </div>
             <div className="flex gap-2">
-              <button onClick={() => setType("assignment")} className={`flex-1 p-2 rounded-xl border text-sm ${type === "assignment" ? "bg-pink-100 border-pink-300" : ""}`}>📝 Assignment</button>
-              <button onClick={() => setType("exam")} className={`flex-1 p-2 rounded-xl border text-sm ${type === "exam" ? "bg-purple-100 border-purple-300" : ""}`}>📖 Exam</button>
+              <div className="flex-1">
+                <label className="text-xs font-semibold opacity-70">Type</label>
+                <input
+                  list="type-suggestions"
+                  value={type}
+                  onChange={(e) => setType(e.target.value)}
+                  placeholder="e.g. Assignment, Exam, CT, Quiz…"
+                  className="w-full mt-1 p-2 rounded-xl border"
+                />
+                <datalist id="type-suggestions">
+                  {typeSuggestions.map((s) => <option key={s} value={s} />)}
+                </datalist>
+              </div>
             </div>
             <div>
               <label className="text-xs font-semibold opacity-70">Due date</label>
@@ -612,9 +626,18 @@ function SettingsView({ profile, onSave, onSignOut }: {
             <span className="font-semibold">{profile.daily_digest_time.slice(0, 5)}</span>
           </div>
         </div>
+        <a
+          href={SUPPORT_CONTACT.waLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-4 mb-2 block text-center text-sm py-2 rounded-xl"
+          style={{ background: "#F0F9F4", color: "#2D7A4F" }}
+        >
+          💬 Report a bug or suggest something
+        </a>
         <button
           onClick={onSignOut}
-          className="mt-4 w-full p-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm"
+          className="w-full p-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm"
           style={{ background: "#FEE2E2", color: "#B91C1C", fontFamily: "Fredoka, sans-serif" }}
         >
           <LogOut size={15} /> Sign out
@@ -876,6 +899,15 @@ export default function StudyDen({ session }: { session: Session }) {
   /* ── derived ── */
   const subjById = useMemo(() => Object.fromEntries(subjects.map((s) => [s.id, s])), [subjects]);
 
+  // Distinct type values the user has previously entered — used for datalist suggestions
+  const typeSuggestions = useMemo(() => [...new Set(tasks.map((t) => t.type).filter(Boolean))].sort(), [tasks]);
+
+  // Overdue tasks: deadline passed, still not completed — shown as in-app prompt on dashboard
+  const overdueForPrompt = useMemo(() =>
+    tasks.filter((t) => t.status !== "completed" && daysBetween(t.dueDate, todayStr()) < 0),
+    [tasks]
+  );
+
   const upcoming = useMemo(() =>
     [...tasks].filter((t) => t.status !== "completed").sort((a, b) => daysBetween(a.dueDate, todayStr()) - daysBetween(b.dueDate, todayStr())).slice(0, 6),
     [tasks]
@@ -1020,6 +1052,7 @@ export default function StudyDen({ session }: { session: Session }) {
             { id: "calendar",  label: "Calendar",   icon: CalendarDays },
             { id: "tasks",     label: "Tasks",       icon: BookOpen },
             { id: "routine",   label: "Routine",     icon: Clock },
+            { id: "journal",   label: "Journal",     icon: NotebookPen },
             { id: "stats",     label: "Stats",       icon: BarChart3 },
             { id: "settings",  label: "Settings",    icon: Settings },
           ].map((t) => (
@@ -1037,6 +1070,28 @@ export default function StudyDen({ session }: { session: Session }) {
         {/* dashboard */}
         {tab === "dashboard" && (
           <div className="no-print">
+            {/* Overdue confirmation prompt — same condition as the overdue email threshold */}
+            {overdueForPrompt.length > 0 && (
+              <Sticker className="p-4 mb-4 border border-red-100" rotate={0.3}>
+                <h3 className="font-bold mb-2 flex items-center gap-1.5 text-sm" style={{ fontFamily: "Fredoka, sans-serif", color: "#B91C1C" }}>
+                  ⚠️ Did you submit these?
+                </h3>
+                {overdueForPrompt.map((t) => (
+                  <div key={t.id} className="flex items-center justify-between gap-2 mb-2 text-sm">
+                    <div>
+                      <span className="font-semibold">{t.title}</span>
+                      <span className="opacity-50 ml-1">— due {niceDate(t.dueDate)}</span>
+                    </div>
+                    <div className="flex gap-1.5 shrink-0">
+                      <button onClick={() => toggleTask(t.id)} className="px-2.5 py-1 rounded-lg text-white text-xs font-semibold" style={{ background: "#93C9A8" }}>
+                        ✓ Mark done
+                      </button>
+                      <button className="px-2.5 py-1 rounded-lg text-xs bg-black/5 opacity-60">Still working</button>
+                    </div>
+                  </div>
+                ))}
+              </Sticker>
+            )}
             <Sticker className="p-4 mb-4" rotate={-0.3}>
               <div className="flex justify-between items-center mb-2">
                 <h3 className="font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>🌸 Coming up soon</h3>
@@ -1067,8 +1122,7 @@ export default function StudyDen({ session }: { session: Session }) {
                 </select>
                 <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="text-xs p-1.5 rounded-lg border bg-white">
                   <option value="all">All types</option>
-                  <option value="assignment">Assignment</option>
-                  <option value="exam">Exam</option>
+                  {typeSuggestions.map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
                 <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="text-xs p-1.5 rounded-lg border bg-white">
                   <option value="pending">Pending</option>
@@ -1160,6 +1214,13 @@ export default function StudyDen({ session }: { session: Session }) {
           </div>
         )}
 
+        {/* journal */}
+        {tab === "journal" && (
+          <div className="no-print">
+            <JournalView userId={userId} session={session} />
+          </div>
+        )}
+
         {/* stats */}
         {tab === "stats" && <div className="no-print"><StatsView tasks={tasks} /></div>}
 
@@ -1189,6 +1250,7 @@ export default function StudyDen({ session }: { session: Session }) {
         <TaskForm
           initial={editingTask}
           subjects={subjects}
+          typeSuggestions={typeSuggestions}
           onSave={saveTask}
           onClose={() => { setFormOpen(false); setEditingTask(null); }}
         />
