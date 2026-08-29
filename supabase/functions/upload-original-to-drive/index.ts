@@ -135,8 +135,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    const folderId = Deno.env.get("GOOGLE_DRIVE_FOLDER_ID");
-    if (!folderId) {
+    const rawFolderId = Deno.env.get("GOOGLE_DRIVE_FOLDER_ID")?.trim();
+    if (!rawFolderId) {
       return new Response(
         JSON.stringify({ error: "GOOGLE_DRIVE_FOLDER_ID not configured" }),
         {
@@ -145,6 +145,8 @@ Deno.serve(async (req) => {
         }
       );
     }
+    // Extract pure folder ID if a full Google Drive URL was entered in secrets
+    const folderId = rawFolderId.match(/([a-zA-Z0-9_-]{25,})/)?.[1] || rawFolderId;
 
     // Parse multipart form data
     const formData = await req.formData();
