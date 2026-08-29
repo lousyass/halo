@@ -479,51 +479,139 @@ function RoutineView({ routineEntries, onAdd, onEdit, onDelete }: {
 
   return (
     <div>
-      <button
-        onClick={() => { setEditingEntry(null); setFormOpen(true); }}
-        className="w-full mb-4 p-3 rounded-2xl text-white font-semibold flex items-center justify-center gap-1.5"
-        style={{ background: "#A8D5BA", fontFamily: "Fredoka, sans-serif" }}
-      >
-        <Plus size={16} /> Add a class
-      </button>
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+        <div>
+          <h2 className="text-xl font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>
+            Weekly Class Timetable 🗓️
+          </h2>
+          <p className="text-xs opacity-60">Your recurring 7-day weekly class schedule</p>
+        </div>
+        <button
+          onClick={() => { setEditingEntry(null); setFormOpen(true); }}
+          className="px-4 py-2.5 rounded-2xl text-white font-semibold flex items-center gap-1.5 shadow-sm hover:opacity-95 transition-all text-sm"
+          style={{ background: "#A8D5BA", fontFamily: "Fredoka, sans-serif" }}
+        >
+          <Plus size={16} /> Add a class
+        </button>
+      </div>
 
-      {routineEntries.length === 0 ? (
-        <Sticker className="p-4" rotate={0.2}>
-          <EmptyState emoji="📅" text="No classes yet — add your weekly schedule above" />
-        </Sticker>
-      ) : (
-        DAY_NAMES.map((dayName, dow) => {
-          const entries = grouped[dow];
-          if (!entries || entries.length === 0) return null;
-          return (
-            <Sticker key={dow} className="p-4 mb-3" rotate={dow % 2 === 0 ? 0.2 : -0.2}>
-              <h3 className="font-bold mb-2 flex items-center gap-1.5" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>
-                <Clock size={15} /> {dayName}
-              </h3>
-              {[...entries].sort((a, b) => a.start_time.localeCompare(b.start_time)).map((entry) => (
-                <div key={entry.id} className="flex items-center gap-2 mb-2 p-2.5 rounded-xl bg-white/70 border border-black/5">
-                  <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-sm">{entry.subject}</div>
-                    <div className="text-xs opacity-60">
-                      {entry.start_time.slice(0, 5)}{entry.end_time ? ` – ${entry.end_time.slice(0, 5)}` : ""}
-                      {entry.location ? ` · ${entry.location}` : ""}
-                      {entry.notes ? ` · ${entry.notes}` : ""}
-                    </div>
+      {/* 7-Day Timetable Grid */}
+      <div className="overflow-x-auto pb-4">
+        <div className="grid grid-cols-7 gap-2.5 min-w-[820px]">
+          {DAY_NAMES.map((dayName, dow) => {
+            const entries = [...(grouped[dow] || [])].sort((a, b) => a.start_time.localeCompare(b.start_time));
+            const shortName = dayName.slice(0, 3);
+            const isWeekend = dow === 0 || dow === 6;
+
+            return (
+              <div
+                key={dow}
+                className={`flex flex-col rounded-3xl p-3 border transition-all ${
+                  isWeekend ? "bg-purple-50/40 border-purple-100/70" : "bg-white/80 border-black/5"
+                } shadow-xs min-h-[420px]`}
+              >
+                {/* Column Header */}
+                <div className="flex items-center justify-between border-b border-black/5 pb-2 mb-2.5">
+                  <div>
+                    <span className="font-bold text-sm text-[#5B4B6D]" style={{ fontFamily: "Fredoka, sans-serif" }}>
+                      {shortName}
+                    </span>
+                    <span className="text-[10px] opacity-50 block font-medium">
+                      {entries.length === 0 ? "Free" : `${entries.length} ${entries.length === 1 ? "class" : "classes"}`}
+                    </span>
                   </div>
-                  <button onClick={() => { setEditingEntry(entry); setFormOpen(true); }} className="p-1.5 rounded-lg hover:bg-black/5"><Pencil size={13} /></button>
-                  <button onClick={() => onDelete(entry.id)} className="p-1.5 rounded-lg hover:bg-black/5"><Trash2 size={13} /></button>
+                  <button
+                    onClick={() => {
+                      setEditingEntry({
+                        id: "",
+                        user_id: "",
+                        day_of_week: dow,
+                        subject: "",
+                        start_time: "09:00",
+                        end_time: null,
+                        location: null,
+                        notes: null,
+                      });
+                      setFormOpen(true);
+                    }}
+                    className="w-6 h-6 rounded-full bg-black/5 hover:bg-[#A8D5BA] hover:text-white flex items-center justify-center text-gray-500 transition-colors"
+                    title={`Add class for ${dayName}`}
+                  >
+                    <Plus size={13} />
+                  </button>
                 </div>
-              ))}
-            </Sticker>
-          );
-        })
-      )}
+
+                {/* Class Slots */}
+                <div className="space-y-2 flex-1">
+                  {entries.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center text-center p-3 opacity-35 border-2 border-dashed border-black/5 rounded-2xl">
+                      <span className="text-xl mb-1">☕</span>
+                      <span className="text-xs font-medium">No classes</span>
+                    </div>
+                  ) : (
+                    entries.map((entry) => (
+                      <div
+                        key={entry.id}
+                        className="p-2.5 rounded-2xl bg-white border border-[#EADEF0] shadow-2xs hover:shadow-xs transition-all text-left group"
+                      >
+                        {/* Time Pill */}
+                        <div className="inline-flex items-center gap-1 text-[10px] font-bold text-[#7C3AED] bg-purple-50 px-2 py-0.5 rounded-full mb-1">
+                          <Clock size={10} />
+                          <span>
+                            {entry.start_time.slice(0, 5)}
+                            {entry.end_time ? ` - ${entry.end_time.slice(0, 5)}` : ""}
+                          </span>
+                        </div>
+
+                        {/* Subject */}
+                        <h4 className="font-bold text-xs text-[#5B4B6D] leading-tight mb-1 truncate" title={entry.subject}>
+                          {entry.subject}
+                        </h4>
+
+                        {/* Location / Notes */}
+                        {entry.location && (
+                          <div className="text-[11px] text-gray-500 truncate mb-0.5">
+                            📍 {entry.location}
+                          </div>
+                        )}
+                        {entry.notes && (
+                          <div className="text-[10px] text-gray-400 italic line-clamp-2 leading-tight">
+                            {entry.notes}
+                          </div>
+                        )}
+
+                        {/* Actions */}
+                        <div className="mt-2 pt-1.5 border-t border-gray-100 flex items-center justify-end gap-1 opacity-80 group-hover:opacity-100">
+                          <button
+                            onClick={() => { setEditingEntry(entry); setFormOpen(true); }}
+                            className="p-1 rounded-lg hover:bg-black/5 text-gray-500 hover:text-[#5B4B6D]"
+                            title="Edit"
+                          >
+                            <Pencil size={11} />
+                          </button>
+                          <button
+                            onClick={() => onDelete(entry.id)}
+                            className="p-1 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600"
+                            title="Delete"
+                          >
+                            <Trash2 size={11} />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
       {formOpen && (
         <RoutineForm
           initial={editingEntry || undefined}
           onSave={(r) => {
-            if (editingEntry) { onEdit(editingEntry.id, r); }
+            if (editingEntry?.id) { onEdit(editingEntry.id, r); }
             else { onAdd(r); }
             setFormOpen(false); setEditingEntry(null);
           }}
