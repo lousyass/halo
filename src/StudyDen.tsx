@@ -8,9 +8,11 @@ import {
   Plus, X, Check, Search, ChevronLeft, ChevronRight,
   Trash2, Pencil, Printer, Palette, ListChecks,
   LayoutDashboard, CalendarDays, BookOpen, BarChart3, LogOut,
-  Clock, Settings,
+  Clock, Settings, NotebookPen,
 } from "lucide-react";
 import { supabase } from "./lib/supabase";
+import { SUPPORT_CONTACT } from "./lib/contact";
+import JournalView from "./JournalView";
 
 /* ─────────────────────────────── types ─────────────────────────────── */
 
@@ -266,8 +268,9 @@ function TaskCard({ task, subject, onToggle, onEdit, onDelete }: {
 
 /* ─────────────────────────── task form ─────────────────────────────── */
 
-function TaskForm({ initial, subjects, onSave, onClose }: {
+function TaskForm({ initial, subjects, typeSuggestions, onSave, onClose }: {
   initial: Partial<FrontendTask> | null; subjects: Subject[];
+  typeSuggestions: string[];
   onSave: (t: FrontendTask) => void; onClose: () => void;
 }) {
   const [subjectId, setSubjectId] = useState(initial?.subjectId || subjects[0]?.id || "");
@@ -319,8 +322,19 @@ function TaskForm({ initial, subjects, onSave, onClose }: {
               <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Activity 5" className="w-full mt-1 p-2 rounded-xl border" />
             </div>
             <div className="flex gap-2">
-              <button onClick={() => setType("assignment")} className={`flex-1 p-2 rounded-xl border text-sm ${type === "assignment" ? "bg-pink-100 border-pink-300" : ""}`}>📝 Assignment</button>
-              <button onClick={() => setType("exam")} className={`flex-1 p-2 rounded-xl border text-sm ${type === "exam" ? "bg-purple-100 border-purple-300" : ""}`}>📖 Exam</button>
+              <div className="flex-1">
+                <label className="text-xs font-semibold opacity-70">Type</label>
+                <input
+                  list="type-suggestions"
+                  value={type}
+                  onChange={(e) => setType(e.target.value)}
+                  placeholder="e.g. Assignment, Exam, CT, Quiz…"
+                  className="w-full mt-1 p-2 rounded-xl border"
+                />
+                <datalist id="type-suggestions">
+                  {typeSuggestions.map((s) => <option key={s} value={s} />)}
+                </datalist>
+              </div>
             </div>
             <div>
               <label className="text-xs font-semibold opacity-70">Due date</label>
@@ -465,51 +479,139 @@ function RoutineView({ routineEntries, onAdd, onEdit, onDelete }: {
 
   return (
     <div>
-      <button
-        onClick={() => { setEditingEntry(null); setFormOpen(true); }}
-        className="w-full mb-4 p-3 rounded-2xl text-white font-semibold flex items-center justify-center gap-1.5"
-        style={{ background: "#A8D5BA", fontFamily: "Fredoka, sans-serif" }}
-      >
-        <Plus size={16} /> Add a class
-      </button>
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+        <div>
+          <h2 className="text-xl font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>
+            Weekly Class Timetable 🗓️
+          </h2>
+          <p className="text-xs opacity-60">Your recurring 7-day weekly class schedule</p>
+        </div>
+        <button
+          onClick={() => { setEditingEntry(null); setFormOpen(true); }}
+          className="px-4 py-2.5 rounded-2xl text-white font-semibold flex items-center gap-1.5 shadow-sm hover:opacity-95 transition-all text-sm"
+          style={{ background: "#A8D5BA", fontFamily: "Fredoka, sans-serif" }}
+        >
+          <Plus size={16} /> Add a class
+        </button>
+      </div>
 
-      {routineEntries.length === 0 ? (
-        <Sticker className="p-4" rotate={0.2}>
-          <EmptyState emoji="📅" text="No classes yet — add your weekly schedule above" />
-        </Sticker>
-      ) : (
-        DAY_NAMES.map((dayName, dow) => {
-          const entries = grouped[dow];
-          if (!entries || entries.length === 0) return null;
-          return (
-            <Sticker key={dow} className="p-4 mb-3" rotate={dow % 2 === 0 ? 0.2 : -0.2}>
-              <h3 className="font-bold mb-2 flex items-center gap-1.5" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>
-                <Clock size={15} /> {dayName}
-              </h3>
-              {[...entries].sort((a, b) => a.start_time.localeCompare(b.start_time)).map((entry) => (
-                <div key={entry.id} className="flex items-center gap-2 mb-2 p-2.5 rounded-xl bg-white/70 border border-black/5">
-                  <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-sm">{entry.subject}</div>
-                    <div className="text-xs opacity-60">
-                      {entry.start_time.slice(0, 5)}{entry.end_time ? ` – ${entry.end_time.slice(0, 5)}` : ""}
-                      {entry.location ? ` · ${entry.location}` : ""}
-                      {entry.notes ? ` · ${entry.notes}` : ""}
-                    </div>
+      {/* 7-Day Timetable Grid */}
+      <div className="overflow-x-auto pb-4">
+        <div className="grid grid-cols-7 gap-2.5 min-w-[820px]">
+          {DAY_NAMES.map((dayName, dow) => {
+            const entries = [...(grouped[dow] || [])].sort((a, b) => a.start_time.localeCompare(b.start_time));
+            const shortName = dayName.slice(0, 3);
+            const isWeekend = dow === 0 || dow === 6;
+
+            return (
+              <div
+                key={dow}
+                className={`flex flex-col rounded-3xl p-3 border transition-all ${
+                  isWeekend ? "bg-purple-50/40 border-purple-100/70" : "bg-white/80 border-black/5"
+                } shadow-xs min-h-[420px]`}
+              >
+                {/* Column Header */}
+                <div className="flex items-center justify-between border-b border-black/5 pb-2 mb-2.5">
+                  <div>
+                    <span className="font-bold text-sm text-[#5B4B6D]" style={{ fontFamily: "Fredoka, sans-serif" }}>
+                      {shortName}
+                    </span>
+                    <span className="text-[10px] opacity-50 block font-medium">
+                      {entries.length === 0 ? "Free" : `${entries.length} ${entries.length === 1 ? "class" : "classes"}`}
+                    </span>
                   </div>
-                  <button onClick={() => { setEditingEntry(entry); setFormOpen(true); }} className="p-1.5 rounded-lg hover:bg-black/5"><Pencil size={13} /></button>
-                  <button onClick={() => onDelete(entry.id)} className="p-1.5 rounded-lg hover:bg-black/5"><Trash2 size={13} /></button>
+                  <button
+                    onClick={() => {
+                      setEditingEntry({
+                        id: "",
+                        user_id: "",
+                        day_of_week: dow,
+                        subject: "",
+                        start_time: "09:00",
+                        end_time: null,
+                        location: null,
+                        notes: null,
+                      });
+                      setFormOpen(true);
+                    }}
+                    className="w-6 h-6 rounded-full bg-black/5 hover:bg-[#A8D5BA] hover:text-white flex items-center justify-center text-gray-500 transition-colors"
+                    title={`Add class for ${dayName}`}
+                  >
+                    <Plus size={13} />
+                  </button>
                 </div>
-              ))}
-            </Sticker>
-          );
-        })
-      )}
+
+                {/* Class Slots */}
+                <div className="space-y-2 flex-1">
+                  {entries.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center text-center p-3 opacity-35 border-2 border-dashed border-black/5 rounded-2xl">
+                      <span className="text-xl mb-1">☕</span>
+                      <span className="text-xs font-medium">No classes</span>
+                    </div>
+                  ) : (
+                    entries.map((entry) => (
+                      <div
+                        key={entry.id}
+                        className="p-2.5 rounded-2xl bg-white border border-[#EADEF0] shadow-2xs hover:shadow-xs transition-all text-left group"
+                      >
+                        {/* Time Pill */}
+                        <div className="inline-flex items-center gap-1 text-[10px] font-bold text-[#7C3AED] bg-purple-50 px-2 py-0.5 rounded-full mb-1">
+                          <Clock size={10} />
+                          <span>
+                            {entry.start_time.slice(0, 5)}
+                            {entry.end_time ? ` - ${entry.end_time.slice(0, 5)}` : ""}
+                          </span>
+                        </div>
+
+                        {/* Subject */}
+                        <h4 className="font-bold text-xs text-[#5B4B6D] leading-tight mb-1 truncate" title={entry.subject}>
+                          {entry.subject}
+                        </h4>
+
+                        {/* Location / Notes */}
+                        {entry.location && (
+                          <div className="text-[11px] text-gray-500 truncate mb-0.5">
+                            📍 {entry.location}
+                          </div>
+                        )}
+                        {entry.notes && (
+                          <div className="text-[10px] text-gray-400 italic line-clamp-2 leading-tight">
+                            {entry.notes}
+                          </div>
+                        )}
+
+                        {/* Actions */}
+                        <div className="mt-2 pt-1.5 border-t border-gray-100 flex items-center justify-end gap-1 opacity-80 group-hover:opacity-100">
+                          <button
+                            onClick={() => { setEditingEntry(entry); setFormOpen(true); }}
+                            className="p-1 rounded-lg hover:bg-black/5 text-gray-500 hover:text-[#5B4B6D]"
+                            title="Edit"
+                          >
+                            <Pencil size={11} />
+                          </button>
+                          <button
+                            onClick={() => onDelete(entry.id)}
+                            className="p-1 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600"
+                            title="Delete"
+                          >
+                            <Trash2 size={11} />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
       {formOpen && (
         <RoutineForm
           initial={editingEntry || undefined}
           onSave={(r) => {
-            if (editingEntry) { onEdit(editingEntry.id, r); }
+            if (editingEntry?.id) { onEdit(editingEntry.id, r); }
             else { onAdd(r); }
             setFormOpen(false); setEditingEntry(null);
           }}
@@ -612,9 +714,18 @@ function SettingsView({ profile, onSave, onSignOut }: {
             <span className="font-semibold">{profile.daily_digest_time.slice(0, 5)}</span>
           </div>
         </div>
+        <a
+          href={SUPPORT_CONTACT.waLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-4 mb-2 block text-center text-sm py-2 rounded-xl"
+          style={{ background: "#F0F9F4", color: "#2D7A4F" }}
+        >
+          💬 Report a bug or suggest something
+        </a>
         <button
           onClick={onSignOut}
-          className="mt-4 w-full p-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm"
+          className="w-full p-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm"
           style={{ background: "#FEE2E2", color: "#B91C1C", fontFamily: "Fredoka, sans-serif" }}
         >
           <LogOut size={15} /> Sign out
@@ -876,6 +987,15 @@ export default function StudyDen({ session }: { session: Session }) {
   /* ── derived ── */
   const subjById = useMemo(() => Object.fromEntries(subjects.map((s) => [s.id, s])), [subjects]);
 
+  // Distinct type values the user has previously entered — used for datalist suggestions
+  const typeSuggestions = useMemo(() => [...new Set(tasks.map((t) => t.type).filter(Boolean))].sort(), [tasks]);
+
+  // Overdue tasks: deadline passed, still not completed — shown as in-app prompt on dashboard
+  const overdueForPrompt = useMemo(() =>
+    tasks.filter((t) => t.status !== "completed" && daysBetween(t.dueDate, todayStr()) < 0),
+    [tasks]
+  );
+
   const upcoming = useMemo(() =>
     [...tasks].filter((t) => t.status !== "completed").sort((a, b) => daysBetween(a.dueDate, todayStr()) - daysBetween(b.dueDate, todayStr())).slice(0, 6),
     [tasks]
@@ -1020,6 +1140,7 @@ export default function StudyDen({ session }: { session: Session }) {
             { id: "calendar",  label: "Calendar",   icon: CalendarDays },
             { id: "tasks",     label: "Tasks",       icon: BookOpen },
             { id: "routine",   label: "Routine",     icon: Clock },
+            { id: "journal",   label: "Journal",     icon: NotebookPen },
             { id: "stats",     label: "Stats",       icon: BarChart3 },
             { id: "settings",  label: "Settings",    icon: Settings },
           ].map((t) => (
@@ -1037,6 +1158,28 @@ export default function StudyDen({ session }: { session: Session }) {
         {/* dashboard */}
         {tab === "dashboard" && (
           <div className="no-print">
+            {/* Overdue confirmation prompt — same condition as the overdue email threshold */}
+            {overdueForPrompt.length > 0 && (
+              <Sticker className="p-4 mb-4 border border-red-100" rotate={0.3}>
+                <h3 className="font-bold mb-2 flex items-center gap-1.5 text-sm" style={{ fontFamily: "Fredoka, sans-serif", color: "#B91C1C" }}>
+                  ⚠️ Did you submit these?
+                </h3>
+                {overdueForPrompt.map((t) => (
+                  <div key={t.id} className="flex items-center justify-between gap-2 mb-2 text-sm">
+                    <div>
+                      <span className="font-semibold">{t.title}</span>
+                      <span className="opacity-50 ml-1">— due {niceDate(t.dueDate)}</span>
+                    </div>
+                    <div className="flex gap-1.5 shrink-0">
+                      <button onClick={() => toggleTask(t.id)} className="px-2.5 py-1 rounded-lg text-white text-xs font-semibold" style={{ background: "#93C9A8" }}>
+                        ✓ Mark done
+                      </button>
+                      <button className="px-2.5 py-1 rounded-lg text-xs bg-black/5 opacity-60">Still working</button>
+                    </div>
+                  </div>
+                ))}
+              </Sticker>
+            )}
             <Sticker className="p-4 mb-4" rotate={-0.3}>
               <div className="flex justify-between items-center mb-2">
                 <h3 className="font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>🌸 Coming up soon</h3>
@@ -1067,8 +1210,7 @@ export default function StudyDen({ session }: { session: Session }) {
                 </select>
                 <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="text-xs p-1.5 rounded-lg border bg-white">
                   <option value="all">All types</option>
-                  <option value="assignment">Assignment</option>
-                  <option value="exam">Exam</option>
+                  {typeSuggestions.map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
                 <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="text-xs p-1.5 rounded-lg border bg-white">
                   <option value="pending">Pending</option>
@@ -1160,6 +1302,13 @@ export default function StudyDen({ session }: { session: Session }) {
           </div>
         )}
 
+        {/* journal */}
+        {tab === "journal" && (
+          <div className="no-print">
+            <JournalView userId={userId} session={session} />
+          </div>
+        )}
+
         {/* stats */}
         {tab === "stats" && <div className="no-print"><StatsView tasks={tasks} /></div>}
 
@@ -1189,6 +1338,7 @@ export default function StudyDen({ session }: { session: Session }) {
         <TaskForm
           initial={editingTask}
           subjects={subjects}
+          typeSuggestions={typeSuggestions}
           onSave={saveTask}
           onClose={() => { setFormOpen(false); setEditingTask(null); }}
         />

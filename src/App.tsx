@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Session } from '@supabase/supabase-js'
 import { supabase } from './lib/supabase'
+import { SUPPORT_CONTACT } from './lib/contact'
 import StudyDen from './StudyDen'
 
 export default function App() {
@@ -101,6 +102,14 @@ function LoginScreen() {
         >
           {loading ? 'Redirecting...' : '✨ Sign in with Google'}
         </button>
+        {/* Testing-mode notice — remove once app is out of Testing in Google Cloud Console */}
+        <p style={{ color: '#9B8BAD', fontSize: '0.8rem', marginTop: '1.5rem', lineHeight: 1.5 }}>
+          This app is currently in testing.{' '}
+          <a href={SUPPORT_CONTACT.waLink} target="_blank" rel="noopener noreferrer" style={{ color: '#C9B6E4', fontWeight: 600 }}>
+            Message on WhatsApp
+          </a>{' '}
+          with your name and Google email to request access.
+        </p>
       </div>
     </div>
   )
