@@ -3,7 +3,7 @@ import { supabase } from "./lib/supabase";
 import {
   Plus, X, Pencil, Trash2, ChevronLeft, ChevronRight, Pin,
   Image as ImageIcon, Shuffle, BookOpen, Calendar as CalendarIcon,
-  Search, Book, Sparkles, ExternalLink,
+  Search, Sparkles, ExternalLink, Calendar, Check,
 } from "lucide-react";
 
 /* ─────────────────────────── types ─────────────────────────── */
@@ -35,6 +35,17 @@ const MOODS: { value: string; emoji: string; label: string; color: string; bg: s
   { value: "okay",   emoji: "🌤️", label: "Okay",   color: "#0284C7", bg: "#E0F2FE" },
   { value: "tough",  emoji: "🌧️", label: "Tough",  color: "#7C3AED", bg: "#EDE9FE" },
   { value: "rough",  emoji: "🌪️", label: "Rough",  color: "#DC2626", bg: "#FEE2E2" },
+];
+
+const DIARY_PROMPTS = [
+  "Dear Diary, today was...",
+  "Something that made me smile today...",
+  "What's on my mind right now...",
+  "A small moment worth remembering...",
+  "Today I noticed...",
+  "The little things from today...",
+  "How I'm feeling as the day closes...",
+  "Something unexpected that happened...",
 ];
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
@@ -80,20 +91,21 @@ async function compressImage(file: File): Promise<Blob> {
   });
 }
 
-/* ─────────────────────────── entry form modal ─────────────────────────── */
+/* ─────────────────────────── Diary Book: Writing Page Component ─────────────────────────── */
 
-function EntryFormModal({
+function DiaryWritePage({
   userId,
   initial,
   onSave,
-  onClose,
+  onCancel,
 }: {
   userId: string;
   initial?: Partial<JournalEntry> | null;
   onSave: (entry: JournalEntry, newFiles: File[], deletedPhotoIds: string[]) => Promise<void>;
-  onClose: () => void;
+  onCancel: () => void;
 }) {
   const [date, setDate] = useState(initial?.entry_date || todayStr());
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [content, setContent] = useState(initial?.content || "");
   const [mood, setMood] = useState<string | null>(initial?.mood || null);
   const [isPinned, setIsPinned] = useState(initial?.is_pinned || false);
@@ -102,6 +114,12 @@ function EntryFormModal({
   const [deletedPhotoIds, setDeletedPhotoIds] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
+  // Pick a random placeholder prompt when entering write mode
+  const placeholderPrompt = useMemo(() => {
+    return DIARY_PROMPTS[Math.floor(Math.random() * DIARY_PROMPTS.length)];
+  }, []);
+
+  // Load existing photos if editing
   useEffect(() => {
     if (!initial?.id) return;
     supabase
@@ -111,7 +129,7 @@ function EntryFormModal({
       .then(({ data }) => setPhotos((data as JournalPhoto[]) || []));
   }, [initial?.id]);
 
-  const save = async () => {
+  const handleSave = async () => {
     if (!content.trim()) return;
     setSaving(true);
     await onSave(
@@ -143,142 +161,215 @@ function EntryFormModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div
-        className="bg-[#FCFBF8] rounded-3xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl border border-[#E9E4DC]"
-        style={{ fontFamily: "Quicksand, sans-serif" }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">✍️</span>
-            <h3 className="text-xl font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>
-              {initial?.id ? "Edit Diary Page" : "Write in Diary"}
-            </h3>
-          </div>
-          <button onClick={onClose} className="p-1 rounded-full hover:bg-black/5"><X size={20} /></button>
+    <div className="max-w-2xl mx-auto my-2">
+      {/* Diary Book Frame */}
+      <div className="relative bg-[#FFFDF9] rounded-3xl border-2 border-[#E8E2D8] shadow-2xl overflow-hidden transition-all">
+        {/* Book spine accent & bookmark ribbon */}
+        <div className="absolute top-0 left-0 w-3.5 h-full bg-gradient-to-r from-[#E0D7C9] to-[#F5EFEB] border-r border-[#D8CFC0]/60" />
+        <div className="absolute top-0 right-8 w-4 h-10 bg-[#F5B8C4] rounded-b-md shadow-sm z-10 flex items-center justify-center">
+          <span className="text-[9px] text-white font-bold">♥</span>
         </div>
 
-        <div className="space-y-4">
-          <div className="flex gap-2 items-end">
-            <div className="flex-1">
-              <label className="text-xs font-bold uppercase tracking-wider text-[#8A7B9D]">Date</label>
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full mt-1 p-2.5 rounded-xl border border-[#E0D7CD] bg-white font-medium text-sm"
-              />
+        {/* Paper Page Interior */}
+        <div className="pl-8 pr-6 pt-7 pb-6">
+          {/* Dateline Header (Reading-view style heading + Date Picker toggle) */}
+          <div className="flex items-start justify-between border-b border-[#EFE9DF] pb-4 mb-5 flex-wrap gap-2">
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-xl font-bold text-[#5B4B6D]" style={{ fontFamily: "Fredoka, sans-serif" }}>
+                  {niceDate(date)}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowDatePicker(!showDatePicker)}
+                  className="text-xs px-2 py-1 bg-[#F5EFEB] hover:bg-[#EDE5DA] text-[#8A7B9D] rounded-lg font-medium flex items-center gap-1 transition-colors"
+                  title="Change entry date"
+                >
+                  <Calendar size={12} />
+                  <span>{showDatePicker ? "Done" : "Change date"}</span>
+                </button>
+              </div>
+
+              {showDatePicker && (
+                <div className="mt-2 flex items-center gap-2">
+                  <input
+                    type="date"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    className="p-1.5 px-2.5 rounded-xl border border-[#D8CFC0] bg-white text-xs font-semibold text-[#5B4B6D]"
+                  />
+                  <span className="text-[11px] text-[#9B8BAD] italic" style={{ fontFamily: "'Patrick Hand', cursive" }}>
+                    ~ backdate or choose another day
+                  </span>
+                </div>
+              )}
+
+              <p className="text-xs text-[#9B8BAD] mt-0.5 italic" style={{ fontFamily: "'Patrick Hand', cursive", fontSize: "14px" }}>
+                {initial?.id ? "editing this page in your diary..." : "writing a fresh page in your diary..."}
+              </p>
             </div>
-            <button
-              onClick={() => setIsPinned(!isPinned)}
-              type="button"
-              className={`p-2.5 rounded-xl border transition-all flex items-center gap-1 text-sm font-semibold ${
-                isPinned ? "bg-amber-100 border-amber-300 text-amber-800" : "bg-white border-[#E0D7CD] text-gray-500 hover:bg-gray-50"
-              }`}
-              title="Pin this memory"
-            >
-              <Pin size={16} className={isPinned ? "fill-amber-500 text-amber-500" : ""} />
-              <span>{isPinned ? "Pinned" : "Pin"}</span>
-            </button>
+
+            {/* Pin Toggle */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsPinned(!isPinned)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border transition-all ${
+                  isPinned
+                    ? "bg-amber-100 border-amber-300 text-amber-900 shadow-2xs"
+                    : "bg-white/80 border-[#E8E2D8] text-gray-500 hover:bg-white"
+                }`}
+              >
+                <Pin size={12} className={isPinned ? "fill-amber-600 text-amber-600" : ""} />
+                <span>{isPinned ? "Pinned memory" : "Pin"}</span>
+              </button>
+              <button
+                type="button"
+                onClick={onCancel}
+                className="p-1.5 rounded-xl text-gray-400 hover:bg-black/5 hover:text-gray-700"
+                title="Cancel"
+              >
+                <X size={18} />
+              </button>
+            </div>
           </div>
 
-          {/* Mood picker */}
-          <div>
-            <label className="text-xs font-bold uppercase tracking-wider text-[#8A7B9D]">How was today?</label>
-            <div className="grid grid-cols-5 gap-1.5 mt-1.5">
+          {/* Mood Selector (Quiet Handwritten Margin Note) */}
+          <div className="mb-4">
+            <div className="text-xs text-[#8A7B9D] mb-1.5 italic" style={{ fontFamily: "'Patrick Hand', cursive", fontSize: "15px" }}>
+              how was today feeling? ~
+            </div>
+            <div className="flex gap-2 flex-wrap">
               {MOODS.map((m) => (
                 <button
                   key={m.value}
                   type="button"
                   onClick={() => setMood(mood === m.value ? null : m.value)}
-                  className={`flex flex-col items-center py-2 px-1 rounded-2xl border text-xs font-semibold transition-all ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border text-xs font-semibold transition-all ${
                     mood === m.value
-                      ? "ring-2 ring-[#C9B6E4] shadow-sm scale-105"
-                      : "opacity-75 hover:opacity-100 bg-white border-[#E5E0D8]"
+                      ? "ring-2 ring-[#C9B6E4] shadow-xs scale-105"
+                      : "bg-white/80 border-[#EADEF0] opacity-75 hover:opacity-100"
                   }`}
                   style={{ backgroundColor: mood === m.value ? m.bg : undefined }}
                 >
-                  <span className="text-xl mb-0.5">{m.emoji}</span>
-                  <span style={{ color: m.color }}>{m.label}</span>
+                  <span className="text-base leading-none">{m.emoji}</span>
+                  <span style={{ color: mood === m.value ? m.color : "#5B4B6D" }}>{m.label}</span>
                 </button>
               ))}
             </div>
           </div>
 
-          <div>
-            <label className="text-xs font-bold uppercase tracking-wider text-[#8A7B9D]">Diary Entry</label>
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              rows={7}
-              placeholder="Dear Diary, today was..."
-              className="w-full mt-1.5 p-3.5 rounded-2xl border border-[#E0D7CD] bg-white resize-none text-sm leading-relaxed focus:ring-2 focus:ring-[#C9B6E4] focus:outline-none"
-              style={{ lineHeight: "1.7" }}
-            />
-          </div>
+          {/* Attached Polaroids + Polaroid Photo Attach Slot */}
+          <div className="mb-5">
+            <div className="text-xs text-[#8A7B9D] mb-2 italic" style={{ fontFamily: "'Patrick Hand', cursive", fontSize: "15px" }}>
+              tuck in some polaroids ~
+            </div>
 
-          {/* Photos */}
-          <div>
-            <label className="text-xs font-bold uppercase tracking-wider text-[#8A7B9D] flex items-center gap-1.5">
-              <ImageIcon size={14} /> Attach Photos (Polaroids)
-            </label>
-            <div className="flex flex-wrap gap-2.5 mt-2">
+            <div className="flex gap-3 overflow-x-auto pb-2 pt-1">
+              {/* Existing Photos */}
               {photos.map((p) => (
-                <div key={p.id} className="relative group rounded-xl overflow-hidden border border-black/10 shadow-xs">
-                  <img src={p.image_url} alt="" className="w-20 h-20 object-cover" />
+                <div
+                  key={p.id}
+                  className="relative shrink-0 bg-white p-2 pb-3 rounded-2xl shadow-md border border-[#E8E2D8] transform rotate-[-1deg] group"
+                  style={{ width: "160px" }}
+                >
+                  <img src={p.image_url} alt="" className="w-full h-28 object-cover rounded-xl" />
                   <button
                     type="button"
                     onClick={() => removeExistingPhoto(p.id)}
-                    className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
                   >
-                    <X size={11} />
+                    <X size={12} />
                   </button>
                   {p.original_drive_url && (
-                    <a
-                      href={p.original_drive_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="absolute bottom-0 right-0 text-[8px] bg-black/60 text-white px-1 rounded-tl"
-                    >
-                      Drive
-                    </a>
+                    <span className="text-[9px] text-[#8A7B9D] mt-1 block text-right font-medium">Drive saved</span>
                   )}
                 </div>
               ))}
+
+              {/* Newly Attached Files */}
               {newFiles.map((f, i) => (
-                <div key={i} className="relative group rounded-xl overflow-hidden border border-black/10 shadow-xs">
-                  <img src={URL.createObjectURL(f)} alt="" className="w-20 h-20 object-cover" />
+                <div
+                  key={i}
+                  className="relative shrink-0 bg-white p-2 pb-3 rounded-2xl shadow-md border border-[#E8E2D8] transform rotate-[1deg] group"
+                  style={{ width: "160px" }}
+                >
+                  <img src={URL.createObjectURL(f)} alt="" className="w-full h-28 object-cover rounded-xl" />
                   <button
                     type="button"
                     onClick={() => removeNewFile(i)}
-                    className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
                   >
-                    <X size={11} />
+                    <X size={12} />
                   </button>
-                  <span className="absolute bottom-0 left-0 right-0 text-[9px] text-center bg-black/50 text-white py-0.5 font-medium">
-                    New
+                  <span className="text-[10px] text-purple-600 mt-1 block text-center font-bold" style={{ fontFamily: "'Patrick Hand', cursive" }}>
+                    new print ✨
                   </span>
                 </div>
               ))}
-              <label className="w-20 h-20 border-2 border-dashed border-[#C9B6E4] rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-purple-50/50 text-xs text-[#8A7B9D] font-medium transition-colors">
-                <Plus size={18} className="text-[#C9B6E4] mb-0.5" />
-                <span>Add</span>
+
+              {/* Polaroid Photo Attach Trigger */}
+              <label
+                className="relative shrink-0 bg-white/90 hover:bg-white p-2.5 rounded-2xl shadow-sm border-2 border-dashed border-[#C9B6E4] transform rotate-[-2deg] hover:rotate-0 transition-all flex flex-col items-center justify-center text-center cursor-pointer group"
+                style={{ width: "150px", height: "135px" }}
+              >
+                <div className="w-9 h-9 rounded-full bg-purple-50 flex items-center justify-center text-[#9B8BAD] group-hover:text-[#5B4B6D] mb-1.5 transition-colors">
+                  <ImageIcon size={18} />
+                </div>
+                <span
+                  className="text-xs text-[#5B4B6D] font-bold group-hover:text-[#7C3AED] leading-tight"
+                  style={{ fontFamily: "'Patrick Hand', cursive", fontSize: "14px" }}
+                >
+                  + Tuck in photo
+                </span>
+                <span className="text-[9px] text-[#9B8BAD] mt-0.5">JPEG / PNG</span>
                 <input type="file" accept="image/*" multiple onChange={handleFileChange} className="hidden" />
               </label>
             </div>
           </div>
 
+          {/* Handwriting Diary Textarea */}
+          <div className="relative">
+            <div className="text-xs text-[#8A7B9D] mb-1.5 italic" style={{ fontFamily: "'Patrick Hand', cursive", fontSize: "15px" }}>
+              dear diary...
+            </div>
+            <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              rows={8}
+              placeholder={placeholderPrompt}
+              className="w-full p-4 rounded-2xl border border-[#E8E2D8] bg-[#FFFDF9] resize-none focus:ring-2 focus:ring-[#C9B6E4] focus:outline-none shadow-inner"
+              style={{
+                fontFamily: "'Caveat', cursive, sans-serif",
+                fontSize: "1.45rem",
+                lineHeight: "1.9",
+                color: "#3F324D",
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Action Footer */}
+        <div className="bg-[#FAF6EF] border-t border-[#E8E2D8] px-6 py-3.5 flex items-center justify-between">
           <button
-            onClick={save}
-            disabled={saving}
-            className="w-full mt-2 p-3 rounded-2xl font-bold text-white shadow-md transition-all flex items-center justify-center gap-2"
+            type="button"
+            onClick={onCancel}
+            className="px-4 py-2 rounded-xl text-xs font-bold text-gray-500 hover:bg-[#F3EDE3] transition-colors"
+          >
+            Turn back / Cancel
+          </button>
+
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving || !content.trim()}
+            className="px-6 py-2.5 rounded-2xl text-xs font-bold text-white shadow-md transition-all flex items-center gap-1.5 hover:opacity-95 disabled:opacity-40 disabled:cursor-not-allowed"
             style={{
               background: saving ? "#C9B6E4AA" : "linear-gradient(135deg, #C9B6E4 0%, #B8A3D8 100%)",
               fontFamily: "Fredoka, sans-serif",
             }}
           >
-            {saving ? "Saving Page..." : initial?.id ? "Update Diary Page ✨" : "Save in Diary 🌸"}
+            {saving ? "Saving Page..." : initial?.id ? "Update Page ✨" : "Save in Diary 🌸"}
           </button>
         </div>
       </div>
@@ -286,30 +377,25 @@ function EntryFormModal({
   );
 }
 
-/* ─────────────────────────── Diary Book View ─────────────────────────── */
+/* ─────────────────────────── Diary Book: Reading Page View ─────────────────────────── */
 
-function DiaryBookView({
+function DiaryReadPage({
   entries,
   photosByEntry,
+  currentIndex,
+  onIndexChange,
   onWriteNew,
   onEdit,
   onDelete,
 }: {
   entries: JournalEntry[];
   photosByEntry: Record<string, JournalPhoto[]>;
+  currentIndex: number;
+  onIndexChange: (idx: number) => void;
   onWriteNew: () => void;
   onEdit: (e: JournalEntry) => void;
   onDelete: (id: string) => void;
 }) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  // Keep index within bounds when entries change
-  useEffect(() => {
-    if (currentIndex >= entries.length && entries.length > 0) {
-      setCurrentIndex(entries.length - 1);
-    }
-  }, [entries.length, currentIndex]);
-
   if (entries.length === 0) {
     return (
       <div className="relative max-w-xl mx-auto my-6 p-10 bg-[#FFFDF9] rounded-3xl border-2 border-[#E9E4DC] shadow-xl text-center">
@@ -333,7 +419,8 @@ function DiaryBookView({
     );
   }
 
-  const currentEntry = entries[currentIndex];
+  const safeIndex = Math.max(0, Math.min(entries.length - 1, currentIndex));
+  const currentEntry = entries[safeIndex];
   const currentPhotos = currentEntry ? photosByEntry[currentEntry.id] || [] : [];
   const moodInfo = currentEntry ? MOODS.find((m) => m.value === currentEntry.mood) : null;
 
@@ -341,13 +428,13 @@ function DiaryBookView({
     <div className="max-w-2xl mx-auto my-2">
       {/* Book Frame */}
       <div className="relative bg-[#FFFDF9] rounded-3xl border-2 border-[#E8E2D8] shadow-2xl overflow-hidden transition-all">
-        {/* Book spine accent line & bookmark ribbon */}
+        {/* Book spine accent & bookmark ribbon */}
         <div className="absolute top-0 left-0 w-3.5 h-full bg-gradient-to-r from-[#E0D7C9] to-[#F5EFEB] border-r border-[#D8CFC0]/60" />
         <div className="absolute top-0 right-8 w-4 h-10 bg-[#F5B8C4] rounded-b-md shadow-sm z-10 flex items-center justify-center">
           <span className="text-[9px] text-white font-bold">♥</span>
         </div>
 
-        {/* Inner page content */}
+        {/* Inner Page Content */}
         <div className="pl-8 pr-6 pt-7 pb-6">
           {/* Header with Date, Mood, Pin, and Page info */}
           <div className="flex items-start justify-between border-b border-[#EFE9DF] pb-4 mb-5">
@@ -372,7 +459,7 @@ function DiaryBookView({
                 )}
               </div>
               <p className="text-xs text-[#9B8BAD] mt-0.5">
-                Page {currentIndex + 1} of {entries.length}
+                Page {safeIndex + 1} of {entries.length}
               </p>
             </div>
 
@@ -395,10 +482,10 @@ function DiaryBookView({
             </div>
           </div>
 
-          {/* Photo Gallery / Polaroid Tape Style */}
+          {/* Photo Gallery / Polaroid Style */}
           {currentPhotos.length > 0 && (
             <div className="mb-5 flex gap-3 overflow-x-auto pb-2 pt-1 scrollbar-thin">
-              {currentPhotos.map((photo, i) => (
+              {currentPhotos.map((photo) => (
                 <div
                   key={photo.id}
                   className="shrink-0 bg-white p-2 pb-3 rounded-2xl shadow-md border border-[#E8E2D8] transform rotate-[-0.5deg] hover:rotate-0 transition-transform"
@@ -427,10 +514,10 @@ function DiaryBookView({
             </div>
           )}
 
-          {/* Diary Entry Content */}
+          {/* Diary Entry Content (With Handwriting Font) */}
           <div
-            className="text-[#4A3E56] text-[15px] leading-relaxed whitespace-pre-wrap min-h-[160px]"
-            style={{ fontFamily: "'Quicksand', sans-serif", lineHeight: "1.85" }}
+            className="text-[#3F324D] text-[1.4rem] leading-relaxed whitespace-pre-wrap min-h-[160px]"
+            style={{ fontFamily: "'Caveat', cursive, sans-serif", lineHeight: "1.95" }}
           >
             {currentEntry.content}
           </div>
@@ -439,10 +526,10 @@ function DiaryBookView({
         {/* Page Flip Navigation Bar */}
         <div className="bg-[#FAF6EF] border-t border-[#E8E2D8] px-6 py-3.5 flex items-center justify-between">
           <button
-            onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 1))}
-            disabled={currentIndex === 0}
+            onClick={() => onIndexChange(Math.max(0, safeIndex - 1))}
+            disabled={safeIndex === 0}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-              currentIndex === 0
+              safeIndex === 0
                 ? "opacity-30 cursor-not-allowed text-gray-400"
                 : "bg-white text-[#5B4B6D] hover:bg-[#F3EDE3] shadow-xs"
             }`}
@@ -450,16 +537,23 @@ function DiaryBookView({
             <ChevronLeft size={16} /> Previous Page
           </button>
 
-          {/* Quick jump dots or counter */}
-          <div className="text-xs font-bold text-[#8A7B9D]">
-            {currentIndex + 1} / {entries.length}
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-bold text-[#8A7B9D]">
+              {safeIndex + 1} / {entries.length}
+            </span>
+            <button
+              onClick={onWriteNew}
+              className="px-3 py-1 rounded-xl bg-white text-[#5B4B6D] hover:bg-purple-100/60 text-xs font-bold shadow-2xs flex items-center gap-1"
+            >
+              <Plus size={13} /> Write New
+            </button>
           </div>
 
           <button
-            onClick={() => setCurrentIndex((prev) => Math.min(entries.length - 1, prev + 1))}
-            disabled={currentIndex === entries.length - 1}
+            onClick={() => onIndexChange(Math.min(entries.length - 1, safeIndex + 1))}
+            disabled={safeIndex === entries.length - 1}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-              currentIndex === entries.length - 1
+              safeIndex === entries.length - 1
                 ? "opacity-30 cursor-not-allowed text-gray-400"
                 : "bg-white text-[#5B4B6D] hover:bg-[#F3EDE3] shadow-xs"
             }`}
@@ -508,7 +602,6 @@ function PhotoCollageCell({ photos }: { photos: JournalPhoto[] }) {
     );
   }
 
-  // 4 or more photos
   return (
     <div className="absolute inset-0 grid grid-cols-2 grid-rows-2 gap-0.5 rounded-2xl overflow-hidden">
       <img src={photos[0].image_url} alt="" className="w-full h-full object-cover" />
@@ -595,16 +688,13 @@ function MemoryWallCalendar({
                   : "bg-white/60 hover:bg-white"
               }`}
             >
-              {/* Photo Background or Collage */}
               {hasPhotos && (
                 <>
                   <PhotoCollageCell photos={photos} />
-                  {/* Subtle top & bottom dark gradients for text readability */}
                   <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/60 pointer-events-none rounded-2xl" />
                 </>
               )}
 
-              {/* Day Number */}
               <div className="relative z-10 flex items-center justify-between w-full">
                 <span
                   className={`text-xs font-bold ${
@@ -618,7 +708,6 @@ function MemoryWallCalendar({
                 )}
               </div>
 
-              {/* Bottom Mood / Indicator */}
               <div className="relative z-10 flex items-center justify-between w-full">
                 {moodInfo && (
                   <span
@@ -755,7 +844,7 @@ function MemoriesAndLogView({
 
   return (
     <div className="space-y-6">
-      {/* ── Random Memory Area (Top) ── */}
+      {/* ── Random Memory Capsule (Top) ── */}
       <div className="bg-gradient-to-br from-purple-50 via-pink-50/50 to-amber-50/40 p-5 rounded-3xl border border-[#EADEF0] shadow-md">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -793,14 +882,17 @@ function MemoriesAndLogView({
               </div>
             )}
 
-            <p className="text-sm text-gray-800 line-clamp-3 whitespace-pre-wrap leading-relaxed">
+            <p
+              className="text-[#3F324D] text-lg leading-relaxed line-clamp-3 whitespace-pre-wrap"
+              style={{ fontFamily: "'Caveat', cursive, sans-serif", lineHeight: "1.7" }}
+            >
               {randomPick.content}
             </p>
 
             <div className="mt-3 flex justify-end">
               <button
                 onClick={() => onOpenEntry(randomPick)}
-                className="text-xs text-[#C9B6E4] hover:text-[#9B8BAD] font-bold flex items-center gap-1"
+                className="text-xs text-[#7C3AED] hover:underline font-bold flex items-center gap-1"
               >
                 Open in Diary 📖
               </button>
@@ -909,7 +1001,10 @@ function MemoriesAndLogView({
                     </div>
                   )}
 
-                  <p className="text-xs text-gray-700 line-clamp-2 leading-relaxed whitespace-pre-wrap">
+                  <p
+                    className="text-gray-700 text-base line-clamp-2 leading-relaxed whitespace-pre-wrap"
+                    style={{ fontFamily: "'Caveat', cursive, sans-serif" }}
+                  >
                     {entry.content}
                   </p>
                 </div>
@@ -935,8 +1030,11 @@ export default function JournalView({
   const [photosByEntry, setPhotosByEntry] = useState<Record<string, JournalPhoto[]>>({});
   const [loaded, setLoaded] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState<"diary" | "wall" | "log">("diary");
-  const [formOpen, setFormOpen] = useState(false);
+  
+  // Diary state: reading vs writing mode
+  const [diaryMode, setDiaryMode] = useState<"read" | "write">("read");
   const [editingEntry, setEditingEntry] = useState<Partial<JournalEntry> | null>(null);
+  const [currentReadIndex, setCurrentReadIndex] = useState(0);
 
   const fetchEntries = useCallback(async () => {
     const { data, error } = await supabase
@@ -1057,8 +1155,9 @@ export default function JournalView({
     }
 
     await fetchEntries();
-    setFormOpen(false);
+    setDiaryMode("read");
     setEditingEntry(null);
+    setCurrentReadIndex(0);
   };
 
   const deleteEntry = async (id: string) => {
@@ -1072,26 +1171,40 @@ export default function JournalView({
     });
   };
 
+  const openWriteMode = (initialData?: Partial<JournalEntry> | null) => {
+    setEditingEntry(initialData || null);
+    setDiaryMode("write");
+    setActiveSubTab("diary");
+  };
+
+  const openReadMode = (entry: JournalEntry) => {
+    const idx = entries.findIndex((e) => e.id === entry.id);
+    if (idx !== -1) {
+      setCurrentReadIndex(idx);
+    }
+    setDiaryMode("read");
+    setActiveSubTab("diary");
+  };
+
   if (!loaded) {
     return <div className="p-8 text-center opacity-60">Opening your journal... 🌸</div>;
   }
 
   return (
     <div style={{ fontFamily: "Quicksand, sans-serif" }}>
-      {/* On-This-Day Banner (bonus resurfacing) */}
+      {/* On-This-Day Banner (Bonus Resurfacing) */}
       <OnThisDayBanner
         userId={userId}
-        onSelectEntry={(entry) => {
-          setEditingEntry(entry);
-          setActiveSubTab("diary");
-        }}
+        onSelectEntry={(entry) => openReadMode(entry)}
       />
 
       {/* Top Journal Sub-Navigation */}
       <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
         <div className="flex gap-1.5 p-1 bg-white/60 rounded-2xl border border-black/5 shadow-xs">
           <button
-            onClick={() => setActiveSubTab("diary")}
+            onClick={() => {
+              setActiveSubTab("diary");
+            }}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
               activeSubTab === "diary"
                 ? "bg-white text-[#5B4B6D] shadow-sm"
@@ -1123,26 +1236,37 @@ export default function JournalView({
         </div>
 
         <button
-          onClick={() => {
-            setEditingEntry(null);
-            setFormOpen(true);
-          }}
+          onClick={() => openWriteMode(null)}
           className="px-4 py-2 rounded-2xl text-xs font-bold text-white shadow-sm flex items-center gap-1.5 hover:opacity-95 transition-all"
           style={{ background: "#C9B6E4", fontFamily: "Fredoka, sans-serif" }}
         >
-          <Plus size={15} /> Write New Entry
+          <Plus size={15} /> Write in Diary ✍️
         </button>
       </div>
 
       {/* Sub-Views */}
       {activeSubTab === "diary" && (
-        <DiaryBookView
-          entries={entries}
-          photosByEntry={photosByEntry}
-          onWriteNew={() => { setEditingEntry(null); setFormOpen(true); }}
-          onEdit={(e) => { setEditingEntry(e); setFormOpen(true); }}
-          onDelete={deleteEntry}
-        />
+        diaryMode === "write" ? (
+          <DiaryWritePage
+            userId={userId}
+            initial={editingEntry}
+            onSave={saveEntry}
+            onCancel={() => {
+              setDiaryMode("read");
+              setEditingEntry(null);
+            }}
+          />
+        ) : (
+          <DiaryReadPage
+            entries={entries}
+            photosByEntry={photosByEntry}
+            currentIndex={currentReadIndex}
+            onIndexChange={setCurrentReadIndex}
+            onWriteNew={() => openWriteMode(null)}
+            onEdit={(entry) => openWriteMode(entry)}
+            onDelete={deleteEntry}
+          />
+        )
       )}
 
       {activeSubTab === "wall" && (
@@ -1151,11 +1275,9 @@ export default function JournalView({
           photosByEntry={photosByEntry}
           onOpenEntry={(entry, date) => {
             if (entry) {
-              setEditingEntry(entry);
-              setFormOpen(true);
+              openReadMode(entry);
             } else {
-              setEditingEntry({ entry_date: date, content: "", mood: null, is_pinned: false });
-              setFormOpen(true);
+              openWriteMode({ entry_date: date, content: "", mood: null, is_pinned: false });
             }
           }}
         />
@@ -1165,21 +1287,9 @@ export default function JournalView({
         <MemoriesAndLogView
           entries={entries}
           photosByEntry={photosByEntry}
-          onEdit={(e) => { setEditingEntry(e); setFormOpen(true); }}
+          onEdit={(entry) => openWriteMode(entry)}
           onDelete={deleteEntry}
-          onOpenEntry={(e) => {
-            setActiveSubTab("diary");
-          }}
-        />
-      )}
-
-      {/* Form Modal */}
-      {formOpen && (
-        <EntryFormModal
-          userId={userId}
-          initial={editingEntry}
-          onSave={saveEntry}
-          onClose={() => { setFormOpen(false); setEditingEntry(null); }}
+          onOpenEntry={(entry) => openReadMode(entry)}
         />
       )}
     </div>
