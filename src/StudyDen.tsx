@@ -13,8 +13,6 @@ import {
 import { supabase } from "./lib/supabase";
 import { SUPPORT_CONTACT } from "./lib/contact";
 import { SyllabusView } from "./SyllabusView";
-import academicsIcon from "./assets/icons/academics.png";
-import journalIcon from "./assets/icons/journal.png";
 
 // Code-split top-level modes with React.lazy
 const JournalView = lazy(() => import("./JournalView"));
@@ -68,6 +66,11 @@ interface UserProfile {
   reminder_mode: string;
   daily_digest_time: string;
   display_name: string | null;
+  preferences?: {
+    hidden_types?: string[];
+    hidden_subjects?: string[];
+    [key: string]: any;
+  };
 }
 
 /* ─────────────────────────── DB row types ───────────────────────────── */
@@ -268,14 +271,32 @@ function EmptyState({ emoji, text }: { emoji: string; text: string }) {
 
 /* ─────────────────────────── task countdown ─────────────────────────── */
 
-function TaskCountdown({ dueDate, status }: { dueDate: string; status: string }) {
-  const [timeLeft, setTimeLeft] = useState<{ d: string; h: string; m: string; s: string; overdue: boolean } | null>(null);
+/* ─────────────────────────── task countdown ─────────────────────────── */
+
+function TaskCountdown({
+  dueDate,
+  status,
+  urgency,
+  overdue,
+}: {
+  dueDate: string;
+  status: string;
+  urgency: "red" | "yellow" | "green" | null;
+  overdue: boolean;
+}) {
+  const [timeLeft, setTimeLeft] = useState<{
+    d: string;
+    h: string;
+    m: string;
+    s: string;
+    totalHours: number;
+    overdue: boolean;
+  } | null>(null);
 
   useEffect(() => {
     if (status === "completed") return;
 
     const calc = () => {
-      // Treat deadline as 23:59:59 local time on due_date
       const clean = dueDate.split("T")[0];
       const parts = clean.split("-").map(Number);
       if (parts.length < 3 || isNaN(parts[0])) return;
@@ -284,7 +305,7 @@ function TaskCountdown({ dueDate, status }: { dueDate: string; status: string })
       const diff = target - now;
 
       if (diff <= 0) {
-        setTimeLeft({ d: "00", h: "00", m: "00", s: "00", overdue: true });
+        setTimeLeft({ d: "00", h: "00", m: "00", s: "00", totalHours: 0, overdue: true });
         return;
       }
 
@@ -298,6 +319,7 @@ function TaskCountdown({ dueDate, status }: { dueDate: string; status: string })
         h: String(h).padStart(2, "0"),
         m: String(m).padStart(2, "0"),
         s: String(s).padStart(2, "0"),
+        totalHours: diff / (1000 * 60 * 60),
         overdue: false,
       });
     };
@@ -309,40 +331,93 @@ function TaskCountdown({ dueDate, status }: { dueDate: string; status: string })
 
   if (status === "completed" || !timeLeft) return null;
 
+  const isUrgent = timeLeft.overdue || timeLeft.totalHours < 24;
+  const isModerate = !isUrgent && timeLeft.totalHours < 72;
+
+  // Dynamic visual styling & color shifting
+  const badgeStyle = timeLeft.overdue
+    ? "bg-rose-50/90 border-rose-300 text-rose-800 shadow-[0_2px_10px_rgba(244,63,94,0.18)]"
+    : isUrgent
+    ? "bg-amber-50/90 border-amber-300 text-amber-900 shadow-[0_2px_10px_rgba(245,158,11,0.15)] animate-pulse"
+    : isModerate
+    ? "bg-purple-50/90 border-purple-200 text-purple-900 shadow-2xs"
+    : "bg-emerald-50/80 border-emerald-200 text-emerald-900 shadow-2xs";
+
   return (
     <div
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-mono font-bold tracking-wider transition-colors ${
-        timeLeft.overdue
-          ? "bg-red-50 text-red-700 border border-red-200"
-          : "bg-purple-50/90 text-purple-900 border border-purple-200/80 shadow-2xs"
-      }`}
-      title={timeLeft.overdue ? "Task is overdue" : "Live deadline countdown (DD : HH : MM : SS)"}
+      className={`flex items-center gap-2 px-3 py-1.5 rounded-2xl border transition-all ${badgeStyle}`}
+      title={timeLeft.overdue ? "Task is overdue" : "Time remaining to deadline (23:59 local)"}
     >
-      <Clock size={11} className={timeLeft.overdue ? "text-red-500" : "text-purple-600 animate-pulse"} />
-      <span>{timeLeft.d} : {timeLeft.h} : {timeLeft.m} : {timeLeft.s}</span>
-      {timeLeft.overdue && <span className="text-[9px] uppercase font-sans font-extrabold text-red-600 ml-0.5">Overdue</span>}
+      <div className="relative flex items-center justify-center">
+        <Clock size={15} className={`shrink-0 ${isUrgent ? "text-rose-500 animate-spin-slow" : "text-purple-600"}`} />
+        {isUrgent && (
+          <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+        )}
+      </div>
+
+      <div className="flex items-center gap-1 font-mono text-xs font-bold tracking-tight">
+        <div className="flex flex-col items-center">
+          <span className="leading-none text-[13px]">{timeLeft.d}</span>
+          <span className="text-[8px] font-sans font-semibold opacity-60 uppercase">days</span>
+        </div>
+        <span className="opacity-40 -mt-1.5">:</span>
+        <div className="flex flex-col items-center">
+          <span className="leading-none text-[13px]">{timeLeft.h}</span>
+          <span className="text-[8px] font-sans font-semibold opacity-60 uppercase">hrs</span>
+        </div>
+        <span className="opacity-40 -mt-1.5">:</span>
+        <div className="flex flex-col items-center">
+          <span className="leading-none text-[13px]">{timeLeft.m}</span>
+          <span className="text-[8px] font-sans font-semibold opacity-60 uppercase">min</span>
+        </div>
+        <span className="opacity-40 -mt-1.5">:</span>
+        <div className="flex flex-col items-center">
+          <span className="leading-none text-[13px]">{timeLeft.s}</span>
+          <span className="text-[8px] font-sans font-semibold opacity-60 uppercase">sec</span>
+        </div>
+      </div>
+
+      {timeLeft.overdue ? (
+        <span className="ml-1 px-1.5 py-0.5 rounded-md bg-rose-600 text-white text-[9px] font-extrabold uppercase tracking-wide">
+          Overdue
+        </span>
+      ) : isUrgent ? (
+        <span className="ml-1 px-1.5 py-0.5 rounded-md bg-amber-500 text-white text-[9px] font-extrabold uppercase tracking-wide">
+          Soon
+        </span>
+      ) : null}
     </div>
   );
 }
 
 /* ─────────────────────────── task card ─────────────────────────────── */
 
-function TaskCard({ task, subject, onToggle, onEdit, onDelete }: {
-  task: FrontendTask; subject: Subject | undefined;
-  onToggle: (id: string) => void; onEdit: (t: FrontendTask) => void; onDelete: (id: string) => void;
+function TaskCard({
+  task,
+  subject,
+  onToggle,
+  onEdit,
+  onDelete,
+}: {
+  task: FrontendTask;
+  subject: Subject | undefined;
+  onToggle: (id: string) => void;
+  onEdit: (t: FrontendTask) => void;
+  onDelete: (id: string) => void;
 }) {
   const urgency = task.status === "completed" ? null : urgencyOf(task.dueDate);
-  const overdue = task.status !== "completed" && daysBetween(task.dueDate, todayStr()) < 0;
+  const overdue = task.status !== "completed" && isTaskOverdue(task.dueDate);
   const color = task.customColor || subject?.color || "#C9B6E4";
   const doneTopics = task.topics.filter((t) => t.done).length;
   const totalTopics = task.topics.length;
 
   return (
     <div
-      className="rounded-2xl p-3.5 mb-2.5 border transition-shadow hover:shadow-md"
-      style={{ borderColor: color + "55", background: task.status === "completed" ? "#F7F5F2" : "#FFFFFFCC" }}
+      className="rounded-2xl p-3.5 mb-2.5 border transition-all hover:shadow-md bg-white/85 backdrop-blur-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3"
+      style={{ borderColor: color + "44" }}
     >
-      <div className="flex items-start gap-2.5">
+      {/* Left: Checkbox + Title + Subject + Work Type + Sub-info */}
+      <div className="flex items-start gap-3 flex-1 min-w-0">
         <button
           onClick={() => onToggle(task.id)}
           className="mt-0.5 w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors"
@@ -350,28 +425,63 @@ function TaskCard({ task, subject, onToggle, onEdit, onDelete }: {
         >
           {task.status === "completed" && <Check size={12} color="white" strokeWidth={3} />}
         </button>
+
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-base">{task.customIcon || TYPE_ICON[task.type] || "📝"}</span>
-            <span className={`font-semibold text-sm ${task.status === "completed" ? "line-through opacity-50" : ""}`} style={{ fontFamily: "Quicksand, sans-serif" }}>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-base shrink-0">{task.customIcon || TYPE_ICON[task.type] || "📝"}</span>
+            <span
+              className={`font-bold text-sm text-gray-900 ${task.status === "completed" ? "line-through opacity-50" : ""}`}
+              style={{ fontFamily: "Quicksand, sans-serif" }}
+            >
               {task.title}
             </span>
-            <span className="text-[11px] px-2 py-0.5 rounded-full" style={{ background: color + "33", color: "#5B4B6D" }}>
+
+            {/* Subject Badge */}
+            <span
+              className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full"
+              style={{ background: color + "28", color: "#4A3B59", border: `1px solid ${color}55` }}
+            >
               {subject?.name || "No subject"}
             </span>
+
+            {/* Work Type Badge */}
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-gray-100/90 text-gray-700 border border-gray-200 uppercase tracking-wider">
+              {task.type || "Assignment"}
+            </span>
+
             {urgency && <UrgencyDot level={overdue ? "red" : urgency} />}
-            <TaskCountdown dueDate={task.dueDate} status={task.status} />
           </div>
-          <div className="text-xs mt-1 opacity-70">
-            {task.status === "completed" ? `Done · was due ${niceDate(task.dueDate)}`
-              : overdue ? `Overdue since ${niceDate(task.dueDate)}`
+
+          <div className="text-xs mt-1 text-gray-500 font-medium">
+            {task.status === "completed"
+              ? `Completed · due was ${niceDate(task.dueDate)}`
+              : overdue
+              ? `Overdue since ${niceDate(task.dueDate)}`
               : `Due ${niceDate(task.dueDate)} · ${daysBetween(task.dueDate, todayStr())}d left`}
             {totalTopics > 0 && ` · ${doneTopics}/${totalTopics} topics`}
           </div>
         </div>
-        <div className="flex gap-1 shrink-0">
-          <button onClick={() => onEdit(task)} className="p-1.5 rounded-lg hover:bg-black/5"><Pencil size={14} /></button>
-          <button onClick={() => onDelete(task.id)} className="p-1.5 rounded-lg hover:bg-black/5"><Trash2 size={14} /></button>
+      </div>
+
+      {/* Center / Right Section: Prominent Timer Widget + Action Buttons */}
+      <div className="flex items-center gap-3 shrink-0 self-end md:self-center w-full md:w-auto justify-between md:justify-end">
+        <TaskCountdown dueDate={task.dueDate} status={task.status} urgency={urgency} overdue={overdue} />
+
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            onClick={() => onEdit(task)}
+            className="p-1.5 rounded-xl hover:bg-black/5 text-gray-400 hover:text-gray-700 transition-colors"
+            title="Edit task"
+          >
+            <Pencil size={15} />
+          </button>
+          <button
+            onClick={() => onDelete(task.id)}
+            className="p-1.5 rounded-xl hover:bg-rose-50 text-gray-400 hover:text-rose-600 transition-colors"
+            title="Delete task"
+          >
+            <Trash2 size={15} />
+          </button>
         </div>
       </div>
     </div>
@@ -380,10 +490,20 @@ function TaskCard({ task, subject, onToggle, onEdit, onDelete }: {
 
 /* ─────────────────────────── task form ─────────────────────────────── */
 
-function TaskForm({ initial, subjects, typeSuggestions, onSave, onClose }: {
-  initial: Partial<FrontendTask> | null; subjects: Subject[];
+function TaskForm({
+  initial,
+  subjects,
+  typeSuggestions,
+  onSave,
+  onClose,
+  onHideTypeSuggestion,
+}: {
+  initial: Partial<FrontendTask> | null;
+  subjects: Subject[];
   typeSuggestions: string[];
-  onSave: (t: FrontendTask) => void; onClose: () => void;
+  onSave: (t: FrontendTask) => void;
+  onClose: () => void;
+  onHideTypeSuggestion: (t: string) => void;
 }) {
   const [subjectId, setSubjectId] = useState(initial?.subjectId || subjects[0]?.id || "");
   const [title, setTitle] = useState(initial?.title || "");
@@ -404,20 +524,35 @@ function TaskForm({ initial, subjects, typeSuggestions, onSave, onClose }: {
     if (!title.trim() || !subjectId) return;
     const resolvedType = type.trim() || "Assignment";
     onSave({
-      id: initial?.id || crypto.randomUUID(), subjectId, title: title.trim(), type: resolvedType, dueDate,
-      status: initial?.status || "pending", completedAt: initial?.completedAt || null,
-      customColor: customColor || null, customIcon: customIcon || null,
+      id: initial?.id || crypto.randomUUID(),
+      subjectId,
+      title: title.trim(),
+      type: resolvedType,
+      dueDate,
+      status: initial?.status || "pending",
+      completedAt: initial?.completedAt || null,
+      customColor: customColor || null,
+      customIcon: customIcon || null,
       topics: resolvedType.toLowerCase() === "exam" ? topics : [],
       createdAt: initial?.createdAt || new Date().toISOString(),
-      rescheduledFrom: initial?.dueDate && initial.dueDate !== dueDate ? (initial.rescheduledFrom || initial.dueDate) : (initial?.rescheduledFrom || null),
+      rescheduledFrom:
+        initial?.dueDate && initial.dueDate !== dueDate
+          ? initial.rescheduledFrom || initial.dueDate
+          : initial?.rescheduledFrom || null,
     });
   };
 
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="bg-white rounded-3xl p-5 w-full max-w-md max-h-[85vh] overflow-y-auto shadow-xl" onClick={(e) => e.stopPropagation()} style={{ fontFamily: "Quicksand, sans-serif" }}>
+      <div
+        className="bg-white rounded-3xl p-5 w-full max-w-md max-h-[85vh] overflow-y-auto shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+        style={{ fontFamily: "Quicksand, sans-serif" }}
+      >
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>{initial?.id ? "Edit task" : "Add a task"}</h3>
+          <h3 className="text-lg font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>
+            {initial?.id ? "Edit task" : "Add a task"}
+          </h3>
           <button onClick={onClose}><X size={20} /></button>
         </div>
         {subjects.length === 0 ? (
@@ -447,24 +582,41 @@ function TaskForm({ initial, subjects, typeSuggestions, onSave, onClose }: {
                 {typeSuggestions.map((s) => <option key={s} value={s} />)}
               </datalist>
 
-              {/* Suggestions chips from previously entered & standard task types */}
+              {/* Suggestions chips from previously entered & standard task types with remove/hide affordance */}
               {typeSuggestions.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mt-2">
-                  {typeSuggestions.slice(0, 8).map((s) => {
+                  {typeSuggestions.map((s) => {
                     const isSelected = type.toLowerCase() === s.toLowerCase();
                     return (
-                      <button
+                      <div
                         key={s}
-                        type="button"
-                        onClick={() => setType(s)}
-                        className={`text-[11px] px-2.5 py-1 rounded-lg border transition-all ${
+                        className={`inline-flex items-center rounded-lg border text-[11px] overflow-hidden transition-all ${
                           isSelected
-                            ? "bg-purple-100 border-purple-300 text-purple-900 font-bold shadow-xs"
-                            : "bg-gray-50/80 border-gray-200 hover:bg-purple-50 hover:border-purple-200 text-gray-700 font-medium"
+                            ? "bg-purple-100 border-purple-300 text-purple-900 shadow-xs"
+                            : "bg-gray-50/90 border-gray-200 text-gray-700 hover:border-purple-200"
                         }`}
                       >
-                        {s}
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => setType(s)}
+                          className={`px-2.5 py-1 text-left font-semibold transition-colors ${
+                            isSelected ? "text-purple-900" : "hover:bg-purple-50 text-gray-700"
+                          }`}
+                        >
+                          {s}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onHideTypeSuggestion(s);
+                          }}
+                          className="px-1.5 py-1 text-gray-400 hover:text-rose-600 hover:bg-rose-50 border-l border-gray-200/80 transition-colors"
+                          title={`Hide "${s}" from suggestions`}
+                        >
+                          <X size={10} strokeWidth={2.5} />
+                        </button>
+                      </div>
                     );
                   })}
                 </div>
@@ -1167,7 +1319,11 @@ export default function StudyDen({ session }: { session: Session }) {
   }, [userId]);
 
   const fetchProfile = useCallback(async () => {
-    const { data, error } = await supabase.from("profiles").select("id, timezone, reminder_mode, daily_digest_time, display_name").eq("id", userId).single();
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, timezone, reminder_mode, daily_digest_time, display_name, preferences")
+      .eq("id", userId)
+      .single();
     if (error) { console.error("fetchProfile:", error.message); return; }
     setProfile(data as UserProfile);
   }, [userId]);
@@ -1175,12 +1331,47 @@ export default function StudyDen({ session }: { session: Session }) {
   /* ── derived ── */
   const subjById = useMemo(() => Object.fromEntries(subjects.map((s) => [s.id, s])), [subjects]);
 
-  // Distinct type values the user has previously entered + common defaults — used for datalist & suggestions
+  // Distinct type values previously entered + defaults — deduplicated and filtered by user hidden preferences
   const typeSuggestions = useMemo(() => {
     const defaults = ["Assignment", "Exam", "CT", "Quiz", "Project", "Lab", "Homework", "Activity", "Presentation"];
     const userEntered = tasks.map((t) => t.type).filter(Boolean);
-    return [...new Set([...userEntered, ...defaults])].filter(Boolean);
-  }, [tasks]);
+    const combined = [...userEntered, ...defaults];
+
+    const seen = new Set<string>();
+    const unique: string[] = [];
+    combined.forEach((item) => {
+      const trimmed = item.trim();
+      if (!trimmed) return;
+      const lower = trimmed.toLowerCase();
+      if (!seen.has(lower)) {
+        seen.add(lower);
+        unique.push(trimmed);
+      }
+    });
+
+    const hidden = new Set((profile?.preferences?.hidden_types || []).map((h) => h.toLowerCase()));
+    return unique.filter((t) => !hidden.has(t.toLowerCase()));
+  }, [tasks, profile?.preferences?.hidden_types]);
+
+  // Hide a type from suggestions without deleting any task history
+  const hideTypeSuggestion = async (t: string) => {
+    const trimmed = t.trim();
+    if (!trimmed) return;
+    const existing = profile?.preferences?.hidden_types || [];
+    if (existing.some((h) => h.toLowerCase() === trimmed.toLowerCase())) return;
+
+    const nextHidden = [...existing, trimmed];
+    const nextPref = { ...(profile?.preferences || {}), hidden_types: nextHidden };
+
+    // Optimistic UI update
+    setProfile((prev) => (prev ? { ...prev, preferences: nextPref } : null));
+
+    try {
+      await supabase.from("profiles").update({ preferences: nextPref }).eq("id", userId);
+    } catch (err) {
+      console.error("Failed to update hidden types:", err);
+    }
+  };
 
   // Overdue tasks: deadline passed, still not completed — shown as in-app prompt on dashboard
   const overdueForPrompt = useMemo(() =>
@@ -1715,6 +1906,7 @@ export default function StudyDen({ session }: { session: Session }) {
           typeSuggestions={typeSuggestions}
           onSave={saveTask}
           onClose={() => { setFormOpen(false); setEditingTask(null); }}
+          onHideTypeSuggestion={hideTypeSuggestion}
         />
       )}
     </div>
