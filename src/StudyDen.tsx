@@ -239,6 +239,24 @@ function UrgencyDot({ level }: { level: keyof typeof URGENCY }) {
   return <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ background: URGENCY[level] }} />;
 }
 
+function BlueRibbonIcon({ size = 26 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
+      {/* Ribbon tails */}
+      <path d="M12 18L7 28L13 26L16 20" fill="#60A5FA" stroke="#3B82F6" strokeWidth="1.2" strokeLinejoin="round" />
+      <path d="M20 18L25 28L19 26L16 20" fill="#60A5FA" stroke="#3B82F6" strokeWidth="1.2" strokeLinejoin="round" />
+      {/* Left Bow Loop */}
+      <path d="M16 14C11 14 5 19 6 12C7 6 14 12 16 14Z" fill="#93C5FD" stroke="#3B82F6" strokeWidth="1.4" strokeLinejoin="round" />
+      <path d="M10 11C11 9 13 12 15 13" stroke="#60A5FA" strokeWidth="1" strokeLinecap="round" />
+      {/* Right Bow Loop */}
+      <path d="M16 14C21 14 27 19 26 12C25 6 18 12 16 14Z" fill="#93C5FD" stroke="#3B82F6" strokeWidth="1.4" strokeLinejoin="round" />
+      <path d="M22 11C21 9 19 12 17 13" stroke="#60A5FA" strokeWidth="1" strokeLinecap="round" />
+      {/* Knot */}
+      <ellipse cx="16" cy="14" rx="3" ry="3.5" fill="#3B82F6" stroke="#2563EB" strokeWidth="1.2" />
+    </svg>
+  );
+}
+
 function EmptyState({ emoji, text }: { emoji: string; text: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-10 text-center opacity-70">
@@ -853,11 +871,22 @@ function SettingsView({ profile, onSave, onSignOut }: {
 
 /* ─────────────────────────── calendar view ─────────────────────────── */
 
-function CalendarView({ tasks, subjects, routineEntries, onQuickAdd }: {
+function CalendarView({
+  tasks,
+  subjects,
+  routineEntries,
+  onQuickAdd,
+  onToggle,
+  onDelete,
+  onEdit,
+}: {
   tasks: FrontendTask[];
   subjects: Subject[];
   routineEntries: RoutineEntry[];
   onQuickAdd: (date: string) => void;
+  onToggle: (id: string) => void;
+  onDelete: (id: string) => void;
+  onEdit: (t: FrontendTask) => void;
 }) {
   const [cursor, setCursor] = useState(new Date());
   const [selected, setSelected] = useState<string | null>(null);
@@ -868,7 +897,12 @@ function CalendarView({ tasks, subjects, routineEntries, onQuickAdd }: {
 
   const tasksByDate = useMemo(() => {
     const map: Record<string, FrontendTask[]> = {};
-    tasks.forEach((t) => { (map[t.dueDate] = map[t.dueDate] || []).push(t); });
+    tasks.forEach((t) => {
+      const clean = (t.dueDate || "").split("T")[0];
+      if (clean) {
+        (map[clean] = map[clean] || []).push(t);
+      }
+    });
     return map;
   }, [tasks]);
 
@@ -963,16 +997,37 @@ function CalendarView({ tasks, subjects, routineEntries, onQuickAdd }: {
             <button onClick={() => setSelected(null)}><X size={16} /></button>
           </div>
 
-          {/* Tasks due this day */}
+          {/* Tasks due this day with in-place toggle and delete */}
           <div className="mb-3">
             <h5 className="text-xs font-bold opacity-60 uppercase tracking-wide mb-1.5">📝 Tasks due</h5>
             {selectedTasks.length === 0
               ? <p className="text-sm opacity-50">Nothing due this day 🌿</p>
               : selectedTasks.map((t) => (
-                  <div key={t.id} className="text-sm flex items-center gap-1.5 mb-1">
-                    <span>{TYPE_ICON[t.type] || "📝"}</span>
-                    <span className={t.status === "completed" ? "line-through opacity-50" : ""}>{t.title}</span>
-                    <span className="opacity-50">— {subjById[t.subjectId]?.name}</span>
+                  <div key={t.id} className="text-sm flex items-center justify-between gap-2 mb-1.5 p-1.5 rounded-xl hover:bg-black/5 transition-colors">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <button
+                        onClick={() => onToggle(t.id)}
+                        className={`w-4 h-4 rounded-md border flex items-center justify-center transition-colors shrink-0 ${
+                          t.status === "completed" ? "bg-emerald-500 border-emerald-500 text-white" : "border-gray-300 hover:border-gray-400"
+                        }`}
+                        title={t.status === "completed" ? "Mark incomplete" : "Mark completed"}
+                      >
+                        {t.status === "completed" && <Check size={10} />}
+                      </button>
+                      <span className="shrink-0">{TYPE_ICON[t.type] || "📝"}</span>
+                      <span className={`truncate font-medium ${t.status === "completed" ? "line-through opacity-50 text-gray-500" : "text-gray-800"}`}>
+                        {t.title}
+                      </span>
+                      <span className="opacity-50 text-xs shrink-0">— {subjById[t.subjectId]?.name}</span>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button onClick={() => onEdit(t)} className="p-1 rounded-md hover:bg-black/10 text-gray-400 hover:text-gray-700" title="Edit task">
+                        <Pencil size={12} />
+                      </button>
+                      <button onClick={() => onDelete(t.id)} className="p-1 rounded-md hover:bg-rose-50 text-gray-400 hover:text-rose-600" title="Delete task">
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
                   </div>
                 ))}
           </div>
@@ -1291,8 +1346,8 @@ export default function StudyDen({ session }: { session: Session }) {
             {/* 6 Modes Navigation List */}
             <nav className="p-2 rounded-3xl bg-white/60 backdrop-blur-md border border-white/60 shadow-sm flex md:flex-col gap-1.5 overflow-x-auto">
               {[
-                { id: "academics" as const, label: "Academics", iconImg: academicsIcon },
-                { id: "journal" as const, label: "Journal", iconImg: journalIcon },
+                { id: "academics" as const, label: "Academics", customIcon: BlueRibbonIcon },
+                { id: "journal" as const, label: "Journal", emoji: "🍒" },
                 { id: "french" as const, label: "Le Coin Français", emoji: "🥐" },
                 { id: "entertainment" as const, label: "Entertainment", emoji: "🎬" },
                 { id: "games" as const, label: "Games", emoji: "🎮" },
@@ -1310,8 +1365,10 @@ export default function StudyDen({ session }: { session: Session }) {
                     }`}
                     style={{ fontFamily: "Fredoka, sans-serif" }}
                   >
-                    {"iconImg" in m && m.iconImg ? (
-                      <img src={m.iconImg} alt={m.label} className="w-8 h-8 object-contain shrink-0" />
+                    {"customIcon" in m && m.customIcon ? (
+                      <div className="w-8 h-8 flex items-center justify-center shrink-0">
+                        <m.customIcon size={26} />
+                      </div>
                     ) : "emoji" in m && m.emoji ? (
                       <span className="w-8 h-8 flex items-center justify-center text-2xl shrink-0 leading-none">{m.emoji}</span>
                     ) : "icon" in m && m.icon ? (
@@ -1485,6 +1542,9 @@ export default function StudyDen({ session }: { session: Session }) {
                       subjects={subjects}
                       routineEntries={routineEntries}
                       onQuickAdd={(date) => { setEditingTask({ dueDate: date }); setFormOpen(true); }}
+                      onToggle={toggleTask}
+                      onDelete={deleteTask}
+                      onEdit={(t) => { setEditingTask(t); setFormOpen(true); }}
                     />
                   </Sticker>
                 </div>
