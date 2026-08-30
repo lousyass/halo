@@ -258,7 +258,10 @@ function TaskCountdown({ dueDate, status }: { dueDate: string; status: string })
 
     const calc = () => {
       // Treat deadline as 23:59:59 local time on due_date
-      const target = new Date(`${dueDate}T23:59:59`).getTime();
+      const clean = dueDate.split("T")[0];
+      const parts = clean.split("-").map(Number);
+      if (parts.length < 3 || isNaN(parts[0])) return;
+      const target = new Date(parts[0], parts[1] - 1, parts[2], 23, 59, 59, 999).getTime();
       const now = Date.now();
       const diff = target - now;
 

@@ -279,6 +279,19 @@ export const FrenchView: React.FC<{ userId: string }> = ({ userId }) => {
     }
   };
 
+  // Sync state mutations directly with in-memory cache
+  useEffect(() => {
+    frenchCache = {
+      userId,
+      cards,
+      units,
+      notes,
+      resources,
+      wordsShown,
+      dailyBatch: dailyBatch.length > 0 ? dailyBatch : undefined,
+    };
+  }, [userId, cards, units, notes, resources, wordsShown, dailyBatch]);
+
   // Generate 6 fresh daily words from frequency list not yet shown
   const generateDailyBatch = (shown: Set<string>, currentBatch?: FrequencyWord[]) => {
     const currentSet = new Set(currentBatch?.map((w) => w.french.toLowerCase()) || []);

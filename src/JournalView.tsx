@@ -1085,6 +1085,13 @@ function MemoriesAndLogView({
 
 /* ─────────────────────────── Main Journal View ─────────────────────────── */
 
+interface JournalDataCache {
+  userId: string;
+  entries: JournalEntry[];
+  photosByEntry: Record<string, JournalPhoto[]>;
+}
+let journalCache: JournalDataCache | null = null;
+
 export default function JournalView({
   userId,
   session,
@@ -1092,15 +1099,26 @@ export default function JournalView({
   userId: string;
   session: { access_token: string };
 }) {
-  const [entries, setEntries] = useState<JournalEntry[]>([]);
-  const [photosByEntry, setPhotosByEntry] = useState<Record<string, JournalPhoto[]>>({});
-  const [loaded, setLoaded] = useState(false);
+  const [entries, setEntries] = useState<JournalEntry[]>(() =>
+    journalCache?.userId === userId ? journalCache.entries : []
+  );
+  const [photosByEntry, setPhotosByEntry] = useState<Record<string, JournalPhoto[]>>(() =>
+    journalCache?.userId === userId ? journalCache.photosByEntry : {}
+  );
+  const [loaded, setLoaded] = useState(() => !(journalCache && journalCache.userId === userId));
   const [activeSubTab, setActiveSubTab] = useState<"diary" | "wall" | "log">("diary");
   
   // Diary state: reading vs writing mode
   const [diaryMode, setDiaryMode] = useState<"read" | "write">("read");
   const [editingEntry, setEditingEntry] = useState<Partial<JournalEntry> | null>(null);
   const [currentReadIndex, setCurrentReadIndex] = useState(0);
+
+  // Sync state mutations directly with in-memory cache
+  useEffect(() => {
+    if (entries.length > 0 || Object.keys(photosByEntry).length > 0) {
+      journalCache = { userId, entries, photosByEntry };
+    }
+  }, [userId, entries, photosByEntry]);
 
   const fetchEntries = useCallback(async () => {
     const { data, error } = await supabase
@@ -1127,6 +1145,9 @@ export default function JournalView({
         (map[p.journal_entry_id] = map[p.journal_entry_id] || []).push(p);
       });
       setPhotosByEntry(map);
+      journalCache = { userId, entries: elist, photosByEntry: map };
+    } else {
+      journalCache = { userId, entries: [], photosByEntry: {} };
     }
   }, [userId]);
 

@@ -74,6 +74,11 @@ export function SyllabusView({
     }
   }, [userId]);
 
+  // Sync entries state mutations directly with in-memory cache
+  useEffect(() => {
+    syllabusCache = { userId, entries };
+  }, [userId, entries]);
+
   useEffect(() => {
     fetchSyllabus();
   }, [fetchSyllabus]);
