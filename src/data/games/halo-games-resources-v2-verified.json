@@ -1,0 +1,1086 @@
+{
+  "name": "Halo Games",
+  "version": "2.0.0",
+  "generatedAtUtc": "2026-08-30T20:51:56.839502+00:00",
+  "storage": {
+    "runtimeScraping": false,
+    "supabaseCatalog": false,
+    "supabaseStorage": false
+  },
+  "resourceCount": 57,
+  "resources": [
+    {
+      "id": "neon-games",
+      "name": "Neon Games",
+      "url": "https://www.neongames.com/",
+      "category": "Puzzle & Casual",
+      "subcategory": "Arcade / Casual",
+      "description": "Neon Games describes itself as a free online high-score games site, with weekly new games and categories including Mahjong, card, classic, brain & puzzle, match-3, bubble and action.",
+      "tags": [
+        "arcade",
+        "casual",
+        "games",
+        "neon",
+        "puzzle"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "verified-live-page",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "puzzle-games",
+      "name": "Puzzle Games",
+      "url": "https://www.puzzle-games.com/",
+      "category": "Puzzle",
+      "subcategory": "Puzzle Collections",
+      "description": "A browser collection focused on puzzle games.",
+      "tags": [
+        "collections",
+        "games",
+        "puzzle"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "verified-live-page",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "match3-games",
+      "name": "Match3 Games",
+      "url": "https://www.match3games.com/",
+      "category": "Puzzle",
+      "subcategory": "Match-3",
+      "description": "A browser collection focused on match-3 games.",
+      "tags": [
+        "3",
+        "games",
+        "match",
+        "match3",
+        "puzzle"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "verified-live-page",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "idle-games",
+      "name": "Idle Games",
+      "url": "https://www.idle-games.com/",
+      "category": "Casual",
+      "subcategory": "Idle / Incremental",
+      "description": "Low-input games built around incremental progress.",
+      "tags": [
+        "casual",
+        "games",
+        "idle",
+        "incremental"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "conservative-unverified",
+      "verificationNote": "Live page could not be reliably fetched in this review; description is intentionally conservative and should be manually checked before public launch.",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "mahjong-com",
+      "name": "Mahjong.com",
+      "url": "https://www.mahjong.com/",
+      "category": "Puzzle & Casual",
+      "subcategory": "Mahjong",
+      "description": "A dedicated online Mahjong game collection.",
+      "tags": [
+        "casual",
+        "mahjong",
+        "mahjong.com",
+        "puzzle"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "verified-live-page",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "classic-game",
+      "name": "Classic Games",
+      "url": "https://www.classicgame.com/",
+      "category": "Puzzle & Casual",
+      "subcategory": "Classic Games",
+      "description": "A browser collection of classic-style games.",
+      "tags": [
+        "casual",
+        "classic",
+        "games",
+        "puzzle"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "verified-live-page",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "mindgames",
+      "name": "MindGames",
+      "url": "https://www.mindgames.com/",
+      "category": "Brain & Puzzle",
+      "subcategory": "Mind Games",
+      "description": "A collection of online mind, brain-training and puzzle games.",
+      "tags": [
+        "brain",
+        "games",
+        "mind",
+        "mindgames",
+        "puzzle"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "verified-live-page",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "braingle",
+      "name": "Braingle",
+      "url": "https://www.braingle.com/",
+      "category": "Brain & Puzzle",
+      "subcategory": "Riddles & Brain Teasers",
+      "description": "Community-style brain teasers, riddles and logic puzzles.",
+      "tags": [
+        "brain",
+        "braingle",
+        "puzzle",
+        "riddles",
+        "teasers"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "conservative-unverified",
+      "verificationNote": "Live page could not be reliably fetched in this review; description is intentionally conservative and should be manually checked before public launch.",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "poki-brain",
+      "name": "Poki Brain",
+      "url": "https://poki.com/en/brain",
+      "category": "Brain & Puzzle",
+      "subcategory": "Brain Games",
+      "description": "Poki's Brain Games category for free online brain and problem-solving games.",
+      "tags": [
+        "brain",
+        "games",
+        "poki",
+        "puzzle"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "verified-live-page",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "games-for-the-brain",
+      "name": "Games for the Brain",
+      "url": "https://www.gamesforthebrain.com/",
+      "category": "Brain & Puzzle",
+      "subcategory": "Brain Games",
+      "description": "Quick browser brain games and cognitive puzzles.",
+      "tags": [
+        "brain",
+        "for",
+        "games",
+        "puzzle",
+        "the"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "conservative-unverified",
+      "verificationNote": "Live page could not be reliably fetched in this review; description is intentionally conservative and should be manually checked before public launch.",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "puzzler",
+      "name": "Puzzler Online",
+      "url": "https://www.puzzler.com/online-puzzles",
+      "category": "Word & Puzzle",
+      "subcategory": "Puzzles",
+      "description": "Puzzler's online-puzzle hub, with Teasers, Backwords, Codeword, Colour Sudoku, Kriss Kross, Sudoku, Wordsearch, Cryptic Crossword, Crossword, Pieceword and Pathfinder.",
+      "tags": [
+        "online",
+        "puzzle",
+        "puzzler",
+        "puzzles",
+        "word"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "verified-live-page",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "brainbashers",
+      "name": "BrainBashers",
+      "url": "https://www.brainbashers.com/puzzles.asp",
+      "category": "Brain & Puzzle",
+      "subcategory": "Puzzles",
+      "description": "Logic puzzles, teasers and brain challenges.",
+      "tags": [
+        "brain",
+        "brainbashers",
+        "puzzle",
+        "puzzles"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "conservative-unverified",
+      "verificationNote": "Live page could not be reliably fetched in this review; description is intentionally conservative and should be manually checked before public launch.",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "aarp-games",
+      "name": "AARP Games",
+      "url": "https://www.aarp.org/games/",
+      "category": "Casual",
+      "subcategory": "Casual & Puzzle",
+      "description": "AARP's online area for casual, puzzle, card and word games.",
+      "tags": [
+        "aarp",
+        "casual",
+        "games",
+        "puzzle"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "conservative-unverified",
+      "verificationNote": "Live page could not be reliably fetched in this review; description is intentionally conservative and should be manually checked before public launch.",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "safeharbor-games",
+      "name": "SafeHarborGames",
+      "url": "https://www.safeharborgames.net/",
+      "category": "Casual",
+      "subcategory": "Casual Games",
+      "description": "SafeHarborGames offers online games including Spades, Backgammon, Canasta, Cribbage, Domino, Euchre, Gin Rummy, Hearts, Pachisi, Pinochle and Yahtzee, plus related guides and community features.",
+      "tags": [
+        "casual",
+        "games",
+        "safeharborgames"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "verified-live-page",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "zoombies",
+      "name": "Zoombies",
+      "url": "https://zoombies.world/auth/?returnTo=https://zoombies.world/bonez/",
+      "category": "Action & Adventure",
+      "subcategory": "Zombie / Action",
+      "description": "A zombie-themed browser game destination.",
+      "tags": [
+        "action",
+        "adventure",
+        "zombie",
+        "zoombies"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "conservative-unverified",
+      "verificationNote": "Live page could not be reliably fetched in this review; description is intentionally conservative and should be manually checked before public launch.",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "nonograms-katana",
+      "name": "Nonograms Katana",
+      "url": "https://nonograms-katana.com/",
+      "category": "Brain & Puzzle",
+      "subcategory": "Nonograms",
+      "description": "A dedicated nonogram/picross puzzle site.",
+      "tags": [
+        "brain",
+        "katana",
+        "nonograms",
+        "puzzle"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "verified-live-page",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "the-word-search",
+      "name": "The Word Search",
+      "url": "https://thewordsearch.com/",
+      "category": "Word & Puzzle",
+      "subcategory": "Word Search",
+      "description": "Online word-search puzzles.",
+      "tags": [
+        "puzzle",
+        "search",
+        "the",
+        "word"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "verified-live-page",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "puzzles-mobile",
+      "name": "Puzzles Mobile",
+      "url": "https://www.puzzles-mobile.com/",
+      "category": "Puzzle & Casual",
+      "subcategory": "Mobile Puzzles",
+      "description": "A browser-friendly collection of mobile-style puzzle games.",
+      "tags": [
+        "casual",
+        "mobile",
+        "puzzle",
+        "puzzles"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "verified-live-page",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "circle9",
+      "name": "Circle9 Puzzle",
+      "url": "https://circle9puzzle.com/",
+      "category": "Brain & Puzzle",
+      "subcategory": "Logic",
+      "description": "A site centered on Circle 9-style logic puzzles.",
+      "tags": [
+        "brain",
+        "circle9",
+        "logic",
+        "puzzle"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "verified-live-page",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "daily-killer-sudoku",
+      "name": "Daily Killer Sudoku",
+      "url": "https://www.dailykillersudoku.com/",
+      "category": "Brain & Puzzle",
+      "subcategory": "Killer Sudoku",
+      "description": "Daily Killer Sudoku puzzles combining Sudoku with arithmetic cage constraints.",
+      "tags": [
+        "brain",
+        "daily",
+        "killer",
+        "puzzle",
+        "sudoku"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "verified-live-page",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "sudoku-coach",
+      "name": "Sudoku Coach",
+      "url": "https://sudoku.coach/",
+      "category": "Brain & Puzzle",
+      "subcategory": "Sudoku",
+      "description": "A Sudoku-focused site for solving, practice and tutorials.",
+      "tags": [
+        "brain",
+        "coach",
+        "puzzle",
+        "sudoku"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "verified-live-page",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "sven-puzzles",
+      "name": "Sven Puzzles",
+      "url": "https://svenpuzzles.com/",
+      "category": "Brain & Puzzle",
+      "subcategory": "Puzzles",
+      "description": "A puzzle-focused browser destination.",
+      "tags": [
+        "brain",
+        "puzzle",
+        "puzzles",
+        "sven"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "conservative-unverified",
+      "verificationNote": "Live page could not be reliably fetched in this review; description is intentionally conservative and should be manually checked before public launch.",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "nyt-crosswords",
+      "name": "NYT Crosswords",
+      "url": "https://www.nytimes.com/crosswords",
+      "category": "Word & Puzzle",
+      "subcategory": "Crosswords",
+      "description": "The New York Times crossword and word-puzzle hub.",
+      "tags": [
+        "crosswords",
+        "nyt",
+        "puzzle",
+        "word"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "conservative-unverified",
+      "verificationNote": "Live page could not be reliably fetched in this review; description is intentionally conservative and should be manually checked before public launch.",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "word-salad",
+      "name": "Word Salad",
+      "url": "https://wordsalad.online/",
+      "category": "Word & Puzzle",
+      "subcategory": "Word Games",
+      "description": "A casual word-game destination.",
+      "tags": [
+        "games",
+        "puzzle",
+        "salad",
+        "word"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "conservative-unverified",
+      "verificationNote": "Live page could not be reliably fetched in this review; description is intentionally conservative and should be manually checked before public launch.",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "puzzmo",
+      "name": "Puzzmo",
+      "url": "https://www.puzzmo.com/today/",
+      "category": "Word & Puzzle",
+      "subcategory": "Daily Games",
+      "description": "Puzzmo presents itself as a place for thoughtful daily puzzles and games.",
+      "tags": [
+        "daily",
+        "games",
+        "puzzle",
+        "puzzmo",
+        "word"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "verified-live-page",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "nodes-game",
+      "name": "Nodes Game",
+      "url": "https://www.nodes-game.com/",
+      "category": "Brain & Puzzle",
+      "subcategory": "Logic / Strategy",
+      "description": "A connection/logic puzzle game presented as a free browser alternative in the Nodes genre.",
+      "tags": [
+        "brain",
+        "game",
+        "logic",
+        "nodes",
+        "puzzle",
+        "strategy"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "verified-live-page",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "rockets-com",
+      "name": "Rockets.com",
+      "url": "https://gasgiant.itch.io/rockets-com",
+      "category": "Simulation & Strategy",
+      "subcategory": "Space",
+      "description": "An indie rocket/space-themed browser game.",
+      "tags": [
+        "rockets.com",
+        "simulation",
+        "space",
+        "strategy"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "conservative-unverified",
+      "verificationNote": "Live page could not be reliably fetched in this review; description is intentionally conservative and should be manually checked before public launch.",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "the-quizzler",
+      "name": "The Quizzler",
+      "url": "https://the-quizzler.com/",
+      "category": "Quiz & Trivia",
+      "subcategory": "Trivia",
+      "description": "A browser destination for quizzes and trivia.",
+      "tags": [
+        "quiz",
+        "quizzler",
+        "the",
+        "trivia"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "conservative-unverified",
+      "verificationNote": "Live page could not be reliably fetched in this review; description is intentionally conservative and should be manually checked before public launch.",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "poki",
+      "name": "Poki",
+      "url": "https://poki.com/",
+      "category": "General",
+      "subcategory": "Game Portal",
+      "description": "Large free browser-game portal covering many genres.",
+      "tags": [
+        "game",
+        "general",
+        "poki",
+        "portal"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "conservative-unverified",
+      "verificationNote": "Live page could not be reliably fetched in this review; description is intentionally conservative and should be manually checked before public launch.",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "poki-2-player",
+      "name": "Poki — 2 Player",
+      "url": "https://poki.com/?search=2+Player+Games",
+      "category": "Multiplayer",
+      "subcategory": "2 Player",
+      "description": "Poki search page for two-player games.",
+      "tags": [
+        "2",
+        "multiplayer",
+        "player",
+        "poki",
+        "—"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "conservative-unverified",
+      "verificationNote": "Live page could not be reliably fetched in this review; description is intentionally conservative and should be manually checked before public launch.",
+      "resourceType": "category-search-page"
+    },
+    {
+      "id": "poki-shooting",
+      "name": "Poki — Shooting",
+      "url": "https://poki.com/?search=Shooting+Games",
+      "category": "Action",
+      "subcategory": "Shooting",
+      "description": "Poki search page for shooting games.",
+      "tags": [
+        "action",
+        "poki",
+        "shooting",
+        "—"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "conservative-unverified",
+      "verificationNote": "Live page could not be reliably fetched in this review; description is intentionally conservative and should be manually checked before public launch.",
+      "resourceType": "category-search-page"
+    },
+    {
+      "id": "poki-skill",
+      "name": "Poki — Skill",
+      "url": "https://poki.com/?search=Skill+Games",
+      "category": "Arcade & Skill",
+      "subcategory": "Skill",
+      "description": "Poki search page for skill games.",
+      "tags": [
+        "arcade",
+        "poki",
+        "skill",
+        "—"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "conservative-unverified",
+      "verificationNote": "Live page could not be reliably fetched in this review; description is intentionally conservative and should be manually checked before public launch.",
+      "resourceType": "category-search-page"
+    },
+    {
+      "id": "poki-action",
+      "name": "Poki — Action",
+      "url": "https://poki.com/?search=Action+Games",
+      "category": "Action",
+      "subcategory": "Action",
+      "description": "Poki search page for action games.",
+      "tags": [
+        "action",
+        "poki",
+        "—"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "conservative-unverified",
+      "verificationNote": "Live page could not be reliably fetched in this review; description is intentionally conservative and should be manually checked before public launch.",
+      "resourceType": "category-search-page"
+    },
+    {
+      "id": "poki-dress-up",
+      "name": "Poki — Dress Up",
+      "url": "https://poki.com/?search=Dress+Up+Games",
+      "category": "Casual & Fashion",
+      "subcategory": "Dress Up",
+      "description": "Poki search page for dress-up games.",
+      "tags": [
+        "casual",
+        "dress",
+        "fashion",
+        "poki",
+        "up",
+        "—"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "conservative-unverified",
+      "verificationNote": "Live page could not be reliably fetched in this review; description is intentionally conservative and should be manually checked before public launch.",
+      "resourceType": "category-search-page"
+    },
+    {
+      "id": "poki-io",
+      "name": "Poki — .io",
+      "url": "https://poki.com/?search=.io+Games",
+      "category": "Multiplayer",
+      "subcategory": ".io Games",
+      "description": "Poki search page for .io games.",
+      "tags": [
+        ".io",
+        "games",
+        "multiplayer",
+        "poki",
+        "—"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "conservative-unverified",
+      "verificationNote": "Live page could not be reliably fetched in this review; description is intentionally conservative and should be manually checked before public launch.",
+      "resourceType": "category-search-page"
+    },
+    {
+      "id": "poki-adventure",
+      "name": "Poki — Adventure",
+      "url": "https://poki.com/?search=Adventure+Games",
+      "category": "Action & Adventure",
+      "subcategory": "Adventure",
+      "description": "Poki search page for adventure games.",
+      "tags": [
+        "action",
+        "adventure",
+        "poki",
+        "—"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "conservative-unverified",
+      "verificationNote": "Live page could not be reliably fetched in this review; description is intentionally conservative and should be manually checked before public launch.",
+      "resourceType": "category-search-page"
+    },
+    {
+      "id": "poki-multiplayer",
+      "name": "Poki — Multiplayer",
+      "url": "https://poki.com/?search=Multiplayer+Games",
+      "category": "Multiplayer",
+      "subcategory": "Multiplayer",
+      "description": "Poki search page for multiplayer games.",
+      "tags": [
+        "multiplayer",
+        "poki",
+        "—"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "conservative-unverified",
+      "verificationNote": "Live page could not be reliably fetched in this review; description is intentionally conservative and should be manually checked before public launch.",
+      "resourceType": "category-search-page"
+    },
+    {
+      "id": "rotaboxes",
+      "name": "RotaBoxes",
+      "url": "https://rotaboxes.com/",
+      "category": "Puzzle & Casual",
+      "subcategory": "Puzzle",
+      "description": "A browser puzzle-game destination.",
+      "tags": [
+        "casual",
+        "puzzle",
+        "rotaboxes"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "conservative-unverified",
+      "verificationNote": "Live page could not be reliably fetched in this review; description is intentionally conservative and should be manually checked before public launch.",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "spot-different",
+      "name": "Spot the Difference",
+      "url": "https://spotdifferent.com/",
+      "category": "Brain & Puzzle",
+      "subcategory": "Spot the Difference",
+      "description": "A daily spot-the-difference puzzle where players look for visual differences between images.",
+      "tags": [
+        "brain",
+        "difference",
+        "puzzle",
+        "spot",
+        "the"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "verified-live-page",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "wordishi",
+      "name": "Wordishi",
+      "url": "https://wordishi.com/",
+      "category": "Word & Puzzle",
+      "subcategory": "Word Games",
+      "description": "A browser destination for word challenges.",
+      "tags": [
+        "games",
+        "puzzle",
+        "word",
+        "wordishi"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "conservative-unverified",
+      "verificationNote": "Live page could not be reliably fetched in this review; description is intentionally conservative and should be manually checked before public launch.",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "deductionary",
+      "name": "Deductionary",
+      "url": "https://deductionary.com/",
+      "category": "Brain & Puzzle",
+      "subcategory": "Deduction",
+      "description": "A daily logic/deduction puzzle site.",
+      "tags": [
+        "brain",
+        "deduction",
+        "deductionary",
+        "puzzle"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "verified-live-page",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "crazygames-action",
+      "name": "CrazyGames — Action",
+      "url": "https://www.crazygames.com/c/action",
+      "category": "Action",
+      "subcategory": "Action",
+      "description": "CrazyGames' Action category for browser action games.",
+      "tags": [
+        "action",
+        "crazygames",
+        "—"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "verified-live-page",
+      "resourceType": "category-page"
+    },
+    {
+      "id": "crazygames-adventure",
+      "name": "CrazyGames — Adventure",
+      "url": "https://www.crazygames.com/c/adventure",
+      "category": "Action & Adventure",
+      "subcategory": "Adventure",
+      "description": "CrazyGames' Adventure category for browser adventure games.",
+      "tags": [
+        "action",
+        "adventure",
+        "crazygames",
+        "—"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "verified-live-page",
+      "resourceType": "category-page"
+    },
+    {
+      "id": "crazygames-arcade",
+      "name": "CrazyGames — Arcade",
+      "url": "https://www.crazygames.com/c/arcade",
+      "category": "Arcade",
+      "subcategory": "Arcade",
+      "description": "CrazyGames' Arcade category for browser arcade games.",
+      "tags": [
+        "arcade",
+        "crazygames",
+        "—"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "verified-live-page",
+      "resourceType": "category-page"
+    },
+    {
+      "id": "crazygames-board",
+      "name": "CrazyGames — Board",
+      "url": "https://www.crazygames.com/c/board",
+      "category": "Board & Card",
+      "subcategory": "Board",
+      "description": "CrazyGames' Board category for browser board games.",
+      "tags": [
+        "board",
+        "card",
+        "crazygames",
+        "—"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "verified-live-page",
+      "resourceType": "category-page"
+    },
+    {
+      "id": "crazygames-card",
+      "name": "CrazyGames — Card",
+      "url": "https://www.crazygames.com/c/card",
+      "category": "Board & Card",
+      "subcategory": "Card",
+      "description": "CrazyGames' Card category for browser card games.",
+      "tags": [
+        "board",
+        "card",
+        "crazygames",
+        "—"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "verified-live-page",
+      "resourceType": "category-page"
+    },
+    {
+      "id": "crazygames-puzzle",
+      "name": "CrazyGames — Puzzle",
+      "url": "https://www.crazygames.com/c/puzzle",
+      "category": "Brain & Puzzle",
+      "subcategory": "Puzzle",
+      "description": "CrazyGames' Puzzle category for browser puzzle games.",
+      "tags": [
+        "brain",
+        "crazygames",
+        "puzzle",
+        "—"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "verified-live-page",
+      "resourceType": "category-page"
+    },
+    {
+      "id": "crazygames-sim",
+      "name": "CrazyGames — Simulation",
+      "url": "https://www.crazygames.com/c/sim",
+      "category": "Simulation",
+      "subcategory": "Simulation",
+      "description": "CrazyGames' Simulation category for browser simulation games.",
+      "tags": [
+        "crazygames",
+        "simulation",
+        "—"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "verified-live-page",
+      "resourceType": "category-page"
+    },
+    {
+      "id": "crazygames-word",
+      "name": "CrazyGames — Word",
+      "url": "https://www.crazygames.com/c/word",
+      "category": "Word & Puzzle",
+      "subcategory": "Word",
+      "description": "CrazyGames' Word category for browser word games.",
+      "tags": [
+        "crazygames",
+        "puzzle",
+        "word",
+        "—"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "verified-live-page",
+      "resourceType": "category-page"
+    },
+    {
+      "id": "crazygames-trivia",
+      "name": "CrazyGames — Trivia",
+      "url": "https://www.crazygames.com/c/trivia",
+      "category": "Quiz & Trivia",
+      "subcategory": "Trivia",
+      "description": "CrazyGames' Trivia category for browser trivia games.",
+      "tags": [
+        "crazygames",
+        "quiz",
+        "trivia",
+        "—"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "verified-live-page",
+      "resourceType": "category-page"
+    },
+    {
+      "id": "bga-flip7",
+      "name": "Board Game Arena — Flip 7",
+      "url": "https://en.boardgamearena.com/gamepanel?game=flipseven",
+      "category": "Board & Card",
+      "subcategory": "Board Games",
+      "description": "A direct Board Game Arena page for playing or learning about Flip 7.",
+      "tags": [
+        "7",
+        "arena",
+        "board",
+        "card",
+        "flip",
+        "game",
+        "games",
+        "—"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "verified-live-page",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "uno-online",
+      "name": "UNO Online",
+      "url": "https://unoonline.co/",
+      "category": "Board & Card",
+      "subcategory": "UNO / Card",
+      "description": "A browser destination for UNO-style card play.",
+      "tags": [
+        "board",
+        "card",
+        "online",
+        "uno"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "conservative-unverified",
+      "verificationNote": "Live page could not be reliably fetched in this review; description is intentionally conservative and should be manually checked before public launch.",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "poki-categories",
+      "name": "Poki — All Categories",
+      "url": "https://poki.com/en/categories",
+      "category": "General",
+      "subcategory": "Categories",
+      "description": "Poki's category index for its broad browser-game catalog.",
+      "tags": [
+        "all",
+        "categories",
+        "general",
+        "poki",
+        "—"
+      ],
+      "source": "suggested",
+      "needsManualReview": false,
+      "verificationStatus": "verified-live-page",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "crazygames",
+      "name": "CrazyGames",
+      "url": "https://www.crazygames.com/",
+      "category": "General",
+      "subcategory": "Game Portal",
+      "description": "A large browser-game portal with action, adventure, arcade, board, card, puzzle, simulation and more.",
+      "tags": [
+        "crazygames",
+        "game",
+        "general",
+        "portal"
+      ],
+      "source": "suggested",
+      "needsManualReview": false,
+      "verificationStatus": "conservative-unverified",
+      "verificationNote": "Live page could not be reliably fetched in this review; description is intentionally conservative and should be manually checked before public launch.",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "itch-free-browser",
+      "name": "itch.io — Free Browser Games",
+      "url": "https://itch.io/games/free/tag-web-browser",
+      "category": "Indie & Creative",
+      "subcategory": "Free Browser Games",
+      "description": "Free indie games playable in the browser.",
+      "tags": [
+        "browser",
+        "creative",
+        "free",
+        "games",
+        "indie",
+        "itch.io",
+        "—"
+      ],
+      "source": "suggested",
+      "needsManualReview": false,
+      "verificationStatus": "conservative-unverified",
+      "verificationNote": "Live page could not be reliably fetched in this review; description is intentionally conservative and should be manually checked before public launch.",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "boardgamearena",
+      "name": "Board Game Arena",
+      "url": "https://en.boardgamearena.com/",
+      "category": "Board & Card",
+      "subcategory": "Board Games",
+      "description": "Board Game Arena is an online platform for playing board games in a browser, including real-time and turn-based games.",
+      "tags": [
+        "arena",
+        "board",
+        "card",
+        "game",
+        "games"
+      ],
+      "source": "suggested",
+      "needsManualReview": false,
+      "verificationStatus": "verified-live-page",
+      "resourceType": "site-or-game"
+    },
+    {
+      "id": "brainbashers-home",
+      "name": "BrainBashers",
+      "url": "https://www.brainbashers.com/",
+      "category": "Brain & Puzzle",
+      "subcategory": "Puzzles",
+      "description": "BrainBashers home page for its puzzle collection.",
+      "tags": [
+        "brain",
+        "brainbashers",
+        "puzzle",
+        "puzzles"
+      ],
+      "source": "user",
+      "needsManualReview": true,
+      "verificationStatus": "conservative-unverified",
+      "verificationNote": "Live page could not be reliably fetched in this review; description is intentionally conservative and should be manually checked before public launch.",
+      "resourceType": "site-or-game"
+    }
+  ],
+  "reviewNotes": [
+    "Descriptions were reviewed against live pages where the web review could fetch reliable content.",
+    "Entries that could not be reliably fetched remain conservative and are explicitly flagged for manual review.",
+    "The catalog remains a static frontend dataset; it is not a runtime scraper."
+  ]
+}

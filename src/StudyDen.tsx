@@ -8,13 +8,14 @@ import {
   Plus, X, Check, Search, ChevronLeft, ChevronRight,
   Trash2, Pencil, Printer, Palette, ListChecks,
   LayoutDashboard, CalendarDays, BookOpen, BarChart3, LogOut,
-  Clock, Settings, NotebookPen, Languages,
+  Clock, Settings, NotebookPen, Languages, Gamepad2,
 } from "lucide-react";
 import { supabase } from "./lib/supabase";
 import { SUPPORT_CONTACT } from "./lib/contact";
 import JournalView from "./JournalView";
 import { FrenchView } from "./FrenchView";
 import { EntertainmentView } from "./EntertainmentView";
+import { GamesView } from "./GamesView";
 import academicsIcon from "./assets/icons/academics.png";
 import journalIcon from "./assets/icons/journal.png";
 import frenchIcon from "./assets/icons/french.png";
@@ -1024,7 +1025,7 @@ export default function StudyDen({ session }: { session: Session }) {
 
   // UI
   const [loaded, setLoaded] = useState(false);
-  const [mode, setMode] = useState<"academics" | "journal" | "french" | "entertainment" | "settings">("academics");
+  const [mode, setMode] = useState<"academics" | "journal" | "french" | "entertainment" | "games" | "settings">("academics");
   const [academicTab, setAcademicTab] = useState<"dashboard" | "calendar" | "tasks" | "routine" | "stats">("dashboard");
   const [snoozedOverdueIds, setSnoozedOverdueIds] = useState<Set<string>>(new Set());
   const [formOpen, setFormOpen] = useState(false);
@@ -1259,13 +1260,14 @@ export default function StudyDen({ session }: { session: Session }) {
               </div>
             </div>
 
-            {/* 5 Modes Navigation List */}
+            {/* 6 Modes Navigation List */}
             <nav className="p-2 rounded-3xl bg-white/60 backdrop-blur-md border border-white/60 shadow-sm flex md:flex-col gap-1.5 overflow-x-auto">
               {[
                 { id: "academics" as const, label: "Academics", iconImg: academicsIcon },
                 { id: "journal" as const, label: "Journal", iconImg: journalIcon },
                 { id: "french" as const, label: "Le Coin Français", iconImg: frenchIcon },
                 { id: "entertainment" as const, label: "Entertainment", iconImg: entertainmentIcon },
+                { id: "games" as const, label: "Games", icon: Gamepad2 },
                 { id: "settings" as const, label: "Settings", icon: Settings },
               ].map((m) => {
                 const isActive = mode === m.id;
@@ -1541,7 +1543,14 @@ export default function StudyDen({ session }: { session: Session }) {
             </div>
           )}
 
-          {/* Mode 5: SETTINGS */}
+          {/* Mode 5: GAMES */}
+          {mode === "games" && (
+            <div className="no-print">
+              <GamesView userId={userId} />
+            </div>
+          )}
+
+          {/* Mode 6: SETTINGS */}
           {mode === "settings" && (
             <div className="no-print">
               <SettingsView
