@@ -8,11 +8,12 @@ import {
   Plus, X, Check, Search, ChevronLeft, ChevronRight,
   Trash2, Pencil, Printer, Palette, ListChecks,
   LayoutDashboard, CalendarDays, BookOpen, BarChart3, LogOut,
-  Clock, Settings, NotebookPen,
+  Clock, Settings, NotebookPen, Languages,
 } from "lucide-react";
 import { supabase } from "./lib/supabase";
 import { SUPPORT_CONTACT } from "./lib/contact";
 import JournalView from "./JournalView";
+import { FrenchView } from "./FrenchView";
 
 /* ─────────────────────────────── types ─────────────────────────────── */
 
@@ -102,10 +103,12 @@ const COLOR_PRESETS = [
 const URGENCY = { red: "#E8837A", yellow: "#EFC067", green: "#93C9A8" };
 
 const THEMES = {
-  bloom:  { label: "Blush Bloom",  css: "linear-gradient(135deg, #FDF2F6 0%, #F7E4EE 50%, #EFE2F7 100%)" },
-  meadow: { label: "Mint Meadow",  css: "linear-gradient(135deg, #F3FAF5 0%, #E3F3E8 50%, #DDEFE9 100%)" },
-  dusk:   { label: "Golden Dusk",  css: "linear-gradient(135deg, #FFF6E9 0%, #FBE7D4 50%, #F3D9E6 100%)" },
-  lilac:  { label: "Lilac Dream",  css: "linear-gradient(135deg, #F6F1FC 0%, #EDE1F7 50%, #E3D6F0 100%)" },
+  bloom:      { label: "Blush Bloom",        css: "linear-gradient(135deg, #FDF2F6 0%, #F7E4EE 50%, #EFE2F7 100%)" },
+  meadow:     { label: "Mint Meadow",        css: "linear-gradient(135deg, #F3FAF5 0%, #E3F3E8 50%, #DDEFE9 100%)" },
+  dusk:       { label: "Golden Dusk",        css: "linear-gradient(135deg, #FFF6E9 0%, #FBE7D4 50%, #F3D9E6 100%)" },
+  lilac:      { label: "Lilac Dream",        css: "linear-gradient(135deg, #F6F1FC 0%, #EDE1F7 50%, #E3D6F0 100%)" },
+  babyblue:   { label: "Baby Blue",          css: "linear-gradient(135deg, #F0F7FD 0%, #E1EFFB 50%, #D4E6F8 100%)" },
+  monochrome: { label: "Monochrome Minimal", css: "linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 50%, #E5E7EB 100%)" },
 };
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -1141,6 +1144,7 @@ export default function StudyDen({ session }: { session: Session }) {
             { id: "tasks",     label: "Tasks",       icon: BookOpen },
             { id: "routine",   label: "Routine",     icon: Clock },
             { id: "journal",   label: "Journal",     icon: NotebookPen },
+            { id: "french",    label: "French",      icon: Languages },
             { id: "stats",     label: "Stats",       icon: BarChart3 },
             { id: "settings",  label: "Settings",    icon: Settings },
           ].map((t) => (
@@ -1306,6 +1310,13 @@ export default function StudyDen({ session }: { session: Session }) {
         {tab === "journal" && (
           <div className="no-print">
             <JournalView userId={userId} session={session} />
+          </div>
+        )}
+
+        {/* french */}
+        {tab === "french" && (
+          <div className="no-print">
+            <FrenchView userId={userId} />
           </div>
         )}
 
