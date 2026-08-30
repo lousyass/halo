@@ -651,22 +651,37 @@ export const FrenchView: React.FC<{ userId: string }> = ({ userId }) => {
     resourceOnlyRecommended,
   ]);
 
-  // Quiz questions generation
+  // Quiz Pool: if user cards < 4, blend with high frequency words so quiz always works!
+  const quizPool = useMemo(() => {
+    if (cards.length >= 4) {
+      return cards.map((c) => ({ id: c.id, french: c.french, english: c.english }));
+    }
+    const existingFrench = new Set(cards.map((c) => c.french.toLowerCase()));
+    const extraWords = FRENCH_FREQUENCY_WORDS.filter(
+      (w) => !existingFrench.has(w.french.toLowerCase())
+    ).slice(0, 20);
+    const combined = [
+      ...cards.map((c) => ({ id: c.id, french: c.french, english: c.english })),
+      ...extraWords.map((w, i) => ({ id: `freq-${i}`, french: w.french, english: w.english })),
+    ];
+    return combined;
+  }, [cards]);
+
+  // Quiz questions list
   const quizQuestions = useMemo(() => {
-    if (cards.length < 4) return [];
-    return [...cards].sort(() => Math.random() - 0.5);
-  }, [cards, quizMode]);
+    return [...quizPool].sort(() => Math.random() - 0.5).slice(0, 10);
+  }, [quizPool, quizMode]);
 
   // Matching game items
   const matchingPairs = useMemo(() => {
-    const sample = [...cards].sort(() => Math.random() - 0.5).slice(0, 6);
+    const sample = [...quizPool].sort(() => Math.random() - 0.5).slice(0, 6);
     const tiles: { id: string; text: string; cardId: string; type: "fr" | "en" }[] = [];
     sample.forEach((c) => {
       tiles.push({ id: `fr-${c.id}`, text: c.french, cardId: c.id, type: "fr" });
       tiles.push({ id: `en-${c.id}`, text: c.english, cardId: c.id, type: "en" });
     });
     return tiles.sort(() => Math.random() - 0.5);
-  }, [cards, activeSubTab]);
+  }, [quizPool, activeSubTab, quizMode]);
 
   return (
     <div className="space-y-6">
@@ -1385,17 +1400,17 @@ export const FrenchView: React.FC<{ userId: string }> = ({ userId }) => {
               ) : (
                 /* MCQ Options */
                 <div className="space-y-2.5">
-                  {useMemo(() => {
+                  {(() => {
                     const current = quizQuestions[quizQuestionIndex];
-                    const distractors = cards
-                      .filter((c) => c.id !== current.id)
-                      .sort(() => Math.random() - 0.5)
-                      .slice(0, 3)
-                      .map((c) => (quizMode === "listening" ? c.french : c.english));
+                    if (!current) return [];
                     const correctAnswer = quizMode === "listening" ? current.french : current.english;
-                    const options = [correctAnswer, ...distractors].sort(() => Math.random() - 0.5);
-                    return options;
-                  }, [quizQuestionIndex, quizMode]).map((opt, idx) => {
+                    const distractors = quizPool
+                      .filter((c) => c.id !== current.id)
+                      .slice(0, 5)
+                      .map((c) => (quizMode === "listening" ? c.french : c.english));
+                    const uniqueOptions = Array.from(new Set([correctAnswer, ...distractors])).slice(0, 4);
+                    return uniqueOptions;
+                  })().map((opt, idx) => {
                     const current = quizQuestions[quizQuestionIndex];
                     const correctAnswer = quizMode === "listening" ? current.french : current.english;
                     const isSelected = quizAnswerSelected === opt;
