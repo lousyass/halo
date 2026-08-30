@@ -271,18 +271,76 @@ function EmptyState({ emoji, text }: { emoji: string; text: string }) {
 
 /* ─────────────────────────── task countdown ─────────────────────────── */
 
-/* ─────────────────────────── task countdown ─────────────────────────── */
+const THEME_TIMER_STYLES: Record<string, {
+  bg: string;
+  border: string;
+  text: string;
+  subText: string;
+  icon: string;
+  colon: string;
+}> = {
+  bloom: {
+    bg: "bg-rose-50/70 hover:bg-rose-50/90",
+    border: "border-rose-200/90",
+    text: "text-rose-900",
+    subText: "text-rose-500",
+    icon: "text-rose-500",
+    colon: "text-rose-300",
+  },
+  meadow: {
+    bg: "bg-emerald-50/70 hover:bg-emerald-50/90",
+    border: "border-emerald-200/90",
+    text: "text-emerald-900",
+    subText: "text-emerald-600",
+    icon: "text-emerald-600",
+    colon: "text-emerald-300",
+  },
+  dusk: {
+    bg: "bg-amber-50/70 hover:bg-amber-50/90",
+    border: "border-amber-200/90",
+    text: "text-amber-900",
+    subText: "text-amber-600",
+    icon: "text-amber-600",
+    colon: "text-amber-300",
+  },
+  lilac: {
+    bg: "bg-purple-50/70 hover:bg-purple-50/90",
+    border: "border-purple-200/90",
+    text: "text-purple-900",
+    subText: "text-purple-500",
+    icon: "text-purple-500",
+    colon: "text-purple-300",
+  },
+  babyblue: {
+    bg: "bg-sky-50/70 hover:bg-sky-50/90",
+    border: "border-sky-200/90",
+    text: "text-sky-900",
+    subText: "text-sky-600",
+    icon: "text-sky-600",
+    colon: "text-sky-300",
+  },
+  monochrome: {
+    bg: "bg-gray-100/70 hover:bg-gray-100/90",
+    border: "border-gray-300/90",
+    text: "text-gray-900",
+    subText: "text-gray-500",
+    icon: "text-gray-600",
+    colon: "text-gray-400",
+  },
+};
 
 function TaskCountdown({
   dueDate,
   status,
   urgency,
   overdue,
+  theme = "bloom",
 }: {
   dueDate: string;
   status: string;
   urgency: "red" | "yellow" | "green" | null;
   overdue: boolean;
+  theme?: keyof typeof THEMES;
 }) {
   const [timeLeft, setTimeLeft] = useState<{
     d: string;
@@ -332,57 +390,70 @@ function TaskCountdown({
   if (status === "completed" || !timeLeft) return null;
 
   const isUrgent = timeLeft.overdue || timeLeft.totalHours < 24;
-  const isModerate = !isUrgent && timeLeft.totalHours < 72;
+  const tStyle = THEME_TIMER_STYLES[theme] || THEME_TIMER_STYLES.bloom;
 
-  // Dynamic visual styling & color shifting
-  const badgeStyle = timeLeft.overdue
+  // Visual style: dynamic theme color styling
+  const badgeClass = timeLeft.overdue
     ? "bg-rose-50/90 border-rose-300 text-rose-800 shadow-[0_2px_10px_rgba(244,63,94,0.18)]"
     : isUrgent
-    ? "bg-amber-50/90 border-amber-300 text-amber-900 shadow-[0_2px_10px_rgba(245,158,11,0.15)] animate-pulse"
-    : isModerate
-    ? "bg-purple-50/90 border-purple-200 text-purple-900 shadow-2xs"
-    : "bg-emerald-50/80 border-emerald-200 text-emerald-900 shadow-2xs";
+    ? "bg-amber-50/90 border-amber-300 text-amber-900 shadow-[0_2px_10px_rgba(245,158,11,0.15)]"
+    : `${tStyle.bg} ${tStyle.border} ${tStyle.text} shadow-2xs`;
+
+  const iconClass = timeLeft.overdue
+    ? "text-rose-600"
+    : isUrgent
+    ? "text-amber-600"
+    : tStyle.icon;
+
+  const colonClass = timeLeft.overdue
+    ? "text-rose-300"
+    : isUrgent
+    ? "text-amber-300"
+    : tStyle.colon;
+
+  const subTextClass = timeLeft.overdue
+    ? "text-rose-500/80"
+    : isUrgent
+    ? "text-amber-600/80"
+    : tStyle.subText;
 
   return (
     <div
-      className={`flex items-center gap-2 px-3 py-1.5 rounded-2xl border transition-all ${badgeStyle}`}
+      className={`flex items-center justify-between md:justify-center gap-3.5 px-4 py-2 rounded-2xl border transition-all w-full max-w-md ${badgeClass}`}
       title={timeLeft.overdue ? "Task is overdue" : "Time remaining to deadline (23:59 local)"}
     >
-      <div className="relative flex items-center justify-center">
-        <Clock size={15} className={`shrink-0 ${isUrgent ? "text-rose-500 animate-spin-slow" : "text-purple-600"}`} />
-        {isUrgent && (
-          <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-rose-500 animate-ping" />
-        )}
+      <div className="flex items-center gap-1.5 shrink-0">
+        <Clock size={16} className={`shrink-0 ${iconClass}`} />
       </div>
 
-      <div className="flex items-center gap-1 font-mono text-xs font-bold tracking-tight">
-        <div className="flex flex-col items-center">
-          <span className="leading-none text-[13px]">{timeLeft.d}</span>
-          <span className="text-[8px] font-sans font-semibold opacity-60 uppercase">days</span>
+      <div className="flex items-center justify-around flex-1 font-mono text-xs font-bold tracking-tight">
+        <div className="flex flex-col items-center min-w-[32px]">
+          <span className="leading-none text-[13.5px] font-extrabold">{timeLeft.d}</span>
+          <span className={`text-[8.5px] font-sans font-bold uppercase tracking-wider ${subTextClass}`}>days</span>
         </div>
-        <span className="opacity-40 -mt-1.5">:</span>
-        <div className="flex flex-col items-center">
-          <span className="leading-none text-[13px]">{timeLeft.h}</span>
-          <span className="text-[8px] font-sans font-semibold opacity-60 uppercase">hrs</span>
+        <span className={`text-[12px] font-bold ${colonClass}`}>:</span>
+        <div className="flex flex-col items-center min-w-[32px]">
+          <span className="leading-none text-[13.5px] font-extrabold">{timeLeft.h}</span>
+          <span className={`text-[8.5px] font-sans font-bold uppercase tracking-wider ${subTextClass}`}>hrs</span>
         </div>
-        <span className="opacity-40 -mt-1.5">:</span>
-        <div className="flex flex-col items-center">
-          <span className="leading-none text-[13px]">{timeLeft.m}</span>
-          <span className="text-[8px] font-sans font-semibold opacity-60 uppercase">min</span>
+        <span className={`text-[12px] font-bold ${colonClass}`}>:</span>
+        <div className="flex flex-col items-center min-w-[32px]">
+          <span className="leading-none text-[13.5px] font-extrabold">{timeLeft.m}</span>
+          <span className={`text-[8.5px] font-sans font-bold uppercase tracking-wider ${subTextClass}`}>min</span>
         </div>
-        <span className="opacity-40 -mt-1.5">:</span>
-        <div className="flex flex-col items-center">
-          <span className="leading-none text-[13px]">{timeLeft.s}</span>
-          <span className="text-[8px] font-sans font-semibold opacity-60 uppercase">sec</span>
+        <span className={`text-[12px] font-bold ${colonClass}`}>:</span>
+        <div className="flex flex-col items-center min-w-[32px]">
+          <span className="leading-none text-[13.5px] font-extrabold">{timeLeft.s}</span>
+          <span className={`text-[8.5px] font-sans font-bold uppercase tracking-wider ${subTextClass}`}>sec</span>
         </div>
       </div>
 
       {timeLeft.overdue ? (
-        <span className="ml-1 px-1.5 py-0.5 rounded-md bg-rose-600 text-white text-[9px] font-extrabold uppercase tracking-wide">
+        <span className="shrink-0 px-2 py-0.5 rounded-lg bg-rose-600 text-white text-[9.5px] font-extrabold uppercase tracking-wide shadow-2xs">
           Overdue
         </span>
       ) : isUrgent ? (
-        <span className="ml-1 px-1.5 py-0.5 rounded-md bg-amber-500 text-white text-[9px] font-extrabold uppercase tracking-wide">
+        <span className="shrink-0 px-2 py-0.5 rounded-lg bg-amber-500 text-white text-[9.5px] font-extrabold uppercase tracking-wide shadow-2xs">
           Soon
         </span>
       ) : null}
@@ -395,12 +466,14 @@ function TaskCountdown({
 function TaskCard({
   task,
   subject,
+  theme,
   onToggle,
   onEdit,
   onDelete,
 }: {
   task: FrontendTask;
   subject: Subject | undefined;
+  theme?: keyof typeof THEMES;
   onToggle: (id: string) => void;
   onEdit: (t: FrontendTask) => void;
   onDelete: (id: string) => void;
@@ -417,7 +490,7 @@ function TaskCard({
       style={{ borderColor: color + "44" }}
     >
       {/* Left: Checkbox + Title + Subject + Work Type + Sub-info */}
-      <div className="flex items-start gap-3 flex-1 min-w-0">
+      <div className="flex items-start gap-3 flex-1 min-w-[200px]">
         <button
           onClick={() => onToggle(task.id)}
           className="mt-0.5 w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors"
@@ -463,26 +536,27 @@ function TaskCard({
         </div>
       </div>
 
-      {/* Center / Right Section: Prominent Timer Widget + Action Buttons */}
-      <div className="flex items-center gap-3 shrink-0 self-end md:self-center w-full md:w-auto justify-between md:justify-end">
-        <TaskCountdown dueDate={task.dueDate} status={task.status} urgency={urgency} overdue={overdue} />
+      {/* Center Section: Wide, Theme-Matched Countdown Timer */}
+      <div className="flex-1 max-w-full md:max-w-md w-full md:w-auto flex justify-center">
+        <TaskCountdown dueDate={task.dueDate} status={task.status} urgency={urgency} overdue={overdue} theme={theme} />
+      </div>
 
-        <div className="flex items-center gap-1 shrink-0">
-          <button
-            onClick={() => onEdit(task)}
-            className="p-1.5 rounded-xl hover:bg-black/5 text-gray-400 hover:text-gray-700 transition-colors"
-            title="Edit task"
-          >
-            <Pencil size={15} />
-          </button>
-          <button
-            onClick={() => onDelete(task.id)}
-            className="p-1.5 rounded-xl hover:bg-rose-50 text-gray-400 hover:text-rose-600 transition-colors"
-            title="Delete task"
-          >
-            <Trash2 size={15} />
-          </button>
-        </div>
+      {/* Right Section: Action Buttons */}
+      <div className="flex items-center gap-1 shrink-0 self-end md:self-center">
+        <button
+          onClick={() => onEdit(task)}
+          className="p-1.5 rounded-xl hover:bg-black/5 text-gray-400 hover:text-gray-700 transition-colors"
+          title="Edit task"
+        >
+          <Pencil size={15} />
+        </button>
+        <button
+          onClick={() => onDelete(task.id)}
+          className="p-1.5 rounded-xl hover:bg-rose-50 text-gray-400 hover:text-rose-600 transition-colors"
+          title="Delete task"
+        >
+          <Trash2 size={15} />
+        </button>
       </div>
     </div>
   );
@@ -1680,7 +1754,7 @@ export default function StudyDen({ session }: { session: Session }) {
                     </div>
                     {upcoming.length === 0
                       ? <EmptyState emoji="🎀" text="Nothing pending — add a task to get started" />
-                      : upcoming.map((t) => <TaskCard key={t.id} task={t} subject={subjById[t.subjectId]} onToggle={toggleTask} onEdit={(t) => { setEditingTask(t); setFormOpen(true); }} onDelete={deleteTask} />)}
+                      : upcoming.map((t) => <TaskCard key={t.id} task={t} subject={subjById[t.subjectId]} theme={theme} onToggle={toggleTask} onEdit={(t) => { setEditingTask(t); setFormOpen(true); }} onDelete={deleteTask} />)}
                   </Sticker>
 
                   <Sticker className="p-4" rotate={0.2}>
@@ -1713,11 +1787,11 @@ export default function StudyDen({ session }: { session: Session }) {
                     {filterStatus === "pending" && Object.keys(grouped).length === 0
                       ? <EmptyState emoji="🐱" text="No tasks match your filters" />
                       : filterStatus !== "pending"
-                      ? filtered.map((t) => <TaskCard key={t.id} task={t} subject={subjById[t.subjectId]} onToggle={toggleTask} onEdit={(t) => { setEditingTask(t); setFormOpen(true); }} onDelete={deleteTask} />)
+                      ? filtered.map((t) => <TaskCard key={t.id} task={t} subject={subjById[t.subjectId]} theme={theme} onToggle={toggleTask} onEdit={(t) => { setEditingTask(t); setFormOpen(true); }} onDelete={deleteTask} />)
                       : Object.entries(grouped).map(([key, list]) => (
                           <div key={key} className="mb-3">
                             <div className="text-xs font-bold opacity-60 mb-1 uppercase tracking-wide">{groupBy === "type" ? (TYPE_ICON[key] || "📝") + " " + key : key}</div>
-                            {list.map((t) => <TaskCard key={t.id} task={t} subject={subjById[t.subjectId]} onToggle={toggleTask} onEdit={(t) => { setEditingTask(t); setFormOpen(true); }} onDelete={deleteTask} />)}
+                            {list.map((t) => <TaskCard key={t.id} task={t} subject={subjById[t.subjectId]} theme={theme} onToggle={toggleTask} onEdit={(t) => { setEditingTask(t); setFormOpen(true); }} onDelete={deleteTask} />)}
                           </div>
                         ))}
                   </Sticker>
@@ -1776,7 +1850,7 @@ export default function StudyDen({ session }: { session: Session }) {
                     {tasks.length === 0
                       ? <EmptyState emoji="📚" text="No tasks yet — add your first one above" />
                       : [...tasks].sort((a, b) => daysBetween(a.dueDate, todayStr()) - daysBetween(b.dueDate, todayStr())).map((t) => (
-                          <TaskCard key={t.id} task={t} subject={subjById[t.subjectId]} onToggle={toggleTask} onEdit={(t) => { setEditingTask(t); setFormOpen(true); }} onDelete={deleteTask} />
+                          <TaskCard key={t.id} task={t} subject={subjById[t.subjectId]} theme={theme} onToggle={toggleTask} onEdit={(t) => { setEditingTask(t); setFormOpen(true); }} onDelete={deleteTask} />
                         ))}
                   </Sticker>
                 </div>
