@@ -14,6 +14,7 @@ import { supabase } from "./lib/supabase";
 import { SUPPORT_CONTACT } from "./lib/contact";
 import JournalView from "./JournalView";
 import { FrenchView } from "./FrenchView";
+import { EntertainmentView } from "./EntertainmentView";
 import academicsIcon from "./assets/icons/academics.png";
 import journalIcon from "./assets/icons/journal.png";
 import frenchIcon from "./assets/icons/french.png";
@@ -1435,23 +1436,10 @@ export default function StudyDen({ session }: { session: Session }) {
             </div>
           )}
 
-          {/* Mode 4: ENTERTAINMENT (Placeholder slot) */}
+          {/* Mode 4: ENTERTAINMENT */}
           {mode === "entertainment" && (
-            <div className="no-print max-w-2xl mx-auto py-10">
-              <Sticker className="p-8 text-center" rotate={-0.3}>
-                <div className="w-16 h-16 mx-auto mb-4 p-2 rounded-3xl bg-pink-100/70 border border-pink-200/60 shadow-sm flex items-center justify-center">
-                  <img src={entertainmentIcon} alt="Entertainment" className="w-12 h-12 object-contain" />
-                </div>
-                <h3 className="text-2xl font-extrabold text-purple-950 mb-2" style={{ fontFamily: "Fredoka, sans-serif" }}>
-                  Entertainment Lounge
-                </h3>
-                <p className="text-sm text-purple-900/70 max-w-md mx-auto mb-6 leading-relaxed">
-                  A cozy corner for music playlists, movie & anime watchlists, study break mini-games, and leisure tracking is in the works!
-                </p>
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold bg-pink-100 text-pink-700 border border-pink-200 shadow-sm">
-                  <span>🎀</span> Space Reserved for Entertainment Mode
-                </div>
-              </Sticker>
+            <div className="no-print">
+              <EntertainmentView />
             </div>
           )}
 
