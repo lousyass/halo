@@ -759,7 +759,7 @@ export const FrenchView: React.FC<{ userId: string }> = ({ userId }) => {
             </span>
           </div>
           <p className="text-sm opacity-75 text-gray-700">
-            Your personal French learning haven — daily vocabulary, spaced repetition deck, interactive quizzes & 250+ curated resources.
+            Your personal French learning haven . Daily vocabulary, spaced repetition deck, interactive quizzes & 250+ curated resources
           </p>
         </div>
 

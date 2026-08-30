@@ -222,6 +222,62 @@ function EmptyState({ emoji, text }: { emoji: string; text: string }) {
   );
 }
 
+/* ─────────────────────────── task countdown ─────────────────────────── */
+
+function TaskCountdown({ dueDate, status }: { dueDate: string; status: string }) {
+  const [timeLeft, setTimeLeft] = useState<{ d: string; h: string; m: string; s: string; overdue: boolean } | null>(null);
+
+  useEffect(() => {
+    if (status === "completed") return;
+
+    const calc = () => {
+      // Treat deadline as 23:59:59 local time on due_date
+      const target = new Date(`${dueDate}T23:59:59`).getTime();
+      const now = Date.now();
+      const diff = target - now;
+
+      if (diff <= 0) {
+        setTimeLeft({ d: "00", h: "00", m: "00", s: "00", overdue: true });
+        return;
+      }
+
+      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const m = Math.floor((diff / (1000 * 60)) % 60);
+      const s = Math.floor((diff / 1000) % 60);
+
+      setTimeLeft({
+        d: String(d).padStart(2, "0"),
+        h: String(h).padStart(2, "0"),
+        m: String(m).padStart(2, "0"),
+        s: String(s).padStart(2, "0"),
+        overdue: false,
+      });
+    };
+
+    calc();
+    const interval = setInterval(calc, 1000);
+    return () => clearInterval(interval);
+  }, [dueDate, status]);
+
+  if (status === "completed" || !timeLeft) return null;
+
+  return (
+    <div
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-mono font-bold tracking-wider transition-colors ${
+        timeLeft.overdue
+          ? "bg-red-50 text-red-700 border border-red-200"
+          : "bg-purple-50/90 text-purple-900 border border-purple-200/80 shadow-2xs"
+      }`}
+      title={timeLeft.overdue ? "Task is overdue" : "Live deadline countdown (DD : HH : MM : SS)"}
+    >
+      <Clock size={11} className={timeLeft.overdue ? "text-red-500" : "text-purple-600 animate-pulse"} />
+      <span>{timeLeft.d} : {timeLeft.h} : {timeLeft.m} : {timeLeft.s}</span>
+      {timeLeft.overdue && <span className="text-[9px] uppercase font-sans font-extrabold text-red-600 ml-0.5">Overdue</span>}
+    </div>
+  );
+}
+
 /* ─────────────────────────── task card ─────────────────────────────── */
 
 function TaskCard({ task, subject, onToggle, onEdit, onDelete }: {
@@ -257,8 +313,9 @@ function TaskCard({ task, subject, onToggle, onEdit, onDelete }: {
               {subject?.name || "No subject"}
             </span>
             {urgency && <UrgencyDot level={overdue ? "red" : urgency} />}
+            <TaskCountdown dueDate={task.dueDate} status={task.status} />
           </div>
-          <div className="text-xs mt-0.5 opacity-70">
+          <div className="text-xs mt-1 opacity-70">
             {task.status === "completed" ? `Done · was due ${niceDate(task.dueDate)}`
               : overdue ? `Overdue since ${niceDate(task.dueDate)}`
               : `Due ${niceDate(task.dueDate)} · ${daysBetween(task.dueDate, todayStr())}d left`}
@@ -490,9 +547,9 @@ function RoutineView({ routineEntries, onAdd, onEdit, onDelete }: {
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <div>
           <h2 className="text-xl font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>
-            Weekly Class Timetable 🗓️
+            Your weekly routine 🗓️
           </h2>
-          <p className="text-xs opacity-60">Your recurring 7-day weekly class schedule</p>
+          <p className="text-xs opacity-60">Your recurring 7 day weekly schedule</p>
         </div>
         <button
           onClick={() => { setEditingEntry(null); setFormOpen(true); }}
@@ -660,7 +717,7 @@ function SettingsView({ profile, onSave, onSignOut }: {
     <div className="space-y-4">
       <Sticker className="p-4" rotate={-0.2}>
         <h3 className="font-bold mb-3" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>⚙️ Reminder Settings</h3>
-        <p className="text-xs opacity-60 mb-3">These control how and when the backend sends reminder emails to your inbox.</p>
+        <p className="text-xs opacity-60 mb-3">Chose how and when you want to receive reminder emails to your inbox</p>
 
         <div className="space-y-3">
           <div>
@@ -892,9 +949,130 @@ function CalendarView({ tasks, subjects, routineEntries, onQuickAdd }: {
   );
 }
 
-/* ─────────────────────────── stats view ────────────────────────────── */
+/* ─────────────────────────── stats / syllabus view ────────────────────────────── */
 
-function StatsView({ tasks }: { tasks: FrontendTask[] }) {
+interface SyllabusTopic {
+  id: string;
+  name: string;
+  done: boolean;
+}
+
+interface SyllabusChapter {
+  id: string;
+  title: string;
+  topics: SyllabusTopic[];
+}
+
+function StatsView({ tasks, subjects, userId }: { tasks: FrontendTask[]; subjects: Subject[]; userId: string }) {
+  const [syllabus, setSyllabus] = useState<Record<string, SyllabusChapter[]>>({});
+  const [selectedSubjId, setSelectedSubjId] = useState<string>(subjects[0]?.id || "");
+  const [newChapterTitle, setNewChapterTitle] = useState("");
+  const [newTopicTitles, setNewTopicTitles] = useState<Record<string, string>>({});
+
+  // Sync selected subject if subject list changes
+  useEffect(() => {
+    if (subjects.length > 0 && (!selectedSubjId || !subjects.some((s) => s.id === selectedSubjId))) {
+      setSelectedSubjId(subjects[0].id);
+    }
+  }, [subjects, selectedSubjId]);
+
+  // Load syllabus from localStorage
+  useEffect(() => {
+    const raw = localStorage.getItem(`halo-syllabus-${userId}`);
+    if (raw) {
+      try {
+        setSyllabus(JSON.parse(raw));
+      } catch {}
+    }
+  }, [userId]);
+
+  const saveSyllabus = (updated: Record<string, SyllabusChapter[]>) => {
+    setSyllabus(updated);
+    localStorage.setItem(`halo-syllabus-${userId}`, JSON.stringify(updated));
+  };
+
+  const activeSubject = subjects.find((s) => s.id === selectedSubjId) || subjects[0];
+  const chapters = (activeSubject && syllabus[activeSubject.id]) || [];
+
+  const addChapter = () => {
+    if (!activeSubject || !newChapterTitle.trim()) return;
+    const newChapter: SyllabusChapter = {
+      id: crypto.randomUUID(),
+      title: newChapterTitle.trim(),
+      topics: [],
+    };
+    const updated = {
+      ...syllabus,
+      [activeSubject.id]: [...chapters, newChapter],
+    };
+    saveSyllabus(updated);
+    setNewChapterTitle("");
+  };
+
+  const deleteChapter = (chapterId: string) => {
+    if (!activeSubject) return;
+    const updated = {
+      ...syllabus,
+      [activeSubject.id]: chapters.filter((c) => c.id !== chapterId),
+    };
+    saveSyllabus(updated);
+  };
+
+  const addTopic = (chapterId: string) => {
+    const title = (newTopicTitles[chapterId] || "").trim();
+    if (!activeSubject || !title) return;
+    const updated = {
+      ...syllabus,
+      [activeSubject.id]: chapters.map((c) =>
+        c.id === chapterId
+          ? {
+              ...c,
+              topics: [...c.topics, { id: crypto.randomUUID(), name: title, done: false }],
+            }
+          : c
+      ),
+    };
+    saveSyllabus(updated);
+    setNewTopicTitles({ ...newTopicTitles, [chapterId]: "" });
+  };
+
+  const toggleTopic = (chapterId: string, topicId: string) => {
+    if (!activeSubject) return;
+    const updated = {
+      ...syllabus,
+      [activeSubject.id]: chapters.map((c) =>
+        c.id === chapterId
+          ? {
+              ...c,
+              topics: c.topics.map((t) => (t.id === topicId ? { ...t, done: !t.done } : t)),
+            }
+          : c
+      ),
+    };
+    saveSyllabus(updated);
+  };
+
+  const deleteTopic = (chapterId: string, topicId: string) => {
+    if (!activeSubject) return;
+    const updated = {
+      ...syllabus,
+      [activeSubject.id]: chapters.map((c) =>
+        c.id === chapterId
+          ? {
+              ...c,
+              topics: c.topics.filter((t) => t.id !== topicId),
+            }
+          : c
+      ),
+    };
+    saveSyllabus(updated);
+  };
+
+  const allTopics = chapters.flatMap((c) => c.topics);
+  const doneCount = allTopics.filter((t) => t.done).length;
+  const totalCount = allTopics.length;
+  const progressPct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+
   const data = useMemo(() =>
     tasks
       .filter((t) => t.status === "completed" && t.completedAt)
@@ -904,8 +1082,188 @@ function StatsView({ tasks }: { tasks: FrontendTask[] }) {
   );
 
   return (
-    <div>
-      <Sticker className="p-4 mb-4" rotate={0.3}>
+    <div className="space-y-5">
+      {/* ── Syllabus Tracker ── */}
+      <Sticker className="p-5" rotate={-0.2}>
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <div>
+            <h3 className="font-bold text-lg flex items-center gap-2" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>
+              📖 Subject Syllabus Tracker
+            </h3>
+            <p className="text-xs opacity-60">Manage chapters, study topics, and track remaining syllabus</p>
+          </div>
+        </div>
+
+        {subjects.length === 0 ? (
+          <div className="p-6 text-center text-sm opacity-60 bg-white/50 rounded-2xl">
+            No subjects defined yet. Add subjects in the Tasks tab to organize your syllabus! 🌸
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {/* Subject Selector Tabs */}
+            <div className="flex gap-1.5 overflow-x-auto pb-1">
+              {subjects.map((s) => {
+                const isSelected = s.id === (activeSubject?.id || "");
+                const subjChapters = syllabus[s.id] || [];
+                const subjTopics = subjChapters.flatMap((c) => c.topics);
+                const subjRemaining = subjTopics.filter((t) => !t.done).length;
+
+                return (
+                  <button
+                    key={s.id}
+                    onClick={() => setSelectedSubjId(s.id)}
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-2xl text-xs font-bold transition-all shrink-0 ${
+                      isSelected
+                        ? "bg-white text-purple-900 shadow-sm border border-purple-200"
+                        : "bg-white/50 text-gray-700 hover:bg-white/80"
+                    }`}
+                  >
+                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: s.color }} />
+                    <span>{s.name}</span>
+                    {subjRemaining > 0 && (
+                      <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-purple-100 text-purple-700 font-extrabold">
+                        {subjRemaining} left
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Active Subject Progress Bar */}
+            {activeSubject && (
+              <div className="p-4 rounded-2xl bg-white/80 border border-purple-100 shadow-2xs space-y-2">
+                <div className="flex items-center justify-between text-xs font-bold text-gray-700">
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full" style={{ background: activeSubject.color }} />
+                    <span className="text-sm font-extrabold text-purple-950">{activeSubject.name} Syllabus</span>
+                  </div>
+                  <span className="text-purple-700">
+                    {doneCount}/{totalCount} topics studied ({progressPct}%)
+                  </span>
+                </div>
+                <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{
+                      width: `${progressPct}%`,
+                      background: activeSubject.color || "#C9B6E4",
+                    }}
+                  />
+                </div>
+                {totalCount > 0 && (
+                  <p className="text-[11px] font-semibold text-gray-500 text-right">
+                    {totalCount - doneCount === 0 ? "✨ All topics completed!" : `${totalCount - doneCount} topics remaining to study`}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Chapters & Topics List */}
+            <div className="space-y-3">
+              {chapters.map((ch) => {
+                const chDone = ch.topics.filter((t) => t.done).length;
+                const chTotal = ch.topics.length;
+
+                return (
+                  <div
+                    key={ch.id}
+                    className="p-3.5 rounded-2xl bg-white/70 border border-black/5 shadow-2xs space-y-2.5"
+                  >
+                    <div className="flex items-center justify-between border-b border-black/5 pb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-black text-purple-950" style={{ fontFamily: "Fredoka, sans-serif" }}>
+                          📌 {ch.title}
+                        </span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-50 text-purple-700">
+                          {chDone}/{chTotal} done
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => deleteChapter(ch.id)}
+                        className="text-gray-400 hover:text-red-500 p-1 rounded-lg transition-colors"
+                        title="Delete Chapter"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+
+                    {/* Topics Checklist */}
+                    <div className="space-y-1.5 pl-1">
+                      {ch.topics.length === 0 ? (
+                        <p className="text-[11px] text-gray-400 italic py-1">No topics yet in this chapter.</p>
+                      ) : (
+                        ch.topics.map((tp) => (
+                          <div
+                            key={tp.id}
+                            className="flex items-center justify-between gap-2 text-xs py-1 px-2 rounded-xl hover:bg-white/80 transition-colors group"
+                          >
+                            <label className="flex items-center gap-2 cursor-pointer flex-1 min-w-0">
+                              <input
+                                type="checkbox"
+                                checked={tp.done}
+                                onChange={() => toggleTopic(ch.id, tp.id)}
+                                className="rounded text-purple-600 focus:ring-purple-400"
+                              />
+                              <span className={`font-medium truncate ${tp.done ? "line-through opacity-45 text-gray-500" : "text-gray-800"}`}>
+                                {tp.name}
+                              </span>
+                            </label>
+                            <button
+                              onClick={() => deleteTopic(ch.id, tp.id)}
+                              className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 p-0.5 transition-opacity"
+                              title="Remove topic"
+                            >
+                              <X size={12} />
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    {/* Add Topic Input */}
+                    <div className="flex gap-1.5 pt-1">
+                      <input
+                        value={newTopicTitles[ch.id] || ""}
+                        onChange={(e) => setNewTopicTitles({ ...newTopicTitles, [ch.id]: e.target.value })}
+                        onKeyDown={(e) => e.key === "Enter" && addTopic(ch.id)}
+                        placeholder="Add topic / sub-topic..."
+                        className="flex-1 p-1.5 text-xs rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-1 focus:ring-purple-300"
+                      />
+                      <button
+                        onClick={() => addTopic(ch.id)}
+                        className="px-2.5 py-1 text-xs font-bold rounded-xl bg-purple-100 hover:bg-purple-200 text-purple-800 flex items-center gap-1 transition-colors"
+                      >
+                        <Plus size={12} /> Add
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Add Chapter Row */}
+              <div className="p-3 rounded-2xl bg-white/40 border border-dashed border-purple-200 flex gap-2 items-center">
+                <input
+                  value={newChapterTitle}
+                  onChange={(e) => setNewChapterTitle(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && addChapter()}
+                  placeholder="New chapter name (e.g. Chapter 3: Integrals)..."
+                  className="flex-1 p-2 text-xs rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-purple-300"
+                />
+                <button
+                  onClick={addChapter}
+                  className="px-3.5 py-2 rounded-xl text-xs font-bold bg-purple-600 text-white hover:bg-purple-700 shadow-sm flex items-center gap-1 shrink-0"
+                >
+                  <Plus size={13} /> Add Chapter
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </Sticker>
+
+      {/* ── Submission Trend Chart ── */}
+      <Sticker className="p-4" rotate={0.2}>
         <h4 className="font-bold mb-2 flex items-center gap-1.5" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>🐉 Your submission trend</h4>
         {data.length === 0
           ? <EmptyState emoji="📈" text="Complete a few tasks to see your trend here" />
@@ -1133,7 +1491,22 @@ export default function StudyDen({ session }: { session: Session }) {
   const pendingPrintList = [...tasks].filter((t) => t.status !== "completed").sort((a, b) => daysBetween(a.dueDate, todayStr()) - daysBetween(b.dueDate, todayStr()));
 
   if (!loaded) {
-    return <div className="p-10 text-center" style={{ fontFamily: "Quicksand, sans-serif", background: THEMES[theme].css, minHeight: "100vh" }}>Loading your den... 🦌</div>;
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: THEMES[theme].css, fontFamily: "Quicksand, sans-serif" }}>
+        <style>{`
+          @keyframes pulseLanding {
+            0%, 100% { transform: scale(1); opacity: 0.85; }
+            50% { transform: scale(1.08) translateY(-4px); opacity: 1; }
+          }
+        `}</style>
+        <div style={{ animation: "pulseLanding 2.4s ease-in-out infinite", fontSize: "2.5rem", marginBottom: "1rem" }}>
+          ✨ 🦌 ✨
+        </div>
+        <p style={{ color: "#5B4B6D", fontSize: "1.15rem", fontWeight: 600, letterSpacing: "0.02em", fontFamily: "Fredoka, sans-serif" }}>
+          Landing to earth
+        </p>
+      </div>
+    );
   }
 
   /* ─── render ─── */
@@ -1183,9 +1556,9 @@ export default function StudyDen({ session }: { session: Session }) {
                     style={{ fontFamily: "Fredoka, sans-serif" }}
                   >
                     {"iconImg" in m && m.iconImg ? (
-                      <img src={m.iconImg} alt={m.label} className="w-6 h-6 object-contain shrink-0" />
+                      <img src={m.iconImg} alt={m.label} className="w-8 h-8 object-contain shrink-0" />
                     ) : "icon" in m && m.icon ? (
-                      <m.icon size={20} className="text-gray-600 shrink-0" />
+                      <m.icon size={24} className="text-gray-600 shrink-0 p-0.5" />
                     ) : null}
                     <span>{m.label}</span>
                   </button>
@@ -1365,7 +1738,7 @@ export default function StudyDen({ session }: { session: Session }) {
                 <div className="no-print">
                   <Sticker className="p-4 mb-4" rotate={0.3}>
                     <h3 className="font-bold mb-2 flex items-center gap-1.5" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}><Palette size={16} /> Subjects</h3>
-                    <p className="text-xs opacity-60 mb-2">Subjects are stored locally in your browser for color-coding. The subject name is saved with each task in the database.</p>
+                    <p className="text-xs opacity-60 mb-2">Set your subjects name and suitable color</p>
                     <div className="flex flex-wrap gap-2 mb-3">
                       {subjects.map((s) => (
                         <div key={s.id} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl" style={{ background: s.color + "33" }}>
@@ -1416,7 +1789,7 @@ export default function StudyDen({ session }: { session: Session }) {
               {/* Sub-tab: Stats */}
               {academicTab === "stats" && (
                 <div className="no-print">
-                  <StatsView tasks={tasks} />
+                  <StatsView tasks={tasks} subjects={subjects} userId={userId} />
                 </div>
               )}
             </div>
@@ -1439,7 +1812,7 @@ export default function StudyDen({ session }: { session: Session }) {
           {/* Mode 4: ENTERTAINMENT */}
           {mode === "entertainment" && (
             <div className="no-print">
-              <EntertainmentView />
+              <EntertainmentView userId={userId} />
             </div>
           )}
 

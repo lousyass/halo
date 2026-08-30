@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Search,
   ExternalLink,
@@ -17,7 +17,9 @@ import {
   Tag,
   Monitor,
   Flame,
+  Heart,
 } from "lucide-react";
+import { supabase } from "./lib/supabase";
 import entertainmentSnapshot from "./data/entertainment/fmhy-video-snapshot.json";
 import entertainmentIcon from "./assets/icons/entertainment.png";
 
@@ -29,6 +31,7 @@ export interface LinkItem {
 }
 
 export interface EntertainmentResource {
+  id: string;
   name: string;
   url: string;
   category: string;
@@ -109,28 +112,86 @@ function calculateMatchScore(resource: EntertainmentResource, query: string): nu
 
 /* ─────────────────────────── main component ─────────────────────────── */
 
-export function EntertainmentView() {
+export function EntertainmentView({ userId }: { userId?: string }) {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedSection, setSelectedSection] = useState<string>("all");
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [openLinksId, setOpenLinksId] = useState<string | null>(null);
 
   const allResources = useMemo(() => {
     return (entertainmentSnapshot.resources || []) as EntertainmentResource[];
   }, []);
 
-  const snapshotDateFormatted = useMemo(() => {
+  // Fetch per-user favorites from Supabase
+  const loadFavorites = useCallback(async () => {
     try {
-      const d = new Date(entertainmentSnapshot.generated_at_utc);
-      return d.toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      });
-    } catch {
-      return "Aug 2026";
+      const { data: { user } } = await supabase.auth.getUser();
+      const currentUserId = userId || user?.id;
+      if (!currentUserId) return;
+
+      const { data, error } = await supabase
+        .from("entertainment_favorites")
+        .select("resource_id")
+        .eq("user_id", currentUserId);
+
+      if (error) {
+        console.error("fetch favorites error:", error.message);
+        return;
+      }
+      if (data) {
+        setFavoriteIds(new Set(data.map((r) => r.resource_id)));
+      }
+    } catch (e) {
+      console.warn("loadFavorites failed:", e);
     }
-  }, []);
+  }, [userId]);
+
+  useEffect(() => {
+    loadFavorites();
+  }, [loadFavorites]);
+
+  // Toggle favorite for a resource
+  const toggleFavorite = async (resourceId: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    const currentUserId = userId || user?.id;
+    if (!currentUserId) {
+      alert("Please sign in to save favorites.");
+      return;
+    }
+
+    const isFav = favoriteIds.has(resourceId);
+    const nextFavorites = new Set(favoriteIds);
+
+    // Optimistic UI update
+    if (isFav) {
+      nextFavorites.delete(resourceId);
+    } else {
+      nextFavorites.add(resourceId);
+    }
+    setFavoriteIds(nextFavorites);
+
+    try {
+      if (isFav) {
+        const { error } = await supabase
+          .from("entertainment_favorites")
+          .delete()
+          .eq("user_id", currentUserId)
+          .eq("resource_id", resourceId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("entertainment_favorites")
+          .insert({ user_id: currentUserId, resource_id: resourceId });
+        if (error) throw error;
+      }
+    } catch (e) {
+      console.error("toggleFavorite error:", e);
+      // Revert on error
+      setFavoriteIds(favoriteIds);
+    }
+  };
 
   // Distinct categories with resource counts
   const categoriesWithCounts = useMemo(() => {
@@ -166,6 +227,11 @@ export function EntertainmentView() {
 
     return allResources
       .filter((r) => {
+        // Favorites filter
+        if (showFavoritesOnly && !favoriteIds.has(r.id)) {
+          return false;
+        }
+
         // Category filter
         if (selectedCategory !== "all" && r.category !== selectedCategory) {
           return false;
@@ -206,12 +272,13 @@ export function EntertainmentView() {
         return a.resource.name.localeCompare(b.resource.name);
       })
       .map((item) => item.resource);
-  }, [allResources, search, selectedCategory, selectedSection]);
+  }, [allResources, search, selectedCategory, selectedSection, showFavoritesOnly, favoriteIds]);
 
   const clearFilters = () => {
     setSearch("");
     setSelectedCategory("all");
     setSelectedSection("all");
+    setShowFavoritesOnly(false);
   };
 
   return (
@@ -224,16 +291,11 @@ export function EntertainmentView() {
               <img src={entertainmentIcon} alt="Entertainment" className="w-8 h-8 object-contain" />
             </div>
             <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-xl md:text-2xl font-black tracking-tight text-gray-800" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>
-                  Entertainment Directory
-                </h2>
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-pink-100/90 text-pink-700 border border-pink-200/80">
-                  Curated Snapshot • {snapshotDateFormatted}
-                </span>
-              </div>
-              <p className="text-xs md:text-sm text-gray-600 mt-1">
-                Static reference directory for streaming, anime, live TV, download sites & media databases.
+              <h2 className="text-xl md:text-2xl font-black tracking-tight" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>
+                Halo Entertainment
+              </h2>
+              <p className="text-xs md:text-sm text-gray-700 mt-1 whitespace-pre-line leading-relaxed font-medium">
+                List of anime, live Tv, series, movies , downloading sites & media database.{"\n\n"}Have fun
               </p>
             </div>
           </div>
@@ -265,7 +327,7 @@ export function EntertainmentView() {
               </button>
             )}
           </div>
-          {(search || selectedCategory !== "all" || selectedSection !== "all") && (
+          {(search || selectedCategory !== "all" || selectedSection !== "all" || showFavoritesOnly) && (
             <button
               onClick={clearFilters}
               className="px-3.5 py-2.5 rounded-2xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors shrink-0"
@@ -276,7 +338,7 @@ export function EntertainmentView() {
         </div>
       </div>
 
-      {/* ── Category Filter Pills ── */}
+      {/* ── Category & Favorite Filter Pills ── */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold uppercase tracking-wider text-purple-900/70">
@@ -288,20 +350,39 @@ export function EntertainmentView() {
         </div>
 
         <div className="flex flex-wrap gap-1.5">
+          {/* Favorites Filter Pill */}
+          <button
+            onClick={() => {
+              setShowFavoritesOnly(!showFavoritesOnly);
+            }}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              showFavoritesOnly
+                ? "bg-rose-500 text-white shadow-sm scale-[1.02]"
+                : "bg-white/70 hover:bg-white text-gray-700 border border-white/80"
+            }`}
+          >
+            <Heart size={13} className={showFavoritesOnly ? "fill-white text-white" : "text-rose-500"} />
+            <span>Favorites</span>
+            <span className={`text-[10px] px-1.5 py-0.2 rounded-md ${showFavoritesOnly ? "bg-white/20" : "bg-rose-100 text-rose-700"}`}>
+              {favoriteIds.size}
+            </span>
+          </button>
+
+          {/* All Categories */}
           <button
             onClick={() => {
               setSelectedCategory("all");
               setSelectedSection("all");
             }}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-              selectedCategory === "all"
+              selectedCategory === "all" && !showFavoritesOnly
                 ? "bg-purple-600 text-white shadow-sm scale-[1.02]"
                 : "bg-white/70 hover:bg-white text-gray-700 border border-white/80"
             }`}
           >
             <Sparkles size={13} />
             <span>All Categories</span>
-            <span className={`text-[10px] px-1.5 py-0.2 rounded-md ${selectedCategory === "all" ? "bg-white/20" : "bg-black/5"}`}>
+            <span className={`text-[10px] px-1.5 py-0.2 rounded-md ${selectedCategory === "all" && !showFavoritesOnly ? "bg-white/20" : "bg-black/5"}`}>
               {allResources.length}
             </span>
           </button>
@@ -390,7 +471,9 @@ export function EntertainmentView() {
             No resources match your search
           </h3>
           <p className="text-xs text-gray-500 mb-4">
-            Try adjusting your search query or switching to another category.
+            {showFavoritesOnly
+              ? "You haven't added any favorites matching these filters yet. Click the heart icon on any resource card to favorite it!"
+              : "Try adjusting your search query or switching to another category."}
           </p>
           <button
             onClick={clearFilters}
@@ -403,8 +486,9 @@ export function EntertainmentView() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
           {filteredResources.map((res, idx) => {
             const hasMultipleLinks = res.all_links && res.all_links.length > 1;
-            const cardKey = `${res.name}-${res.category}-${idx}`;
+            const cardKey = `${res.id}-${idx}`;
             const isLinksOpen = openLinksId === cardKey;
+            const isFav = favoriteIds.has(res.id);
             const catColors = CATEGORY_COLORS[res.category] || {
               bg: "bg-purple-50",
               text: "text-purple-700",
@@ -417,18 +501,31 @@ export function EntertainmentView() {
                 className="p-4 rounded-2xl bg-white/80 hover:bg-white/95 backdrop-blur-sm border border-white/70 hover:border-purple-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group relative"
               >
                 <div>
-                  {/* Category & Section badges */}
-                  <div className="flex items-center gap-1.5 flex-wrap mb-2.5">
-                    <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${catColors.bg} ${catColors.text} border ${catColors.border}`}
-                    >
-                      {res.category}
-                    </span>
-                    {res.section && (
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600">
-                        {res.section}
+                  {/* Category & Section badges + Favorite toggle */}
+                  <div className="flex items-center justify-between gap-1 mb-2.5">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${catColors.bg} ${catColors.text} border ${catColors.border}`}
+                      >
+                        {res.category}
                       </span>
-                    )}
+                      {res.section && (
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600">
+                          {res.section}
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => toggleFavorite(res.id)}
+                      className={`p-1.5 rounded-xl transition-all ${
+                        isFav
+                          ? "text-rose-500 bg-rose-50 hover:bg-rose-100"
+                          : "text-gray-300 hover:text-rose-400 hover:bg-gray-100/70"
+                      }`}
+                      title={isFav ? "Remove from favorites" : "Add to favorites"}
+                    >
+                      <Heart size={15} className={isFav ? "fill-rose-500 text-rose-500" : ""} />
+                    </button>
                   </div>
 
                   {/* Resource Name */}

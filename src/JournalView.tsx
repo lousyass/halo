@@ -650,7 +650,7 @@ function MemoryWallCalendar({
           <h3 className="font-bold text-lg" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>
             {cursor.toLocaleDateString(undefined, { month: "long", year: "numeric" })}
           </h3>
-          <p className="text-xs opacity-60">Memory Wall — Days with polaroids & memories</p>
+          <p className="text-xs opacity-60">Capture your days with Polaroids & memories</p>
         </div>
         <button onClick={() => setCursor(new Date(year, month + 1, 1))} className="p-2 rounded-xl hover:bg-black/5">
           <ChevronRight size={20} />
