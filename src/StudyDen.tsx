@@ -340,7 +340,7 @@ function TaskForm({ initial, subjects, typeSuggestions, onSave, onClose }: {
 }) {
   const [subjectId, setSubjectId] = useState(initial?.subjectId || subjects[0]?.id || "");
   const [title, setTitle] = useState(initial?.title || "");
-  const [type, setType] = useState(initial?.type || "assignment");
+  const [type, setType] = useState(initial?.type || "");
   const [dueDate, setDueDate] = useState(initial?.dueDate || todayStr());
   const [customColor, setCustomColor] = useState(initial?.customColor || "");
   const [customIcon, setCustomIcon] = useState(initial?.customIcon || "");
@@ -355,11 +355,12 @@ function TaskForm({ initial, subjects, typeSuggestions, onSave, onClose }: {
 
   const save = () => {
     if (!title.trim() || !subjectId) return;
+    const resolvedType = type.trim() || "Assignment";
     onSave({
-      id: initial?.id || crypto.randomUUID(), subjectId, title: title.trim(), type, dueDate,
+      id: initial?.id || crypto.randomUUID(), subjectId, title: title.trim(), type: resolvedType, dueDate,
       status: initial?.status || "pending", completedAt: initial?.completedAt || null,
       customColor: customColor || null, customIcon: customIcon || null,
-      topics: type === "exam" ? topics : [],
+      topics: resolvedType.toLowerCase() === "exam" ? topics : [],
       createdAt: initial?.createdAt || new Date().toISOString(),
       rescheduledFrom: initial?.dueDate && initial.dueDate !== dueDate ? (initial.rescheduledFrom || initial.dueDate) : (initial?.rescheduledFrom || null),
     });
@@ -386,28 +387,49 @@ function TaskForm({ initial, subjects, typeSuggestions, onSave, onClose }: {
               <label className="text-xs font-semibold opacity-70">Title</label>
               <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Activity 5" className="w-full mt-1 p-2 rounded-xl border" />
             </div>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <label className="text-xs font-semibold opacity-70">Type</label>
-                <input
-                  list="type-suggestions"
-                  value={type}
-                  onChange={(e) => setType(e.target.value)}
-                  placeholder="e.g. Assignment, Exam, CT, Quiz…"
-                  className="w-full mt-1 p-2 rounded-xl border"
-                />
-                <datalist id="type-suggestions">
-                  {typeSuggestions.map((s) => <option key={s} value={s} />)}
-                </datalist>
-              </div>
+            <div>
+              <label className="text-xs font-semibold opacity-70">Type</label>
+              <input
+                list="type-suggestions"
+                value={type}
+                onChange={(e) => setType(e.target.value)}
+                placeholder="e.g. Assignment, Exam, CT, Quiz…"
+                className="w-full mt-1 p-2 rounded-xl border bg-white focus:outline-none focus:ring-2 focus:ring-purple-200"
+              />
+              <datalist id="type-suggestions">
+                {typeSuggestions.map((s) => <option key={s} value={s} />)}
+              </datalist>
+
+              {/* Suggestions chips from previously entered & standard task types */}
+              {typeSuggestions.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {typeSuggestions.slice(0, 8).map((s) => {
+                    const isSelected = type.toLowerCase() === s.toLowerCase();
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setType(s)}
+                        className={`text-[11px] px-2.5 py-1 rounded-lg border transition-all ${
+                          isSelected
+                            ? "bg-purple-100 border-purple-300 text-purple-900 font-bold shadow-xs"
+                            : "bg-gray-50/80 border-gray-200 hover:bg-purple-50 hover:border-purple-200 text-gray-700 font-medium"
+                        }`}
+                      >
+                        {s}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
             <div>
               <label className="text-xs font-semibold opacity-70">Due date</label>
               <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="w-full mt-1 p-2 rounded-xl border" />
             </div>
-            {type === "exam" && (
+            {(type.toLowerCase() === "exam" || type.toLowerCase() === "ct" || type.toLowerCase() === "quiz") && (
               <div className="p-3 rounded-xl bg-purple-50/60">
-                <label className="text-xs font-semibold opacity-70 flex items-center gap-1"><ListChecks size={14} /> Syllabus topics</label>
+                <label className="text-xs font-semibold opacity-70 flex items-center gap-1"><ListChecks size={14} /> Exam topics</label>
                 <div className="space-y-1 mt-2">
                   {topics.map((t) => (
                     <div key={t.id} className="flex items-center gap-2 text-sm">
@@ -1069,8 +1091,12 @@ export default function StudyDen({ session }: { session: Session }) {
   /* ── derived ── */
   const subjById = useMemo(() => Object.fromEntries(subjects.map((s) => [s.id, s])), [subjects]);
 
-  // Distinct type values the user has previously entered — used for datalist suggestions
-  const typeSuggestions = useMemo(() => [...new Set(tasks.map((t) => t.type).filter(Boolean))].sort(), [tasks]);
+  // Distinct type values the user has previously entered + common defaults — used for datalist & suggestions
+  const typeSuggestions = useMemo(() => {
+    const defaults = ["Assignment", "Exam", "CT", "Quiz", "Project", "Lab", "Homework", "Activity", "Presentation"];
+    const userEntered = tasks.map((t) => t.type).filter(Boolean);
+    return [...new Set([...userEntered, ...defaults])].filter(Boolean);
+  }, [tasks]);
 
   // Overdue tasks: deadline passed, still not completed — shown as in-app prompt on dashboard
   const overdueForPrompt = useMemo(() =>
