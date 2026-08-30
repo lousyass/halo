@@ -253,17 +253,48 @@ export const FrenchView: React.FC<{ userId: string }> = ({ userId }) => {
     setDailyBatch(batch.length > 0 ? batch : FRENCH_FREQUENCY_WORDS.slice(0, 6));
   };
 
-  // Web Speech API for pronunciation
+  // Web Speech API for French pronunciation with explicit French voice resolution
   const speakFrench = (text: string) => {
     if (!("speechSynthesis" in window)) {
       alert("Text-to-speech is not supported on this browser.");
       return;
     }
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "fr-FR";
-    utterance.rate = 0.9;
-    window.speechSynthesis.speak(utterance);
+
+    const playWithVoice = (frenchVoice: SpeechSynthesisVoice | null) => {
+      if (!frenchVoice) {
+        alert(
+          "A French text-to-speech voice is not installed or available on this system/browser. Please install or enable a French voice in your system/browser settings."
+        );
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "fr-FR";
+      utterance.rate = 0.9;
+      utterance.voice = frenchVoice;
+      window.speechSynthesis.speak(utterance);
+    };
+
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length > 0) {
+      const frenchVoice =
+        voices.find((v) => v.lang.toLowerCase().replace("_", "-") === "fr-fr") ||
+        voices.find((v) => v.lang.toLowerCase().startsWith("fr")) ||
+        null;
+      playWithVoice(frenchVoice);
+    } else {
+      // If voices are not yet loaded, wait for the voiceschanged event
+      const handleVoicesChanged = () => {
+        window.speechSynthesis.removeEventListener("voiceschanged", handleVoicesChanged);
+        const loadedVoices = window.speechSynthesis.getVoices();
+        const frenchVoice =
+          loadedVoices.find((v) => v.lang.toLowerCase().replace("_", "-") === "fr-fr") ||
+          loadedVoices.find((v) => v.lang.toLowerCase().startsWith("fr")) ||
+          null;
+        playWithVoice(frenchVoice);
+      };
+      window.speechSynthesis.addEventListener("voiceschanged", handleVoicesChanged, { once: true });
+    }
   };
 
   // Add daily word to learning cards
