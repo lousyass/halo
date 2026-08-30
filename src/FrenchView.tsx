@@ -248,9 +248,18 @@ export const FrenchView: React.FC<{ userId: string }> = ({ userId }) => {
   };
 
   // Generate 6 fresh daily words from frequency list not yet shown
-  const generateDailyBatch = (shown: Set<string>) => {
-    const unshown = FRENCH_FREQUENCY_WORDS.filter((w) => !shown.has(w.french.toLowerCase()));
-    const batch = unshown.slice(0, 6);
+  const generateDailyBatch = (shown: Set<string>, currentBatch?: FrequencyWord[]) => {
+    const currentSet = new Set(currentBatch?.map((w) => w.french.toLowerCase()) || []);
+    // Unshown words excluding what's currently on screen
+    let pool = FRENCH_FREQUENCY_WORDS.filter(
+      (w) => !shown.has(w.french.toLowerCase()) && !currentSet.has(w.french.toLowerCase())
+    );
+    if (pool.length < 6) {
+      pool = FRENCH_FREQUENCY_WORDS.filter((w) => !shown.has(w.french.toLowerCase()));
+    }
+    // Random sample 6 from the unshown pool
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    const batch = shuffled.slice(0, 6);
     setDailyBatch(batch.length > 0 ? batch : FRENCH_FREQUENCY_WORDS.slice(0, 6));
   };
 
@@ -827,7 +836,7 @@ export const FrenchView: React.FC<{ userId: string }> = ({ userId }) => {
             </div>
             <div className="flex gap-2">
               <button
-                onClick={() => generateDailyBatch(wordsShown)}
+                onClick={() => generateDailyBatch(wordsShown, dailyBatch)}
                 className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white/70 hover:bg-white border text-gray-700 flex items-center gap-1 shadow-sm"
               >
                 <Shuffle size={13} /> Refresh Suggestions
@@ -2146,22 +2155,18 @@ export const FrenchView: React.FC<{ userId: string }> = ({ userId }) => {
                               )}
                             </div>
 
-                            <div className="pt-2 border-t border-gray-50 flex items-center justify-between text-[11px] text-gray-400">
-                              <span className="truncate max-w-[140px]" title={res.source_attribution || ""}>
-                                {res.source_attribution || ""}
-                              </span>
-
-                              {res.url && (
+                            {res.url && (
+                              <div className="pt-2 border-t border-gray-50 flex items-center justify-end">
                                 <a
                                   href={res.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="px-2.5 py-1 rounded-xl bg-purple-50 text-purple-700 hover:bg-purple-100 font-bold flex items-center gap-1"
+                                  className="px-2.5 py-1 rounded-xl bg-purple-50 text-purple-700 hover:bg-purple-100 font-bold flex items-center gap-1 text-[11px]"
                                 >
                                   Open <ExternalLink size={11} />
                                 </a>
-                              )}
-                            </div>
+                              </div>
+                            )}
                           </div>
                         );
                       })}

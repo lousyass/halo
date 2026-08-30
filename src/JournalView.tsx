@@ -1078,37 +1078,47 @@ export default function JournalView({
 
     const { data: { publicUrl } } = supabase.storage.from("journal-photos").getPublicUrl(path);
 
-    // Best-effort Drive upload relay
-    let originalDriveUrl: string | null = null;
-    try {
-      const form = new FormData();
-      form.append("file", file, file.name);
-      form.append("entry_date", entryDate);
-      const driveRes = await fetch(`${SUPABASE_URL}/functions/v1/upload-original-to-drive`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${session.access_token}` },
-        body: form,
-      });
-      if (driveRes.ok) {
-        const resData = await driveRes.json();
-        originalDriveUrl = resData.drive_url || null;
-      }
-    } catch (e) {
-      console.warn("Drive upload failed (best-effort):", e);
-    }
-
+    // 1. Immediately insert photo row with public CDN url so save completes instantly
     const { data: photoRow, error: dbErr } = await supabase
       .from("journal_photos")
       .insert({
         journal_entry_id: entryId,
         user_id: userId,
         image_url: publicUrl,
-        original_drive_url: originalDriveUrl,
+        original_drive_url: null,
       })
       .select()
       .single();
 
     if (dbErr) throw dbErr;
+
+    // 2. Best-effort Google Drive relay upload executed non-blocking in background
+    if (session?.access_token && photoRow?.id) {
+      const photoId = photoRow.id;
+      const form = new FormData();
+      form.append("file", file, file.name);
+      form.append("entry_date", entryDate);
+      fetch(`${SUPABASE_URL}/functions/v1/upload-original-to-drive`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body: form,
+      })
+        .then(async (res) => {
+          if (res.ok) {
+            const resData = await res.json();
+            if (resData.drive_url) {
+              await supabase
+                .from("journal_photos")
+                .update({ original_drive_url: resData.drive_url })
+                .eq("id", photoId);
+            }
+          }
+        })
+        .catch((e) => {
+          console.warn("Background Drive upload relay failed (best-effort):", e);
+        });
+    }
+
     return photoRow as JournalPhoto;
   };
 

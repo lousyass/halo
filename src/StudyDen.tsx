@@ -14,6 +14,10 @@ import { supabase } from "./lib/supabase";
 import { SUPPORT_CONTACT } from "./lib/contact";
 import JournalView from "./JournalView";
 import { FrenchView } from "./FrenchView";
+import academicsIcon from "./assets/icons/academics.png";
+import journalIcon from "./assets/icons/journal.png";
+import frenchIcon from "./assets/icons/french.png";
+import entertainmentIcon from "./assets/icons/entertainment.png";
 
 /* ─────────────────────────────── types ─────────────────────────────── */
 
@@ -740,18 +744,14 @@ function SettingsView({ profile, onSave, onSignOut }: {
 
 /* ─────────────────────────── calendar view ─────────────────────────── */
 
-function CalendarView({ tasks, subjects, routineEntries, dayBackgrounds, onSetBackground, onClearBackground, onQuickAdd }: {
+function CalendarView({ tasks, subjects, routineEntries, onQuickAdd }: {
   tasks: FrontendTask[];
   subjects: Subject[];
   routineEntries: RoutineEntry[];
-  dayBackgrounds: Record<string, string>;
-  onSetBackground: (date: string, url: string) => void;
-  onClearBackground: (date: string) => void;
   onQuickAdd: (date: string) => void;
 }) {
   const [cursor, setCursor] = useState(new Date());
   const [selected, setSelected] = useState<string | null>(null);
-  const [bgInput, setBgInput] = useState("");
 
   const year = cursor.getFullYear(), month = cursor.getMonth();
   const cells = monthGrid(year, month);
@@ -764,7 +764,6 @@ function CalendarView({ tasks, subjects, routineEntries, dayBackgrounds, onSetBa
   }, [tasks]);
 
   const selectedTasks = selected ? (tasksByDate[selected] || []) : [];
-  const selectedBg = selected ? dayBackgrounds[selected] : null;
 
   // Routine entries for the selected date's day-of-week
   const selectedDow = selected ? new Date(selected + "T00:00:00").getDay() : null;
@@ -774,7 +773,7 @@ function CalendarView({ tasks, subjects, routineEntries, dayBackgrounds, onSetBa
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-4">
         <button onClick={() => setCursor(new Date(year, month - 1, 1))} className="p-2 rounded-xl hover:bg-black/5"><ChevronLeft size={18} /></button>
         <h3 className="font-bold text-lg" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>
           {cursor.toLocaleDateString(undefined, { month: "long", year: "numeric" })}
@@ -782,29 +781,64 @@ function CalendarView({ tasks, subjects, routineEntries, dayBackgrounds, onSetBa
         <button onClick={() => setCursor(new Date(year, month + 1, 1))} className="p-2 rounded-xl hover:bg-black/5"><ChevronRight size={18} /></button>
       </div>
 
-      <div className="grid grid-cols-7 gap-1.5 text-center text-xs font-semibold opacity-60 mb-1">
-        {["S","M","T","W","T","F","S"].map((d, i) => <div key={i}>{d}</div>)}
+      <div className="grid grid-cols-7 gap-2 text-center text-xs font-bold text-gray-500 mb-2">
+        {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d, i) => <div key={i}>{d}</div>)}
       </div>
-      <div className="grid grid-cols-7 gap-1.5">
+      <div className="grid grid-cols-7 gap-2">
         {cells.map((d, i) => {
-          if (!d) return <div key={i} />;
+          if (!d) return <div key={i} className="min-h-[90px] rounded-2xl bg-black/[0.02]" />;
           const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
           const dayTasks = tasksByDate[dateStr] || [];
           const isToday = dateStr === todayStr();
-          const hasBg = dayBackgrounds[dateStr];
           return (
             <button
               key={i}
-              onClick={() => { setSelected(dateStr); setBgInput(dayBackgrounds[dateStr] || ""); }}
-              className={`aspect-square rounded-xl p-1 text-left relative overflow-hidden border ${isToday ? "border-2" : "border-transparent"}`}
-              style={{ borderColor: isToday ? "#C9B6E4" : undefined, background: hasBg ? `url(${hasBg}) center/cover` : "#FFFFFFAA" }}
+              onClick={() => setSelected(dateStr)}
+              className={`min-h-[90px] rounded-2xl p-2 text-left relative overflow-hidden border transition-all ${
+                isToday ? "border-2 shadow-sm bg-white/95" : "border-white/70 hover:border-purple-200 bg-white/75 hover:bg-white/95"
+              } backdrop-blur-sm flex flex-col justify-between`}
+              style={{ borderColor: isToday ? "#C9B6E4" : undefined }}
             >
-              <span className={`text-xs font-semibold ${hasBg ? "bg-white/70 px-1 rounded" : ""}`}>{d}</span>
-              <div className="absolute bottom-1 left-1 right-1 flex gap-0.5 flex-wrap">
-                {dayTasks.slice(0, 3).map((t) => (
-                  <span key={t.id} className="w-2 h-2 rounded-full" style={{ background: t.customColor || subjById[t.subjectId]?.color || "#C9B6E4" }} />
-                ))}
-                {dayTasks.length > 3 && <span className="text-[9px]">+{dayTasks.length - 3}</span>}
+              <div className="flex items-center justify-between w-full">
+                <span className={`text-sm font-bold ${isToday ? "text-purple-700 bg-purple-100 px-1.5 py-0.5 rounded-lg" : "text-gray-700"}`}>
+                  {d}
+                </span>
+                {dayTasks.length > 0 && (
+                  <div className="flex gap-1 items-center">
+                    {dayTasks.slice(0, 3).map((t) => (
+                      <span
+                        key={t.id}
+                        className="w-1.5 h-1.5 rounded-full shrink-0"
+                        style={{ background: t.customColor || subjById[t.subjectId]?.color || "#C9B6E4" }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Task titles shown as text badges in the cell */}
+              <div className="mt-1 space-y-1 w-full overflow-hidden">
+                {dayTasks.slice(0, 2).map((t) => {
+                  const color = t.customColor || subjById[t.subjectId]?.color || "#C9B6E4";
+                  return (
+                    <div
+                      key={t.id}
+                      className="text-[10.5px] font-semibold px-1.5 py-0.5 rounded-md truncate text-gray-800 flex items-center gap-1"
+                      style={{
+                        backgroundColor: color + "22",
+                        borderLeft: `2.5px solid ${color}`,
+                      }}
+                      title={t.title}
+                    >
+                      <span className="truncate">{t.title}</span>
+                    </div>
+                  );
+                })}
+                {dayTasks.length > 2 && (
+                  <span className="text-[9.5px] font-bold text-gray-400 pl-1 block">
+                    +{dayTasks.length - 2} more
+                  </span>
+                )}
               </div>
             </button>
           );
@@ -819,11 +853,6 @@ function CalendarView({ tasks, subjects, routineEntries, dayBackgrounds, onSetBa
             </h4>
             <button onClick={() => setSelected(null)}><X size={16} /></button>
           </div>
-
-          {/* Day background preview */}
-          {selectedBg && (
-            <img src={selectedBg} alt="Day background" className="w-full h-24 object-cover rounded-xl mb-3" />
-          )}
 
           {/* Tasks due this day */}
           <div className="mb-3">
@@ -853,19 +882,9 @@ function CalendarView({ tasks, subjects, routineEntries, dayBackgrounds, onSetBa
                 ))}
           </div>
 
-          <button onClick={() => onQuickAdd(selected)} className="text-sm mb-3 px-3 py-1.5 rounded-xl bg-pink-100 flex items-center gap-1">
+          <button onClick={() => onQuickAdd(selected)} className="text-sm px-3 py-1.5 rounded-xl bg-pink-100 flex items-center gap-1">
             <Plus size={14} /> Add task on this day
           </button>
-
-          {/* Day background */}
-          <div className="pt-3 border-t border-black/5">
-            <label className="text-xs font-semibold opacity-70">Background for this day (paste image URL)</label>
-            <div className="flex gap-1.5 mt-1">
-              <input value={bgInput} onChange={(e) => setBgInput(e.target.value)} placeholder="https://..." className="flex-1 p-1.5 rounded-lg border text-xs" />
-              <button onClick={() => onSetBackground(selected, bgInput)} className="px-2.5 rounded-lg bg-purple-200 text-xs">Set</button>
-              {selectedBg && <button onClick={() => { onClearBackground(selected); setBgInput(""); }} className="px-2.5 rounded-lg bg-black/5 text-xs">Clear</button>}
-            </div>
-          </div>
         </Sticker>
       )}
     </div>
@@ -925,7 +944,9 @@ export default function StudyDen({ session }: { session: Session }) {
 
   // UI
   const [loaded, setLoaded] = useState(false);
-  const [tab, setTab] = useState("dashboard");
+  const [mode, setMode] = useState<"academics" | "journal" | "french" | "entertainment" | "settings">("academics");
+  const [academicTab, setAcademicTab] = useState<"dashboard" | "calendar" | "tasks" | "routine" | "stats">("dashboard");
+  const [snoozedOverdueIds, setSnoozedOverdueIds] = useState<Set<string>>(new Set());
   const [formOpen, setFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Partial<FrontendTask> | null>(null);
   const [subjectDraft, setSubjectDraft] = useState({ name: "", color: COLOR_PRESETS[0].hex });
@@ -995,8 +1016,8 @@ export default function StudyDen({ session }: { session: Session }) {
 
   // Overdue tasks: deadline passed, still not completed — shown as in-app prompt on dashboard
   const overdueForPrompt = useMemo(() =>
-    tasks.filter((t) => t.status !== "completed" && daysBetween(t.dueDate, todayStr()) < 0),
-    [tasks]
+    tasks.filter((t) => t.status !== "completed" && daysBetween(t.dueDate, todayStr()) < 0 && !snoozedOverdueIds.has(t.id)),
+    [tasks, snoozedOverdueIds]
   );
 
   const upcoming = useMemo(() =>
@@ -1116,233 +1137,345 @@ export default function StudyDen({ session }: { session: Session }) {
 
   /* ─── render ─── */
   return (
-    <div className="min-h-screen p-4 md:p-6" style={{ background: THEMES[theme].css, fontFamily: "Quicksand, sans-serif" }}>
+    <div className="min-h-screen p-3 md:p-6" style={{ background: THEMES[theme].css, fontFamily: "Quicksand, sans-serif" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@400;500;600;700&display=swap'); @media print { .no-print { display: none !important; } .print-only { display: block !important; } } .print-only { display: none; }`}</style>
 
-      <div className="max-w-3xl mx-auto">
-        {/* header */}
-        <div className="flex items-center justify-between mb-5 no-print">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>
-              Halo <span>{CREATURES[new Date().getDate() % CREATURES.length]}</span>
-            </h1>
-            <p className="text-xs opacity-60">{session.user.email}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <select value={theme} onChange={(e) => setTheme(e.target.value as keyof typeof THEMES)} className="text-xs p-1.5 rounded-xl border bg-white/70">
-              {Object.entries(THEMES).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-            </select>
-            <button onClick={() => window.print()} className="p-2 rounded-xl bg-white/70 hover:bg-white"><Printer size={16} /></button>
-          </div>
-        </div>
-
-        {/* tabs */}
-        <div className="flex gap-1.5 mb-5 no-print flex-wrap">
-          {[
-            { id: "dashboard", label: "Dashboard",  icon: LayoutDashboard },
-            { id: "calendar",  label: "Calendar",   icon: CalendarDays },
-            { id: "tasks",     label: "Tasks",       icon: BookOpen },
-            { id: "routine",   label: "Routine",     icon: Clock },
-            { id: "journal",   label: "Journal",     icon: NotebookPen },
-            { id: "french",    label: "French",      icon: Languages },
-            { id: "stats",     label: "Stats",       icon: BarChart3 },
-            { id: "settings",  label: "Settings",    icon: Settings },
-          ].map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold transition-colors ${tab === t.id ? "bg-white shadow-sm" : "bg-white/40 opacity-70"}`}
-              style={{ color: "#5B4B6D" }}
-            >
-              <t.icon size={15} /> <span className="hidden sm:inline">{t.label}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* dashboard */}
-        {tab === "dashboard" && (
-          <div className="no-print">
-            {/* Overdue confirmation prompt — same condition as the overdue email threshold */}
-            {overdueForPrompt.length > 0 && (
-              <Sticker className="p-4 mb-4 border border-red-100" rotate={0.3}>
-                <h3 className="font-bold mb-2 flex items-center gap-1.5 text-sm" style={{ fontFamily: "Fredoka, sans-serif", color: "#B91C1C" }}>
-                  ⚠️ Did you submit these?
-                </h3>
-                {overdueForPrompt.map((t) => (
-                  <div key={t.id} className="flex items-center justify-between gap-2 mb-2 text-sm">
-                    <div>
-                      <span className="font-semibold">{t.title}</span>
-                      <span className="opacity-50 ml-1">— due {niceDate(t.dueDate)}</span>
-                    </div>
-                    <div className="flex gap-1.5 shrink-0">
-                      <button onClick={() => toggleTask(t.id)} className="px-2.5 py-1 rounded-lg text-white text-xs font-semibold" style={{ background: "#93C9A8" }}>
-                        ✓ Mark done
-                      </button>
-                      <button className="px-2.5 py-1 rounded-lg text-xs bg-black/5 opacity-60">Still working</button>
-                    </div>
-                  </div>
-                ))}
-              </Sticker>
-            )}
-            <Sticker className="p-4 mb-4" rotate={-0.3}>
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>🌸 Coming up soon</h3>
-                <button onClick={() => { setEditingTask(null); setFormOpen(true); }} className="flex items-center gap-1 text-sm px-3 py-1.5 rounded-xl text-white" style={{ background: "#E497B3" }}>
-                  <Plus size={14} /> Add task
-                </button>
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-6 items-start">
+        {/* ── Left Sidebar (Desktop) / Top Nav (Mobile) ── */}
+        <aside className="w-full md:w-64 shrink-0 no-print flex flex-col justify-between md:sticky md:top-6">
+          <div className="space-y-4">
+            {/* App Brand Header */}
+            <div className="p-4 rounded-3xl bg-white/70 backdrop-blur-md border border-white/60 shadow-sm flex items-center justify-between md:block">
+              <div>
+                <h1 className="text-2xl font-black flex items-center gap-2 tracking-tight" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>
+                  Halo <span className="text-xl">{CREATURES[new Date().getDate() % CREATURES.length]}</span>
+                </h1>
+                <p className="text-[11px] font-semibold text-gray-500 truncate max-w-[180px] mt-0.5">{session.user.email}</p>
               </div>
-              {upcoming.length === 0
-                ? <EmptyState emoji="🎀" text="Nothing pending — add a task to get started" />
-                : upcoming.map((t) => <TaskCard key={t.id} task={t} subject={subjById[t.subjectId]} onToggle={toggleTask} onEdit={(t) => { setEditingTask(t); setFormOpen(true); }} onDelete={deleteTask} />)}
-            </Sticker>
-
-            <Sticker className="p-4" rotate={0.2}>
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>All tasks</h3>
-                <button onClick={() => setGroupBy(groupBy === "subject" ? "type" : "subject")} className="text-xs px-2.5 py-1 rounded-lg bg-black/5">
-                  Group by: {groupBy === "subject" ? "Subject" : "Type"}
-                </button>
-              </div>
-              <div className="flex gap-1.5 mb-3 flex-wrap">
-                <div className="flex items-center gap-1 bg-white rounded-lg px-2 flex-1 min-w-[140px]">
-                  <Search size={13} className="opacity-50" />
-                  <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search..." className="p-1.5 text-sm outline-none w-full" />
-                </div>
-                <select value={filterSubject} onChange={(e) => setFilterSubject(e.target.value)} className="text-xs p-1.5 rounded-lg border bg-white">
-                  <option value="all">All subjects</option>
-                  {subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+              <div className="md:hidden flex items-center gap-1.5">
+                <select value={theme} onChange={(e) => setTheme(e.target.value as keyof typeof THEMES)} className="text-[11px] p-1.5 rounded-xl border bg-white/80">
+                  {Object.entries(THEMES).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
                 </select>
-                <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="text-xs p-1.5 rounded-lg border bg-white">
-                  <option value="all">All types</option>
-                  {typeSuggestions.map((t) => <option key={t} value={t}>{t}</option>)}
-                </select>
-                <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="text-xs p-1.5 rounded-lg border bg-white">
-                  <option value="pending">Pending</option>
-                  <option value="completed">Completed</option>
-                  <option value="all">All</option>
-                </select>
-                <button onClick={() => setThisWeekOnly(!thisWeekOnly)} className={`text-xs px-2.5 py-1 rounded-lg ${thisWeekOnly ? "bg-pink-200" : "bg-black/5"}`}>This week</button>
+                <button onClick={() => window.print()} className="p-1.5 rounded-xl bg-white/80 hover:bg-white"><Printer size={14} /></button>
               </div>
-              {filterStatus === "pending" && Object.keys(grouped).length === 0
-                ? <EmptyState emoji="🐱" text="No tasks match your filters" />
-                : filterStatus !== "pending"
-                ? filtered.map((t) => <TaskCard key={t.id} task={t} subject={subjById[t.subjectId]} onToggle={toggleTask} onEdit={(t) => { setEditingTask(t); setFormOpen(true); }} onDelete={deleteTask} />)
-                : Object.entries(grouped).map(([key, list]) => (
-                    <div key={key} className="mb-3">
-                      <div className="text-xs font-bold opacity-60 mb-1 uppercase tracking-wide">{groupBy === "type" ? (TYPE_ICON[key] || "📝") + " " + key : key}</div>
-                      {list.map((t) => <TaskCard key={t.id} task={t} subject={subjById[t.subjectId]} onToggle={toggleTask} onEdit={(t) => { setEditingTask(t); setFormOpen(true); }} onDelete={deleteTask} />)}
-                    </div>
-                  ))}
-            </Sticker>
-          </div>
-        )}
-
-        {/* calendar */}
-        {tab === "calendar" && (
-          <div className="no-print">
-            <Sticker className="p-4" rotate={-0.2}>
-              <CalendarView
-                tasks={tasks} subjects={subjects}
-                routineEntries={routineEntries}
-                dayBackgrounds={dayBackgrounds}
-                onSetBackground={setDayBackground}
-                onClearBackground={clearDayBackground}
-                onQuickAdd={(date) => { setEditingTask({ dueDate: date }); setFormOpen(true); }}
-              />
-            </Sticker>
-          </div>
-        )}
-
-        {/* tasks + subjects */}
-        {tab === "tasks" && (
-          <div className="no-print">
-            <Sticker className="p-4 mb-4" rotate={0.3}>
-              <h3 className="font-bold mb-2 flex items-center gap-1.5" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}><Palette size={16} /> Subjects</h3>
-              <p className="text-xs opacity-60 mb-2">Subjects are stored locally in your browser for color-coding. The subject name is saved with each task in the database.</p>
-              <div className="flex flex-wrap gap-2 mb-3">
-                {subjects.map((s) => (
-                  <div key={s.id} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl" style={{ background: s.color + "33" }}>
-                    <span className="w-2.5 h-2.5 rounded-full" style={{ background: s.color }} />
-                    <span className="text-sm font-semibold">{s.name}</span>
-                    <button onClick={() => deleteSubject(s.id)}><X size={12} /></button>
-                  </div>
-                ))}
-              </div>
-              <div className="flex gap-1.5 items-center flex-wrap">
-                <input value={subjectDraft.name} onChange={(e) => setSubjectDraft({ ...subjectDraft, name: e.target.value })} onKeyDown={(e) => e.key === "Enter" && addSubject()} placeholder="Subject name" className="p-1.5 rounded-lg border text-sm flex-1 min-w-[140px]" />
-                <div className="flex gap-1">
-                  {COLOR_PRESETS.map((c) => (
-                    <button key={c.hex} onClick={() => setSubjectDraft({ ...subjectDraft, color: c.hex })} className="w-5 h-5 rounded-full border-2" style={{ background: c.hex, borderColor: subjectDraft.color === c.hex ? "#5B4B6D" : "transparent" }} />
-                  ))}
-                </div>
-                <button onClick={addSubject} className="px-3 py-1.5 rounded-lg text-white text-sm font-semibold" style={{ background: "#C9B6E4" }}>Add</button>
-              </div>
-            </Sticker>
-
-            <button onClick={() => { setEditingTask(null); setFormOpen(true); }} className="w-full mb-4 p-3 rounded-2xl text-white font-semibold flex items-center justify-center gap-1.5" style={{ background: "#E497B3", fontFamily: "Fredoka, sans-serif" }}>
-              <Plus size={16} /> Add a task
-            </button>
-
-            <Sticker className="p-4" rotate={-0.3}>
-              <h3 className="font-bold mb-2" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>🐱 All tasks</h3>
-              {tasks.length === 0
-                ? <EmptyState emoji="📚" text="No tasks yet — add your first one above" />
-                : [...tasks].sort((a, b) => daysBetween(a.dueDate, todayStr()) - daysBetween(b.dueDate, todayStr())).map((t) => (
-                    <TaskCard key={t.id} task={t} subject={subjById[t.subjectId]} onToggle={toggleTask} onEdit={(t) => { setEditingTask(t); setFormOpen(true); }} onDelete={deleteTask} />
-                  ))}
-            </Sticker>
-          </div>
-        )}
-
-        {/* routine */}
-        {tab === "routine" && (
-          <div className="no-print">
-            <RoutineView
-              routineEntries={routineEntries}
-              onAdd={addRoutineEntry}
-              onEdit={editRoutineEntry}
-              onDelete={deleteRoutineEntry}
-            />
-          </div>
-        )}
-
-        {/* journal */}
-        {tab === "journal" && (
-          <div className="no-print">
-            <JournalView userId={userId} session={session} />
-          </div>
-        )}
-
-        {/* french */}
-        {tab === "french" && (
-          <div className="no-print">
-            <FrenchView userId={userId} />
-          </div>
-        )}
-
-        {/* stats */}
-        {tab === "stats" && <div className="no-print"><StatsView tasks={tasks} /></div>}
-
-        {/* settings */}
-        {tab === "settings" && (
-          <div className="no-print">
-            <SettingsView
-              profile={profile}
-              onSave={saveProfile}
-              onSignOut={() => supabase.auth.signOut()}
-            />
-          </div>
-        )}
-
-        {/* print view */}
-        <div className="print-only">
-          <h2 style={{ fontFamily: "Fredoka, sans-serif" }}>Pending Tasks — {niceDate(todayStr())}</h2>
-          {pendingPrintList.map((t) => (
-            <div key={t.id} style={{ marginBottom: 6 }}>
-              {TYPE_ICON[t.type] || "📝"} <strong>{subjById[t.subjectId]?.name}</strong> — {t.title} — due {niceDate(t.dueDate)}
             </div>
-          ))}
-        </div>
+
+            {/* 5 Modes Navigation List */}
+            <nav className="p-2 rounded-3xl bg-white/60 backdrop-blur-md border border-white/60 shadow-sm flex md:flex-col gap-1.5 overflow-x-auto">
+              {[
+                { id: "academics" as const, label: "Academics", iconImg: academicsIcon },
+                { id: "journal" as const, label: "Journal", iconImg: journalIcon },
+                { id: "french" as const, label: "Le Coin Français", iconImg: frenchIcon },
+                { id: "entertainment" as const, label: "Entertainment", iconImg: entertainmentIcon },
+                { id: "settings" as const, label: "Settings", icon: Settings },
+              ].map((m) => {
+                const isActive = mode === m.id;
+                return (
+                  <button
+                    key={m.id}
+                    onClick={() => setMode(m.id)}
+                    className={`flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs md:text-sm font-bold transition-all text-left whitespace-nowrap md:whitespace-normal w-full ${
+                      isActive
+                        ? "bg-white text-purple-900 shadow-md scale-[1.02]"
+                        : "text-gray-700 hover:bg-white/50 opacity-80 hover:opacity-100"
+                    }`}
+                    style={{ fontFamily: "Fredoka, sans-serif" }}
+                  >
+                    {"iconImg" in m && m.iconImg ? (
+                      <img src={m.iconImg} alt={m.label} className="w-6 h-6 object-contain shrink-0" />
+                    ) : "icon" in m && m.icon ? (
+                      <m.icon size={20} className="text-gray-600 shrink-0" />
+                    ) : null}
+                    <span>{m.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* Sidebar Footer (Desktop Theme & Print) */}
+          <div className="hidden md:flex p-3 rounded-2xl bg-white/50 backdrop-blur-sm border border-white/50 items-center justify-between mt-6">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-gray-500">Theme:</span>
+              <select
+                value={theme}
+                onChange={(e) => setTheme(e.target.value as keyof typeof THEMES)}
+                className="text-xs p-1 rounded-xl border bg-white/80 focus:outline-none"
+              >
+                {Object.entries(THEMES).map(([k, v]) => (
+                  <option key={k} value={k}>{v.label}</option>
+                ))}
+              </select>
+            </div>
+            <button
+              onClick={() => window.print()}
+              className="p-1.5 rounded-xl bg-white/80 hover:bg-white text-gray-700 shadow-sm"
+              title="Print view"
+            >
+              <Printer size={15} />
+            </button>
+          </div>
+        </aside>
+
+        {/* ── Main Workspace Area ── */}
+        <main className="flex-1 min-w-0 w-full">
+          {/* Mode 1: ACADEMICS */}
+          {mode === "academics" && (
+            <div>
+              {/* Academics Sub-Tabs Switcher */}
+              <div className="flex items-center justify-between mb-5 no-print flex-wrap gap-2">
+                <div className="flex gap-1.5 p-1.5 rounded-2xl bg-white/60 backdrop-blur-md border border-white/60 shadow-sm overflow-x-auto">
+                  {[
+                    { id: "dashboard" as const, label: "Dashboard", icon: LayoutDashboard },
+                    { id: "calendar" as const, label: "Calendar", icon: CalendarDays },
+                    { id: "tasks" as const, label: "Tasks", icon: BookOpen },
+                    { id: "routine" as const, label: "Routine", icon: Clock },
+                    { id: "stats" as const, label: "Stats", icon: BarChart3 },
+                  ].map((st) => {
+                    const isSubActive = academicTab === st.id;
+                    return (
+                      <button
+                        key={st.id}
+                        onClick={() => setAcademicTab(st.id)}
+                        className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                          isSubActive
+                            ? "bg-purple-600 text-white shadow-sm"
+                            : "text-gray-700 hover:bg-white/60 opacity-80 hover:opacity-100"
+                        }`}
+                      >
+                        <st.icon size={14} /> <span>{st.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {academicTab === "tasks" && (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => { setEditingTask(null); setFormOpen(true); }}
+                      className="px-3.5 py-2 rounded-xl text-xs font-bold bg-pink-500 text-white hover:bg-pink-600 shadow-sm flex items-center gap-1.5"
+                    >
+                      <Plus size={14} /> Add Task
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Sub-tab: Dashboard */}
+              {academicTab === "dashboard" && (
+                <div className="no-print">
+                  {/* Overdue confirmation prompt */}
+                  {overdueForPrompt.length > 0 && (
+                    <Sticker className="p-4 mb-4 border border-red-100" rotate={0.3}>
+                      <h3 className="font-bold mb-2 flex items-center gap-1.5 text-sm" style={{ fontFamily: "Fredoka, sans-serif", color: "#B91C1C" }}>
+                        ⚠️ Did you submit these?
+                      </h3>
+                      {overdueForPrompt.map((t) => (
+                        <div key={t.id} className="flex items-center justify-between gap-2 mb-2 text-sm">
+                          <div>
+                            <span className="font-semibold">{t.title}</span>
+                            <span className="opacity-50 ml-1">— due {niceDate(t.dueDate)}</span>
+                          </div>
+                          <div className="flex gap-1.5 shrink-0">
+                            <button onClick={() => toggleTask(t.id)} className="px-2.5 py-1 rounded-lg text-white text-xs font-semibold" style={{ background: "#93C9A8" }}>
+                              ✓ Mark done
+                            </button>
+                            <button
+                              onClick={() => setSnoozedOverdueIds((prev) => new Set([...prev, t.id]))}
+                              className="px-2.5 py-1 rounded-lg text-xs bg-black/5 hover:bg-black/10 opacity-70"
+                            >
+                              Still working
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </Sticker>
+                  )}
+
+                  <Sticker className="p-4 mb-4" rotate={-0.3}>
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>🌸 Coming up soon</h3>
+                      <button onClick={() => { setEditingTask(null); setFormOpen(true); }} className="flex items-center gap-1 text-sm px-3 py-1.5 rounded-xl text-white" style={{ background: "#E497B3" }}>
+                        <Plus size={14} /> Add task
+                      </button>
+                    </div>
+                    {upcoming.length === 0
+                      ? <EmptyState emoji="🎀" text="Nothing pending — add a task to get started" />
+                      : upcoming.map((t) => <TaskCard key={t.id} task={t} subject={subjById[t.subjectId]} onToggle={toggleTask} onEdit={(t) => { setEditingTask(t); setFormOpen(true); }} onDelete={deleteTask} />)}
+                  </Sticker>
+
+                  <Sticker className="p-4" rotate={0.2}>
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>All tasks</h3>
+                      <button onClick={() => setGroupBy(groupBy === "subject" ? "type" : "subject")} className="text-xs px-2.5 py-1 rounded-lg bg-black/5">
+                        Group by: {groupBy === "subject" ? "Subject" : "Type"}
+                      </button>
+                    </div>
+                    <div className="flex gap-1.5 mb-3 flex-wrap">
+                      <div className="flex items-center gap-1 bg-white rounded-lg px-2 flex-1 min-w-[140px]">
+                        <Search size={13} className="opacity-50" />
+                        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search..." className="p-1.5 text-sm outline-none w-full" />
+                      </div>
+                      <select value={filterSubject} onChange={(e) => setFilterSubject(e.target.value)} className="text-xs p-1.5 rounded-lg border bg-white">
+                        <option value="all">All subjects</option>
+                        {subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                      </select>
+                      <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="text-xs p-1.5 rounded-lg border bg-white">
+                        <option value="all">All types</option>
+                        {typeSuggestions.map((t) => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                      <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="text-xs p-1.5 rounded-lg border bg-white">
+                        <option value="pending">Pending</option>
+                        <option value="completed">Completed</option>
+                        <option value="all">All</option>
+                      </select>
+                      <button onClick={() => setThisWeekOnly(!thisWeekOnly)} className={`text-xs px-2.5 py-1 rounded-lg ${thisWeekOnly ? "bg-pink-200" : "bg-black/5"}`}>This week</button>
+                    </div>
+                    {filterStatus === "pending" && Object.keys(grouped).length === 0
+                      ? <EmptyState emoji="🐱" text="No tasks match your filters" />
+                      : filterStatus !== "pending"
+                      ? filtered.map((t) => <TaskCard key={t.id} task={t} subject={subjById[t.subjectId]} onToggle={toggleTask} onEdit={(t) => { setEditingTask(t); setFormOpen(true); }} onDelete={deleteTask} />)
+                      : Object.entries(grouped).map(([key, list]) => (
+                          <div key={key} className="mb-3">
+                            <div className="text-xs font-bold opacity-60 mb-1 uppercase tracking-wide">{groupBy === "type" ? (TYPE_ICON[key] || "📝") + " " + key : key}</div>
+                            {list.map((t) => <TaskCard key={t.id} task={t} subject={subjById[t.subjectId]} onToggle={toggleTask} onEdit={(t) => { setEditingTask(t); setFormOpen(true); }} onDelete={deleteTask} />)}
+                          </div>
+                        ))}
+                  </Sticker>
+                </div>
+              )}
+
+              {/* Sub-tab: Calendar */}
+              {academicTab === "calendar" && (
+                <div className="no-print">
+                  <Sticker className="p-4" rotate={-0.2}>
+                    <CalendarView
+                      tasks={tasks}
+                      subjects={subjects}
+                      routineEntries={routineEntries}
+                      onQuickAdd={(date) => { setEditingTask({ dueDate: date }); setFormOpen(true); }}
+                    />
+                  </Sticker>
+                </div>
+              )}
+
+              {/* Sub-tab: Tasks + Subjects */}
+              {academicTab === "tasks" && (
+                <div className="no-print">
+                  <Sticker className="p-4 mb-4" rotate={0.3}>
+                    <h3 className="font-bold mb-2 flex items-center gap-1.5" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}><Palette size={16} /> Subjects</h3>
+                    <p className="text-xs opacity-60 mb-2">Subjects are stored locally in your browser for color-coding. The subject name is saved with each task in the database.</p>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {subjects.map((s) => (
+                        <div key={s.id} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl" style={{ background: s.color + "33" }}>
+                          <span className="w-2.5 h-2.5 rounded-full" style={{ background: s.color }} />
+                          <span className="text-sm font-semibold">{s.name}</span>
+                          <button onClick={() => deleteSubject(s.id)}><X size={12} /></button>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex gap-1.5 items-center flex-wrap">
+                      <input value={subjectDraft.name} onChange={(e) => setSubjectDraft({ ...subjectDraft, name: e.target.value })} onKeyDown={(e) => e.key === "Enter" && addSubject()} placeholder="Subject name" className="p-1.5 rounded-lg border text-sm flex-1 min-w-[140px]" />
+                      <div className="flex gap-1">
+                        {COLOR_PRESETS.map((c) => (
+                          <button key={c.hex} onClick={() => setSubjectDraft({ ...subjectDraft, color: c.hex })} className="w-5 h-5 rounded-full border-2" style={{ background: c.hex, borderColor: subjectDraft.color === c.hex ? "#5B4B6D" : "transparent" }} />
+                        ))}
+                      </div>
+                      <button onClick={addSubject} className="px-3 py-1.5 rounded-lg text-white text-sm font-semibold" style={{ background: "#C9B6E4" }}>Add</button>
+                    </div>
+                  </Sticker>
+
+                  <button onClick={() => { setEditingTask(null); setFormOpen(true); }} className="w-full mb-4 p-3 rounded-2xl text-white font-semibold flex items-center justify-center gap-1.5" style={{ background: "#E497B3", fontFamily: "Fredoka, sans-serif" }}>
+                    <Plus size={16} /> Add a task
+                  </button>
+
+                  <Sticker className="p-4" rotate={-0.3}>
+                    <h3 className="font-bold mb-2" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>🐱 All tasks</h3>
+                    {tasks.length === 0
+                      ? <EmptyState emoji="📚" text="No tasks yet — add your first one above" />
+                      : [...tasks].sort((a, b) => daysBetween(a.dueDate, todayStr()) - daysBetween(b.dueDate, todayStr())).map((t) => (
+                          <TaskCard key={t.id} task={t} subject={subjById[t.subjectId]} onToggle={toggleTask} onEdit={(t) => { setEditingTask(t); setFormOpen(true); }} onDelete={deleteTask} />
+                        ))}
+                  </Sticker>
+                </div>
+              )}
+
+              {/* Sub-tab: Routine */}
+              {academicTab === "routine" && (
+                <div className="no-print">
+                  <RoutineView
+                    routineEntries={routineEntries}
+                    onAdd={addRoutineEntry}
+                    onEdit={editRoutineEntry}
+                    onDelete={deleteRoutineEntry}
+                  />
+                </div>
+              )}
+
+              {/* Sub-tab: Stats */}
+              {academicTab === "stats" && (
+                <div className="no-print">
+                  <StatsView tasks={tasks} />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Mode 2: JOURNAL */}
+          {mode === "journal" && (
+            <div className="no-print">
+              <JournalView userId={userId} session={session} />
+            </div>
+          )}
+
+          {/* Mode 3: LE COIN FRANÇAIS */}
+          {mode === "french" && (
+            <div className="no-print">
+              <FrenchView userId={userId} />
+            </div>
+          )}
+
+          {/* Mode 4: ENTERTAINMENT (Placeholder slot) */}
+          {mode === "entertainment" && (
+            <div className="no-print max-w-2xl mx-auto py-10">
+              <Sticker className="p-8 text-center" rotate={-0.3}>
+                <div className="w-16 h-16 mx-auto mb-4 p-2 rounded-3xl bg-pink-100/70 border border-pink-200/60 shadow-sm flex items-center justify-center">
+                  <img src={entertainmentIcon} alt="Entertainment" className="w-12 h-12 object-contain" />
+                </div>
+                <h3 className="text-2xl font-extrabold text-purple-950 mb-2" style={{ fontFamily: "Fredoka, sans-serif" }}>
+                  Entertainment Lounge
+                </h3>
+                <p className="text-sm text-purple-900/70 max-w-md mx-auto mb-6 leading-relaxed">
+                  A cozy corner for music playlists, movie & anime watchlists, study break mini-games, and leisure tracking is in the works!
+                </p>
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold bg-pink-100 text-pink-700 border border-pink-200 shadow-sm">
+                  <span>🎀</span> Space Reserved for Entertainment Mode
+                </div>
+              </Sticker>
+            </div>
+          )}
+
+          {/* Mode 5: SETTINGS */}
+          {mode === "settings" && (
+            <div className="no-print">
+              <SettingsView
+                profile={profile}
+                onSave={saveProfile}
+                onSignOut={() => supabase.auth.signOut()}
+              />
+            </div>
+          )}
+        </main>
+      </div>
+
+      {/* print view */}
+      <div className="print-only">
+        <h2 style={{ fontFamily: "Fredoka, sans-serif" }}>Pending Tasks — {niceDate(todayStr())}</h2>
+        {pendingPrintList.map((t) => (
+          <div key={t.id} style={{ marginBottom: 6 }}>
+            {TYPE_ICON[t.type] || "📝"} <strong>{subjById[t.subjectId]?.name}</strong> — {t.title} — due {niceDate(t.dueDate)}
+          </div>
+        ))}
       </div>
 
       {formOpen && (
