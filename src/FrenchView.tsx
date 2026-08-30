@@ -338,7 +338,7 @@ export const FrenchView: React.FC<{ userId: string }> = ({ userId }) => {
     }
   };
 
-  // Dictionary Lookup (using Free Dictionary API + Wiktionary fallback)
+  // Dictionary Lookup (using MyMemory Bilingual Translation API + local frequency-list fallback)
   const lookupDictionary = async () => {
     if (!dictQuery.trim()) return;
     setDictLoading(true);
@@ -347,24 +347,28 @@ export const FrenchView: React.FC<{ userId: string }> = ({ userId }) => {
     const cleanWord = dictQuery.trim().toLowerCase();
 
     try {
-      // Look up via Dictionary API
-      const langCode = dictMode === "fr_en" ? "fr" : "en";
-      const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/${langCode}/${encodeURIComponent(cleanWord)}`);
-      
+      // 1. Query MyMemory Bilingual API
+      const langpair = dictMode === "en_fr" ? "en|fr" : "fr|en";
+      const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(cleanWord)}&langpair=${langpair}&de=haloapp.study@gmail.com`;
+      const res = await fetch(url);
+
       if (res.ok) {
         const data = await res.json();
-        if (data && data.length > 0) {
+        const translatedText = data?.responseData?.translatedText;
+        if (translatedText && typeof translatedText === "string" && translatedText.trim()) {
+          const frenchWord = dictMode === "en_fr" ? translatedText.trim() : cleanWord;
+          const englishWord = dictMode === "en_fr" ? cleanWord : translatedText.trim();
           setDictResult({
-            word: data[0].word,
-            phonetic: data[0].phonetic || (data[0].phonetics?.[0]?.text ?? ""),
-            meanings: data[0].meanings,
-            raw: data[0],
+            french: frenchWord,
+            english: englishWord,
+            rawTranslation: translatedText.trim(),
+            mode: dictMode,
           });
           return;
         }
       }
 
-      // Fallback: search in our bundled frequency list
+      // 2. Fallback: search in our bundled frequency list exactly as-is
       const match = FRENCH_FREQUENCY_WORDS.find(
         (w) =>
           (dictMode === "fr_en" && w.french.toLowerCase() === cleanWord) ||
@@ -373,19 +377,30 @@ export const FrenchView: React.FC<{ userId: string }> = ({ userId }) => {
 
       if (match) {
         setDictResult({
-          word: match.french,
+          french: match.french,
           english: match.english,
           pos: match.pos,
           fallback: true,
+          mode: dictMode,
         });
       } else {
         setDictResult({ notFound: true, word: cleanWord });
       }
     } catch (err) {
       // Fallback to frequency list
-      const match = FRENCH_FREQUENCY_WORDS.find((w) => w.french.toLowerCase() === cleanWord);
+      const match = FRENCH_FREQUENCY_WORDS.find(
+        (w) =>
+          (dictMode === "fr_en" && w.french.toLowerCase() === cleanWord) ||
+          (dictMode === "en_fr" && w.english.toLowerCase().includes(cleanWord))
+      );
       if (match) {
-        setDictResult({ word: match.french, english: match.english, pos: match.pos, fallback: true });
+        setDictResult({
+          french: match.french,
+          english: match.english,
+          pos: match.pos,
+          fallback: true,
+          mode: dictMode,
+        });
       } else {
         setDictResult({ notFound: true, word: cleanWord });
       }
@@ -1588,95 +1603,54 @@ export const FrenchView: React.FC<{ userId: string }> = ({ userId }) => {
                   <p className="text-gray-600 font-bold">No direct dictionary entry found for "{dictResult.word}".</p>
                   <p className="text-xs text-gray-500 mt-1">Try checking on WordReference or add manually as a custom card.</p>
                 </div>
-              ) : dictResult.fallback ? (
-                <div>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="text-2xl font-extrabold text-gray-900" style={{ fontFamily: "Fredoka, sans-serif" }}>
-                          {dictResult.word}
-                        </h4>
-                        <button
-                          onClick={() => speakFrench(dictResult.word)}
-                          className="p-1.5 rounded-xl bg-pink-50 text-pink-600 hover:bg-pink-100"
-                        >
-                          <Volume2 size={16} />
-                        </button>
-                      </div>
-                      {dictResult.pos && (
-                        <span className="text-xs font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-md">
-                          {dictResult.pos}
-                        </span>
-                      )}
-                    </div>
-
-                    <button
-                      onClick={() => starWordToDeck(dictResult.word, dictResult.english)}
-                      disabled={starredDictWords.has(dictResult.word)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition-all ${
-                        starredDictWords.has(dictResult.word)
-                          ? "bg-amber-100 text-amber-800"
-                          : "bg-amber-400 text-white hover:bg-amber-500"
-                      }`}
-                    >
-                      <Star size={13} className="fill-current" /> {starredDictWords.has(dictResult.word) ? "Saved to Deck" : "Star to Deck"}
-                    </button>
-                  </div>
-
-                  <div className="mt-4 p-4 rounded-2xl bg-purple-50/50">
-                    <div className="text-xs font-bold text-purple-700 mb-1">Definition / Translation:</div>
-                    <div className="text-base font-bold text-gray-800">{dictResult.english}</div>
-                  </div>
-                </div>
               ) : (
                 <div>
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="flex items-center gap-2">
                         <h4 className="text-2xl font-extrabold text-gray-900" style={{ fontFamily: "Fredoka, sans-serif" }}>
-                          {dictResult.word}
+                          {dictResult.french}
                         </h4>
                         <button
-                          onClick={() => speakFrench(dictResult.word)}
-                          className="p-1.5 rounded-xl bg-pink-50 text-pink-600 hover:bg-pink-100"
+                          onClick={() => speakFrench(dictResult.french)}
+                          className="p-1.5 rounded-xl bg-pink-50 text-pink-600 hover:bg-pink-100 transition-colors"
+                          title="Listen to French pronunciation"
                         >
                           <Volume2 size={16} />
                         </button>
                       </div>
-                      {dictResult.phonetic && (
-                        <div className="text-xs text-gray-500 font-mono mt-0.5">{dictResult.phonetic}</div>
+                      {dictResult.pos && (
+                        <span className="text-xs font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-md mt-1 inline-block">
+                          {dictResult.pos}
+                        </span>
                       )}
                     </div>
 
                     <button
-                      onClick={() => {
-                        const def = dictResult.meanings?.[0]?.definitions?.[0]?.definition || "Starred definition";
-                        starWordToDeck(dictResult.word, def);
-                      }}
-                      disabled={starredDictWords.has(dictResult.word)}
+                      onClick={() => starWordToDeck(dictResult.french, dictResult.english)}
+                      disabled={starredDictWords.has(dictResult.french)}
                       className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition-all ${
-                        starredDictWords.has(dictResult.word)
+                        starredDictWords.has(dictResult.french)
                           ? "bg-amber-100 text-amber-800"
                           : "bg-amber-400 text-white hover:bg-amber-500"
                       }`}
                     >
-                      <Star size={13} className="fill-current" /> {starredDictWords.has(dictResult.word) ? "Saved" : "Star to Deck"}
+                      <Star size={13} className="fill-current" /> {starredDictWords.has(dictResult.french) ? "Saved to Deck" : "Star to Deck"}
                     </button>
                   </div>
 
-                  {/* Meanings */}
-                  <div className="mt-4 space-y-4">
-                    {dictResult.meanings?.map((m: any, idx: number) => (
-                      <div key={idx} className="p-4 rounded-2xl bg-gray-50/80 border border-gray-100 space-y-2">
-                        <span className="text-xs font-bold text-purple-600 uppercase tracking-wider">{m.partOfSpeech}</span>
-                        {m.definitions?.slice(0, 3).map((d: any, dIdx: number) => (
-                          <div key={dIdx} className="text-sm text-gray-800">
-                            <p className="font-medium">• {d.definition}</p>
-                            {d.example && <p className="text-xs text-gray-500 italic mt-0.5 ml-3">"{d.example}"</p>}
-                          </div>
-                        ))}
+                  <div className="mt-4 p-4 rounded-2xl bg-purple-50/50 space-y-1">
+                    <div className="text-xs font-bold text-purple-700">
+                      {dictResult.mode === "en_fr" ? "French Translation:" : "English Translation:"}
+                    </div>
+                    <div className="text-lg font-bold text-gray-800">
+                      {dictResult.mode === "en_fr" ? dictResult.french : dictResult.english}
+                    </div>
+                    {dictResult.mode === "en_fr" && (
+                      <div className="text-xs text-gray-500 font-medium">
+                        Original English query: <span className="text-gray-700 font-semibold">{dictResult.english}</span>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
               )}
