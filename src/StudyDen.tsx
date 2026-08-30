@@ -271,6 +271,8 @@ function EmptyState({ emoji, text }: { emoji: string; text: string }) {
 
 /* ─────────────────────────── task countdown ─────────────────────────── */
 
+/* ─────────────────────────── task countdown ─────────────────────────── */
+
 const THEME_TIMER_STYLES: Record<string, {
   bg: string;
   border: string;
@@ -278,54 +280,61 @@ const THEME_TIMER_STYLES: Record<string, {
   subText: string;
   icon: string;
   colon: string;
+  badgeBg: string;
 }> = {
   bloom: {
-    bg: "bg-rose-50/70 hover:bg-rose-50/90",
-    border: "border-rose-200/90",
-    text: "text-rose-900",
-    subText: "text-rose-500",
-    icon: "text-rose-500",
-    colon: "text-rose-300",
+    bg: "bg-pink-50/90 hover:bg-pink-100/80",
+    border: "border-pink-300",
+    text: "text-pink-950",
+    subText: "text-pink-600 font-semibold",
+    icon: "text-pink-600",
+    colon: "text-pink-400",
+    badgeBg: "bg-pink-600 text-white",
   },
   meadow: {
-    bg: "bg-emerald-50/70 hover:bg-emerald-50/90",
-    border: "border-emerald-200/90",
-    text: "text-emerald-900",
-    subText: "text-emerald-600",
+    bg: "bg-emerald-50/90 hover:bg-emerald-100/80",
+    border: "border-emerald-300",
+    text: "text-emerald-950",
+    subText: "text-emerald-600 font-semibold",
     icon: "text-emerald-600",
-    colon: "text-emerald-300",
+    colon: "text-emerald-400",
+    badgeBg: "bg-emerald-600 text-white",
   },
   dusk: {
-    bg: "bg-amber-50/70 hover:bg-amber-50/90",
-    border: "border-amber-200/90",
-    text: "text-amber-900",
-    subText: "text-amber-600",
+    bg: "bg-amber-50/90 hover:bg-amber-100/80",
+    border: "border-amber-300",
+    text: "text-amber-950",
+    subText: "text-amber-700 font-semibold",
     icon: "text-amber-600",
-    colon: "text-amber-300",
+    colon: "text-amber-400",
+    badgeBg: "bg-amber-600 text-white",
   },
   lilac: {
-    bg: "bg-purple-50/70 hover:bg-purple-50/90",
-    border: "border-purple-200/90",
-    text: "text-purple-900",
-    subText: "text-purple-500",
-    icon: "text-purple-500",
-    colon: "text-purple-300",
+    bg: "bg-purple-50/90 hover:bg-purple-100/80",
+    border: "border-purple-300",
+    text: "text-purple-950",
+    subText: "text-purple-600 font-semibold",
+    icon: "text-purple-600",
+    colon: "text-purple-400",
+    badgeBg: "bg-purple-600 text-white",
   },
   babyblue: {
-    bg: "bg-sky-50/70 hover:bg-sky-50/90",
-    border: "border-sky-200/90",
-    text: "text-sky-900",
-    subText: "text-sky-600",
+    bg: "bg-sky-50/90 hover:bg-sky-100/80",
+    border: "border-sky-300",
+    text: "text-sky-950",
+    subText: "text-sky-600 font-semibold",
     icon: "text-sky-600",
-    colon: "text-sky-300",
+    colon: "text-sky-400",
+    badgeBg: "bg-sky-600 text-white",
   },
   monochrome: {
-    bg: "bg-gray-100/70 hover:bg-gray-100/90",
-    border: "border-gray-300/90",
-    text: "text-gray-900",
-    subText: "text-gray-500",
-    icon: "text-gray-600",
+    bg: "bg-gray-100/90 hover:bg-gray-200/80",
+    border: "border-gray-300",
+    text: "text-gray-950",
+    subText: "text-gray-600 font-semibold",
+    icon: "text-gray-700",
     colon: "text-gray-400",
+    badgeBg: "bg-gray-800 text-white",
   },
 };
 
@@ -392,30 +401,14 @@ function TaskCountdown({
   const isUrgent = timeLeft.overdue || timeLeft.totalHours < 24;
   const tStyle = THEME_TIMER_STYLES[theme] || THEME_TIMER_STYLES.bloom;
 
-  // Visual style: dynamic theme color styling
+  // Visual style strictly matching the selected theme
   const badgeClass = timeLeft.overdue
-    ? "bg-rose-50/90 border-rose-300 text-rose-800 shadow-[0_2px_10px_rgba(244,63,94,0.18)]"
-    : isUrgent
-    ? "bg-amber-50/90 border-amber-300 text-amber-900 shadow-[0_2px_10px_rgba(245,158,11,0.15)]"
-    : `${tStyle.bg} ${tStyle.border} ${tStyle.text} shadow-2xs`;
+    ? "bg-rose-50/90 border-rose-300 text-rose-900 shadow-[0_2px_10px_rgba(244,63,94,0.18)]"
+    : `${tStyle.bg} ${tStyle.border} ${tStyle.text} shadow-xs`;
 
-  const iconClass = timeLeft.overdue
-    ? "text-rose-600"
-    : isUrgent
-    ? "text-amber-600"
-    : tStyle.icon;
-
-  const colonClass = timeLeft.overdue
-    ? "text-rose-300"
-    : isUrgent
-    ? "text-amber-300"
-    : tStyle.colon;
-
-  const subTextClass = timeLeft.overdue
-    ? "text-rose-500/80"
-    : isUrgent
-    ? "text-amber-600/80"
-    : tStyle.subText;
+  const iconClass = timeLeft.overdue ? "text-rose-600" : tStyle.icon;
+  const colonClass = timeLeft.overdue ? "text-rose-300" : tStyle.colon;
+  const subTextClass = timeLeft.overdue ? "text-rose-600 font-semibold" : tStyle.subText;
 
   return (
     <div
@@ -429,22 +422,22 @@ function TaskCountdown({
       <div className="flex items-center justify-around flex-1 font-mono text-xs font-bold tracking-tight">
         <div className="flex flex-col items-center min-w-[32px]">
           <span className="leading-none text-[13.5px] font-extrabold">{timeLeft.d}</span>
-          <span className={`text-[8.5px] font-sans font-bold uppercase tracking-wider ${subTextClass}`}>days</span>
+          <span className={`text-[8.5px] font-sans uppercase tracking-wider ${subTextClass}`}>days</span>
         </div>
         <span className={`text-[12px] font-bold ${colonClass}`}>:</span>
         <div className="flex flex-col items-center min-w-[32px]">
           <span className="leading-none text-[13.5px] font-extrabold">{timeLeft.h}</span>
-          <span className={`text-[8.5px] font-sans font-bold uppercase tracking-wider ${subTextClass}`}>hrs</span>
+          <span className={`text-[8.5px] font-sans uppercase tracking-wider ${subTextClass}`}>hrs</span>
         </div>
         <span className={`text-[12px] font-bold ${colonClass}`}>:</span>
         <div className="flex flex-col items-center min-w-[32px]">
           <span className="leading-none text-[13.5px] font-extrabold">{timeLeft.m}</span>
-          <span className={`text-[8.5px] font-sans font-bold uppercase tracking-wider ${subTextClass}`}>min</span>
+          <span className={`text-[8.5px] font-sans uppercase tracking-wider ${subTextClass}`}>min</span>
         </div>
         <span className={`text-[12px] font-bold ${colonClass}`}>:</span>
         <div className="flex flex-col items-center min-w-[32px]">
           <span className="leading-none text-[13.5px] font-extrabold">{timeLeft.s}</span>
-          <span className={`text-[8.5px] font-sans font-bold uppercase tracking-wider ${subTextClass}`}>sec</span>
+          <span className={`text-[8.5px] font-sans uppercase tracking-wider ${subTextClass}`}>sec</span>
         </div>
       </div>
 
@@ -453,7 +446,7 @@ function TaskCountdown({
           Overdue
         </span>
       ) : isUrgent ? (
-        <span className="shrink-0 px-2 py-0.5 rounded-lg bg-amber-500 text-white text-[9.5px] font-extrabold uppercase tracking-wide shadow-2xs">
+        <span className={`shrink-0 px-2 py-0.5 rounded-lg ${tStyle.badgeBg} text-[9.5px] font-extrabold uppercase tracking-wide shadow-2xs`}>
           Soon
         </span>
       ) : null}
