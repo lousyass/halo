@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, Suspense, lazy } from "react";
 import { Session } from "@supabase/supabase-js";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -12,14 +12,15 @@ import {
 } from "lucide-react";
 import { supabase } from "./lib/supabase";
 import { SUPPORT_CONTACT } from "./lib/contact";
-import JournalView from "./JournalView";
-import { FrenchView } from "./FrenchView";
-import { EntertainmentView } from "./EntertainmentView";
-import { GamesView } from "./GamesView";
+import { SyllabusView } from "./SyllabusView";
 import academicsIcon from "./assets/icons/academics.png";
 import journalIcon from "./assets/icons/journal.png";
-import frenchIcon from "./assets/icons/french.png";
-import entertainmentIcon from "./assets/icons/entertainment.png";
+
+// Code-split top-level modes with React.lazy
+const JournalView = lazy(() => import("./JournalView"));
+const FrenchView = lazy(() => import("./FrenchView").then((m) => ({ default: m.FrenchView })));
+const EntertainmentView = lazy(() => import("./EntertainmentView").then((m) => ({ default: m.EntertainmentView })));
+const GamesView = lazy(() => import("./GamesView").then((m) => ({ default: m.GamesView })));
 
 /* ─────────────────────────────── types ─────────────────────────────── */
 
@@ -129,9 +130,31 @@ function fmtDate(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 function todayStr() { return fmtDate(new Date()); }
-function daysBetween(a: string, b: string) {
-  return Math.round((new Date(a + "T00:00:00").getTime() - new Date(b + "T00:00:00").getTime()) / 86_400_000);
+
+function parseDateOnly(dateStr: string): Date {
+  if (!dateStr) return new Date();
+  const clean = dateStr.split("T")[0];
+  const parts = clean.split("-").map(Number);
+  if (parts.length < 3 || isNaN(parts[0])) return new Date();
+  return new Date(parts[0], parts[1] - 1, parts[2]);
 }
+
+function daysBetween(a: string, b: string) {
+  const da = parseDateOnly(a);
+  const db = parseDateOnly(b);
+  return Math.round((da.getTime() - db.getTime()) / 86_400_000);
+}
+
+function isTaskOverdue(dueDate: string): boolean {
+  if (!dueDate) return false;
+  const clean = dueDate.split("T")[0];
+  const parts = clean.split("-").map(Number);
+  if (parts.length < 3 || isNaN(parts[0])) return false;
+  // End of day (23:59:59) in user's local timezone
+  const target = new Date(parts[0], parts[1] - 1, parts[2], 23, 59, 59, 999).getTime();
+  return Date.now() > target;
+}
+
 function urgencyOf(dueDate: string) {
   const d = daysBetween(dueDate, todayStr());
   if (d < 3) return "red";
@@ -139,7 +162,9 @@ function urgencyOf(dueDate: string) {
   return "green";
 }
 function niceDate(dateStr: string) {
-  return new Date(dateStr + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  if (!dateStr) return "";
+  const d = parseDateOnly(dateStr);
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 function monthGrid(year: number, month: number): (number | null)[] {
   const startWeekday = new Date(year, month, 1).getDay();
@@ -1101,7 +1126,7 @@ export default function StudyDen({ session }: { session: Session }) {
 
   // Overdue tasks: deadline passed, still not completed — shown as in-app prompt on dashboard
   const overdueForPrompt = useMemo(() =>
-    tasks.filter((t) => t.status !== "completed" && daysBetween(t.dueDate, todayStr()) < 0 && !snoozedOverdueIds.has(t.id)),
+    tasks.filter((t) => t.status !== "completed" && isTaskOverdue(t.dueDate) && !snoozedOverdueIds.has(t.id)),
     [tasks, snoozedOverdueIds]
   );
 
@@ -1265,9 +1290,9 @@ export default function StudyDen({ session }: { session: Session }) {
               {[
                 { id: "academics" as const, label: "Academics", iconImg: academicsIcon },
                 { id: "journal" as const, label: "Journal", iconImg: journalIcon },
-                { id: "french" as const, label: "Le Coin Français", iconImg: frenchIcon },
-                { id: "entertainment" as const, label: "Entertainment", iconImg: entertainmentIcon },
-                { id: "games" as const, label: "Games", icon: Gamepad2 },
+                { id: "french" as const, label: "Le Coin Français", emoji: "🥐" },
+                { id: "entertainment" as const, label: "Entertainment", emoji: "🎬" },
+                { id: "games" as const, label: "Games", emoji: "🎮" },
                 { id: "settings" as const, label: "Settings", icon: Settings },
               ].map((m) => {
                 const isActive = mode === m.id;
@@ -1284,6 +1309,8 @@ export default function StudyDen({ session }: { session: Session }) {
                   >
                     {"iconImg" in m && m.iconImg ? (
                       <img src={m.iconImg} alt={m.label} className="w-8 h-8 object-contain shrink-0" />
+                    ) : "emoji" in m && m.emoji ? (
+                      <span className="w-8 h-8 flex items-center justify-center text-2xl shrink-0 leading-none">{m.emoji}</span>
                     ) : "icon" in m && m.icon ? (
                       <m.icon size={24} className="text-gray-600 shrink-0 p-0.5" />
                     ) : null}
@@ -1331,7 +1358,7 @@ export default function StudyDen({ session }: { session: Session }) {
                     { id: "calendar" as const, label: "Calendar", icon: CalendarDays },
                     { id: "tasks" as const, label: "Tasks", icon: BookOpen },
                     { id: "routine" as const, label: "Routine", icon: Clock },
-                    { id: "stats" as const, label: "Stats", icon: BarChart3 },
+                    { id: "stats" as const, label: "Syllabus & Stats", icon: BarChart3 },
                   ].map((st) => {
                     const isSubActive = academicTab === st.id;
                     return (
@@ -1513,9 +1540,10 @@ export default function StudyDen({ session }: { session: Session }) {
                 </div>
               )}
 
-              {/* Sub-tab: Stats */}
+              {/* Sub-tab: Syllabus & Stats */}
               {academicTab === "stats" && (
-                <div className="no-print">
+                <div className="no-print space-y-6">
+                  <SyllabusView userId={userId} subjects={subjects} />
                   <StatsView tasks={tasks} />
                 </div>
               )}
@@ -1525,28 +1553,72 @@ export default function StudyDen({ session }: { session: Session }) {
           {/* Mode 2: JOURNAL */}
           {mode === "journal" && (
             <div className="no-print">
-              <JournalView userId={userId} session={session} />
+              <Suspense
+                fallback={
+                  <div className="p-12 text-center rounded-3xl bg-white/60 backdrop-blur-sm border border-white/60 shadow-sm max-w-md mx-auto my-8">
+                    <div className="animate-pulse text-3xl mb-2">✨ 🦌 ✨</div>
+                    <p className="text-xs font-bold text-gray-500" style={{ fontFamily: "Fredoka, sans-serif" }}>
+                      Opening Journal...
+                    </p>
+                  </div>
+                }
+              >
+                <JournalView userId={userId} session={session} />
+              </Suspense>
             </div>
           )}
 
           {/* Mode 3: LE COIN FRANÇAIS */}
           {mode === "french" && (
             <div className="no-print">
-              <FrenchView userId={userId} />
+              <Suspense
+                fallback={
+                  <div className="p-12 text-center rounded-3xl bg-white/60 backdrop-blur-sm border border-white/60 shadow-sm max-w-md mx-auto my-8">
+                    <div className="animate-pulse text-3xl mb-2">✨ 🥐 ✨</div>
+                    <p className="text-xs font-bold text-gray-500" style={{ fontFamily: "Fredoka, sans-serif" }}>
+                      Opening Le Coin Français...
+                    </p>
+                  </div>
+                }
+              >
+                <FrenchView userId={userId} />
+              </Suspense>
             </div>
           )}
 
           {/* Mode 4: ENTERTAINMENT */}
           {mode === "entertainment" && (
             <div className="no-print">
-              <EntertainmentView userId={userId} />
+              <Suspense
+                fallback={
+                  <div className="p-12 text-center rounded-3xl bg-white/60 backdrop-blur-sm border border-white/60 shadow-sm max-w-md mx-auto my-8">
+                    <div className="animate-pulse text-3xl mb-2">✨ 🎬 ✨</div>
+                    <p className="text-xs font-bold text-gray-500" style={{ fontFamily: "Fredoka, sans-serif" }}>
+                      Opening Entertainment...
+                    </p>
+                  </div>
+                }
+              >
+                <EntertainmentView userId={userId} />
+              </Suspense>
             </div>
           )}
 
           {/* Mode 5: GAMES */}
           {mode === "games" && (
             <div className="no-print">
-              <GamesView userId={userId} />
+              <Suspense
+                fallback={
+                  <div className="p-12 text-center rounded-3xl bg-white/60 backdrop-blur-sm border border-white/60 shadow-sm max-w-md mx-auto my-8">
+                    <div className="animate-pulse text-3xl mb-2">✨ 🎮 ✨</div>
+                    <p className="text-xs font-bold text-gray-500" style={{ fontFamily: "Fredoka, sans-serif" }}>
+                      Opening Games...
+                    </p>
+                  </div>
+                }
+              >
+                <GamesView userId={userId} />
+              </Suspense>
             </div>
           )}
 

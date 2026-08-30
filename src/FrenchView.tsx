@@ -137,21 +137,33 @@ const LEVEL_LABELS: Record<string, string> = {
   b2_c1: "B2 – C1 (Advanced)",
 };
 
+// In-memory session cache for French module
+interface FrenchDataCache {
+  userId: string;
+  cards: LearningCard[];
+  units: LearningUnit[];
+  notes: LearningNote[];
+  resources: LearningResource[];
+  wordsShown: Set<string>;
+  dailyBatch?: FrequencyWord[];
+}
+let frenchCache: FrenchDataCache | null = null;
+
 export const FrenchView: React.FC<{ userId: string }> = ({ userId }) => {
   const [activeSubTab, setActiveSubTab] = useState<
     "daily" | "deck" | "quiz" | "dictionary" | "units" | "notes" | "resources"
   >("daily");
 
   // State
-  const [cards, setCards] = useState<LearningCard[]>([]);
-  const [units, setUnits] = useState<LearningUnit[]>([]);
-  const [notes, setNotes] = useState<LearningNote[]>([]);
-  const [resources, setResources] = useState<LearningResource[]>([]);
-  const [wordsShown, setWordsShown] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(true);
+  const [cards, setCards] = useState<LearningCard[]>(() => (frenchCache?.userId === userId ? frenchCache.cards : []));
+  const [units, setUnits] = useState<LearningUnit[]>(() => (frenchCache?.userId === userId ? frenchCache.units : []));
+  const [notes, setNotes] = useState<LearningNote[]>(() => (frenchCache?.userId === userId ? frenchCache.notes : []));
+  const [resources, setResources] = useState<LearningResource[]>(() => (frenchCache?.userId === userId ? frenchCache.resources : []));
+  const [wordsShown, setWordsShown] = useState<Set<string>>(() => (frenchCache?.userId === userId ? frenchCache.wordsShown : new Set()));
+  const [loading, setLoading] = useState(() => !(frenchCache && frenchCache.userId === userId));
 
   // Daily suggestions state
-  const [dailyBatch, setDailyBatch] = useState<FrequencyWord[]>([]);
+  const [dailyBatch, setDailyBatch] = useState<FrequencyWord[]>(() => (frenchCache?.userId === userId && frenchCache.dailyBatch ? frenchCache.dailyBatch : []));
   const [addedDailyWords, setAddedDailyWords] = useState<Set<string>>(new Set());
 
   // Dictionary state
@@ -195,6 +207,7 @@ export const FrenchView: React.FC<{ userId: string }> = ({ userId }) => {
   const [resourceOnlyFavorites, setResourceOnlyFavorites] = useState(false);
   const [resourceOnlyRecommended, setResourceOnlyRecommended] = useState(false);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+  const [visibleSectionCounts, setVisibleSectionCounts] = useState<Record<string, number>>({});
 
   // Notes state
   const [noteTitle, setNoteTitle] = useState("");
@@ -217,7 +230,9 @@ export const FrenchView: React.FC<{ userId: string }> = ({ userId }) => {
   }, [userId]);
 
   const fetchFrenchData = async () => {
-    setLoading(true);
+    if (!frenchCache || frenchCache.userId !== userId) {
+      setLoading(true);
+    }
     try {
       const [cardsRes, unitsRes, notesRes, resourcesRes, shownRes] = await Promise.all([
         supabase.from("learning_cards").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
@@ -227,19 +242,36 @@ export const FrenchView: React.FC<{ userId: string }> = ({ userId }) => {
         supabase.from("learning_words_shown").select("french_word").eq("user_id", userId),
       ]);
 
-      if (cardsRes.data) setCards(cardsRes.data);
-      if (unitsRes.data) setUnits(unitsRes.data);
-      if (notesRes.data) setNotes(notesRes.data);
-      if (resourcesRes.data) setResources(resourcesRes.data);
+      const c = cardsRes.data || [];
+      const u = unitsRes.data || [];
+      const n = notesRes.data || [];
+      const r = resourcesRes.data || [];
+
+      if (cardsRes.data) setCards(c);
+      if (unitsRes.data) setUnits(u);
+      if (notesRes.data) setNotes(n);
+      if (resourcesRes.data) setResources(r);
 
       const shownSet = new Set<string>();
       if (shownRes.data) {
-        shownRes.data.forEach((r) => shownSet.add(r.french_word.toLowerCase()));
+        shownRes.data.forEach((row) => shownSet.add(row.french_word.toLowerCase()));
       }
       setWordsShown(shownSet);
 
-      // Generate daily words
-      generateDailyBatch(shownSet);
+      frenchCache = {
+        userId,
+        cards: c,
+        units: u,
+        notes: n,
+        resources: r,
+        wordsShown: shownSet,
+        dailyBatch: dailyBatch.length > 0 ? dailyBatch : undefined,
+      };
+
+      // Generate daily words if none
+      if (dailyBatch.length === 0) {
+        generateDailyBatch(shownSet);
+      }
     } catch (err) {
       console.error("Error fetching French data:", err);
     } finally {
@@ -2093,85 +2125,109 @@ export const FrenchView: React.FC<{ userId: string }> = ({ userId }) => {
                     </div>
                   </button>
 
-                  {/* Section Items */}
-                  {!isCollapsed && list.length > 0 && (
-                    <div className="p-4 md:p-5 pt-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 border-t border-gray-100/60 mt-1">
-                      {list.map((res) => {
-                        const badge = RESOURCE_TYPE_BADGES[res.resource_type] || RESOURCE_TYPE_BADGES.other;
+                  {/* Section Items with Lazy Chunk Rendering */}
+                  {!isCollapsed && list.length > 0 && (() => {
+                    const limit = visibleSectionCounts[sectionKey] || 18;
+                    const visibleList = list.slice(0, limit);
+                    const hasMore = list.length > limit;
 
-                        return (
-                          <div
-                            key={res.id}
-                            className="p-4 rounded-2xl bg-white border border-gray-100/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
-                          >
-                            <div>
-                              <div className="flex items-start justify-between gap-2 mb-2">
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                  <span
-                                    className="px-2 py-0.5 rounded-md text-[10px] font-bold"
-                                    style={{ backgroundColor: badge.bg, color: badge.text }}
-                                  >
-                                    {badge.label}
-                                  </span>
-                                  {res.level && (
-                                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-gray-100 text-gray-600">
-                                      {LEVEL_LABELS[res.level] || res.level}
-                                    </span>
+                    return (
+                      <div className="p-4 md:p-5 pt-0 border-t border-gray-100/60 mt-1">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {visibleList.map((res) => {
+                            const badge = RESOURCE_TYPE_BADGES[res.resource_type] || RESOURCE_TYPE_BADGES.other;
+
+                            return (
+                              <div
+                                key={res.id}
+                                className="p-4 rounded-2xl bg-white border border-gray-100/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
+                              >
+                                <div>
+                                  <div className="flex items-start justify-between gap-2 mb-2">
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <span
+                                        className="px-2 py-0.5 rounded-md text-[10px] font-bold"
+                                        style={{ backgroundColor: badge.bg, color: badge.text }}
+                                      >
+                                        {badge.label}
+                                      </span>
+                                      {res.level && (
+                                        <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-gray-100 text-gray-600">
+                                          {LEVEL_LABELS[res.level] || res.level}
+                                        </span>
+                                      )}
+                                      {res.recommended && (
+                                        <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                          ⭐ Recommended
+                                        </span>
+                                      )}
+                                    </div>
+
+                                    <button
+                                      onClick={() => handleToggleFavorite(res.id, res.her_favorite)}
+                                      className={`p-1.5 rounded-xl transition-colors ${
+                                        res.her_favorite
+                                          ? "text-rose-500 bg-rose-50 hover:bg-rose-100"
+                                          : "text-gray-300 hover:text-rose-400 hover:bg-rose-50"
+                                      }`}
+                                      title={res.her_favorite ? "Remove from Favorites" : "Add to Favorites"}
+                                    >
+                                      <Heart size={16} className={res.her_favorite ? "fill-current" : ""} />
+                                    </button>
+                                  </div>
+
+                                  <div className="font-bold text-sm text-gray-900 mb-1 leading-snug">
+                                    {res.title}
+                                  </div>
+
+                                  {res.skills && (
+                                    <div className="text-[11px] font-semibold text-purple-700 mb-1.5">
+                                      Focus: {res.skills}
+                                    </div>
                                   )}
-                                  {res.recommended && (
-                                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                                      ⭐ Recommended
-                                    </span>
+
+                                  {res.notes && (
+                                    <p className="text-xs text-gray-600 line-clamp-3 leading-relaxed mb-3">
+                                      {res.notes}
+                                    </p>
                                   )}
                                 </div>
 
-                                <button
-                                  onClick={() => handleToggleFavorite(res.id, res.her_favorite)}
-                                  className={`p-1.5 rounded-xl transition-colors ${
-                                    res.her_favorite
-                                      ? "text-rose-500 bg-rose-50 hover:bg-rose-100"
-                                      : "text-gray-300 hover:text-rose-400 hover:bg-rose-50"
-                                  }`}
-                                  title={res.her_favorite ? "Remove from Favorites" : "Add to Favorites"}
-                                >
-                                  <Heart size={16} className={res.her_favorite ? "fill-current" : ""} />
-                                </button>
+                                {res.url && (
+                                  <div className="pt-2 border-t border-gray-50 flex items-center justify-end">
+                                    <a
+                                      href={res.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="px-2.5 py-1 rounded-xl bg-purple-50 text-purple-700 hover:bg-purple-100 font-bold flex items-center gap-1 text-[11px]"
+                                    >
+                                      Open <ExternalLink size={11} />
+                                    </a>
+                                  </div>
+                                )}
                               </div>
+                            );
+                          })}
+                        </div>
 
-                              <div className="font-bold text-sm text-gray-900 mb-1 leading-snug">
-                                {res.title}
-                              </div>
-
-                              {res.skills && (
-                                <div className="text-[11px] font-semibold text-purple-700 mb-1.5">
-                                  Focus: {res.skills}
-                                </div>
-                              )}
-
-                              {res.notes && (
-                                <p className="text-xs text-gray-600 line-clamp-3 leading-relaxed mb-3">
-                                  {res.notes}
-                                </p>
-                              )}
-                            </div>
-
-                            {res.url && (
-                              <div className="pt-2 border-t border-gray-50 flex items-center justify-end">
-                                <a
-                                  href={res.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="px-2.5 py-1 rounded-xl bg-purple-50 text-purple-700 hover:bg-purple-100 font-bold flex items-center gap-1 text-[11px]"
-                                >
-                                  Open <ExternalLink size={11} />
-                                </a>
-                              </div>
-                            )}
+                        {hasMore && (
+                          <div className="mt-4 flex justify-center">
+                            <button
+                              onClick={() =>
+                                setVisibleSectionCounts((prev) => ({
+                                  ...prev,
+                                  [sectionKey]: (prev[sectionKey] || 18) + 36,
+                                }))
+                              }
+                              className="px-4 py-2 bg-purple-100/70 hover:bg-purple-200 text-purple-800 rounded-2xl text-xs font-bold transition-all shadow-xs"
+                            >
+                              Show more in this section ({visibleList.length} of {list.length})
+                            </button>
                           </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               );
             })}

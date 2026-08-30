@@ -27,15 +27,31 @@ export interface JournalPhoto {
   created_at: string;
 }
 
-/* ─────────────────────────── constants ─────────────────────────── */
-
 const MOODS: { value: string; emoji: string; label: string; color: string; bg: string }[] = [
-  { value: "great",  emoji: "🌟", label: "Great",  color: "#D97706", bg: "#FEF3C7" },
-  { value: "good",   emoji: "🌸", label: "Good",   color: "#059669", bg: "#D1FAE5" },
-  { value: "okay",   emoji: "🌤️", label: "Okay",   color: "#0284C7", bg: "#E0F2FE" },
-  { value: "tough",  emoji: "🌧️", label: "Tough",  color: "#7C3AED", bg: "#EDE9FE" },
-  { value: "rough",  emoji: "🌪️", label: "Rough",  color: "#DC2626", bg: "#FEE2E2" },
+  { value: "gorgeous",           emoji: "💖", label: "Gorgeous",           color: "#DB2777", bg: "#FCE7F3" },
+  { value: "stunning",           emoji: "✨", label: "Stunning",           color: "#7C3AED", bg: "#EDE9FE" },
+  { value: "pretty",             emoji: "🌸", label: "Pretty",             color: "#E11D48", bg: "#FFE4E6" },
+  { value: "cute",               emoji: "🎀", label: "Cute",               color: "#D946EF", bg: "#FAE8FF" },
+  { value: "okay",               emoji: "🌤️", label: "Okay",               color: "#0284C7", bg: "#E0F2FE" },
+  { value: "jellyfish",          emoji: "🪼", label: "Jellyfish",          color: "#0D9488", bg: "#CCFBF1" },
+  { value: "bored",              emoji: "🥱", label: "Bored",              color: "#64748B", bg: "#F1F5F9" },
+  { value: "cult_leader_energy", emoji: "👑", label: "Cult Leader Energy", color: "#D97706", bg: "#FEF3C7" },
+  { value: "blocking",           emoji: "🛑", label: "Blocking",           color: "#DC2626", bg: "#FEE2E2" },
 ];
+
+export function getMoodMeta(moodVal: string | null): { emoji: string; label: string; color: string; bg: string } | null {
+  if (!moodVal) return null;
+  const raw = moodVal.trim();
+  const normalized = raw.toLowerCase().replace(/[\s-]+/g, "_");
+  const found = MOODS.find((m) => m.value === normalized || m.value === raw.toLowerCase() || m.label.toLowerCase() === raw.toLowerCase());
+  if (found) return found;
+  return {
+    emoji: "💭",
+    label: raw.charAt(0).toUpperCase() + raw.slice(1),
+    color: "#6D28D9",
+    bg: "#F5F3FF",
+  };
+}
 
 const DIARY_PROMPTS = [
   "Dear Diary, today was...",
@@ -108,6 +124,11 @@ function DiaryWritePage({
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [content, setContent] = useState(initial?.content || "");
   const [mood, setMood] = useState<string | null>(initial?.mood || null);
+  const [customMoodInput, setCustomMoodInput] = useState<string>(() => {
+    if (!initial?.mood) return "";
+    const isCurated = MOODS.some(m => m.value === initial.mood);
+    return isCurated ? "" : initial.mood;
+  });
   const [isPinned, setIsPinned] = useState(initial?.is_pinned || false);
   const [photos, setPhotos] = useState<JournalPhoto[]>([]);
   const [newFiles, setNewFiles] = useState<File[]>([]);
@@ -234,28 +255,63 @@ function DiaryWritePage({
             </div>
           </div>
 
-          {/* Mood Selector (Quiet Handwritten Margin Note) */}
+          {/* Mood Selector (Curated Buttons + Free-text Custom Input) */}
           <div className="mb-4">
             <div className="text-xs text-[#8A7B9D] mb-1.5 italic" style={{ fontFamily: "'Patrick Hand', cursive", fontSize: "15px" }}>
               how was today feeling? ~
             </div>
-            <div className="flex gap-2 flex-wrap">
-              {MOODS.map((m) => (
-                <button
-                  key={m.value}
-                  type="button"
-                  onClick={() => setMood(mood === m.value ? null : m.value)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border text-xs font-semibold transition-all ${
-                    mood === m.value
-                      ? "ring-2 ring-[#C9B6E4] shadow-xs scale-105"
-                      : "bg-white/80 border-[#EADEF0] opacity-75 hover:opacity-100"
-                  }`}
-                  style={{ backgroundColor: mood === m.value ? m.bg : undefined }}
-                >
-                  <span className="text-base leading-none">{m.emoji}</span>
-                  <span style={{ color: mood === m.value ? m.color : "#5B4B6D" }}>{m.label}</span>
-                </button>
-              ))}
+            <div className="flex gap-1.5 flex-wrap mb-2">
+              {MOODS.map((m) => {
+                const isSelected = mood?.toLowerCase() === m.value.toLowerCase() || mood?.toLowerCase() === m.label.toLowerCase();
+                return (
+                  <button
+                    key={m.value}
+                    type="button"
+                    onClick={() => {
+                      if (isSelected) {
+                        setMood(null);
+                        setCustomMoodInput("");
+                      } else {
+                        setMood(m.value);
+                        setCustomMoodInput("");
+                      }
+                    }}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border text-xs font-semibold transition-all ${
+                      isSelected
+                        ? "ring-2 ring-[#C9B6E4] shadow-xs scale-105"
+                        : "bg-white/80 border-[#EADEF0] opacity-80 hover:opacity-100"
+                    }`}
+                    style={{ backgroundColor: isSelected ? m.bg : undefined }}
+                  >
+                    <span className="text-base leading-none">{m.emoji}</span>
+                    <span style={{ color: isSelected ? m.color : "#5B4B6D" }}>{m.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={customMoodInput}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setCustomMoodInput(val);
+                  const trimmed = val.trim();
+                  if (!trimmed) {
+                    setMood(null);
+                    return;
+                  }
+                  const normalized = trimmed.toLowerCase().replace(/[\s-]+/g, "_");
+                  const matched = MOODS.find(m => m.value === normalized || m.value === trimmed.toLowerCase() || m.label.toLowerCase() === trimmed.toLowerCase());
+                  if (matched) {
+                    setMood(matched.value);
+                  } else {
+                    setMood(trimmed);
+                  }
+                }}
+                placeholder="or type a custom mood (e.g. cozy, nostalgic, unstoppable…)"
+                className="w-full text-xs p-2 px-3 rounded-xl border border-[#EADEF0] bg-white/90 text-[#5B4B6D] placeholder:text-[#B3A6C4] focus:outline-none focus:ring-2 focus:ring-[#C9B6E4]"
+              />
             </div>
           </div>
 
@@ -422,7 +478,7 @@ function DiaryReadPage({
   const safeIndex = Math.max(0, Math.min(entries.length - 1, currentIndex));
   const currentEntry = entries[safeIndex];
   const currentPhotos = currentEntry ? photosByEntry[currentEntry.id] || [] : [];
-  const moodInfo = currentEntry ? MOODS.find((m) => m.value === currentEntry.mood) : null;
+  const moodInfo = currentEntry ? getMoodMeta(currentEntry.mood) : null;
 
   return (
     <div className="max-w-2xl mx-auto my-2">
@@ -831,16 +887,26 @@ function MemoriesAndLogView({
     }
   }, [entries, randomPick, pickRandom]);
 
+  const distinctMoodOptions = useMemo(() => {
+    const fromEntries = entries.map((e) => e.mood).filter(Boolean) as string[];
+    const allVals = [...new Set([...MOODS.map((m) => m.value), ...fromEntries])];
+    return allVals.map((v) => ({ value: v, meta: getMoodMeta(v) })).filter(item => item.meta !== null);
+  }, [entries]);
+
   const filteredEntries = useMemo(() => {
     return entries.filter((e) => {
-      if (selectedMood !== "all" && e.mood !== selectedMood) return false;
+      if (selectedMood !== "all") {
+        if (!e.mood) return false;
+        const normalized = e.mood.trim().toLowerCase().replace(/[\s-]+/g, "_");
+        if (e.mood !== selectedMood && normalized !== selectedMood.toLowerCase()) return false;
+      }
       if (search && !e.content.toLowerCase().includes(search.toLowerCase())) return false;
       return true;
     });
   }, [entries, selectedMood, search]);
 
   const randomPhotos = randomPick ? photosByEntry[randomPick.id] || [] : [];
-  const randomMood = randomPick ? MOODS.find((m) => m.value === randomPick.mood) : null;
+  const randomMood = randomPick ? getMoodMeta(randomPick.mood) : null;
 
   return (
     <div className="space-y-6">
@@ -929,8 +995,8 @@ function MemoriesAndLogView({
               className="text-xs p-1.5 rounded-xl border border-gray-200 bg-white"
             >
               <option value="all">All moods</option>
-              {MOODS.map((m) => (
-                <option key={m.value} value={m.value}>{m.emoji} {m.label}</option>
+              {distinctMoodOptions.map(({ value, meta }) => (
+                <option key={value} value={value}>{meta?.emoji} {meta?.label}</option>
               ))}
             </select>
           </div>
@@ -944,7 +1010,7 @@ function MemoriesAndLogView({
           <div className="space-y-3">
             {filteredEntries.map((entry) => {
               const photos = photosByEntry[entry.id] || [];
-              const mood = MOODS.find((m) => m.value === entry.mood);
+              const mood = getMoodMeta(entry.mood);
               return (
                 <div
                   key={entry.id}
