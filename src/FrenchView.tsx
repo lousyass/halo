@@ -28,6 +28,7 @@ import {
   Award,
 } from "lucide-react";
 import { FRENCH_FREQUENCY_WORDS, FrequencyWord } from "./data/frenchFrequencyWords";
+import { playFrenchAudio } from "./lib/frenchAudio";
 
 // Card interface
 export interface LearningCard {
@@ -295,6 +296,11 @@ export const FrenchView: React.FC<{ userId: string }> = ({ userId }) => {
       };
       window.speechSynthesis.addEventListener("voiceschanged", handleVoicesChanged, { once: true });
     }
+  };
+
+  // Primary audio playback: uses pre-generated Storage CDN audio when available, falling back to Web Speech
+  const handleAudio = (text: string) => {
+    playFrenchAudio(text, speakFrench);
   };
 
   // Add daily word to learning cards
@@ -849,7 +855,7 @@ export const FrenchView: React.FC<{ userId: string }> = ({ userId }) => {
                         {word.pos || "vocab"}
                       </span>
                       <button
-                        onClick={() => speakFrench(word.french)}
+                        onClick={() => handleAudio(word.french)}
                         className="p-1.5 rounded-xl bg-pink-50 text-pink-600 hover:bg-pink-100 transition-colors"
                         title="Listen to French pronunciation"
                       >
@@ -930,7 +936,7 @@ export const FrenchView: React.FC<{ userId: string }> = ({ userId }) => {
                       {dueCards[reviewIndex].french}
                     </h3>
                     <button
-                      onClick={() => speakFrench(dueCards[reviewIndex].french)}
+                      onClick={() => handleAudio(dueCards[reviewIndex].french)}
                       className="p-2 rounded-2xl bg-purple-100 text-purple-700 hover:bg-purple-200"
                       title="Pronounce"
                     >
@@ -1105,7 +1111,7 @@ export const FrenchView: React.FC<{ userId: string }> = ({ userId }) => {
                             </div>
 
                             <button
-                              onClick={() => speakFrench(card.french)}
+                              onClick={() => handleAudio(card.french)}
                               className="p-1 rounded-lg text-gray-400 hover:text-pink-600 hover:bg-pink-50 transition-colors"
                               title="Listen"
                             >
@@ -1171,7 +1177,7 @@ export const FrenchView: React.FC<{ userId: string }> = ({ userId }) => {
                       />
                       <button
                         type="button"
-                        onClick={() => speakFrench(newCardFrench)}
+                        onClick={() => handleAudio(newCardFrench)}
                         disabled={!newCardFrench}
                         className="p-2 rounded-2xl bg-pink-50 text-pink-600 hover:bg-pink-100 disabled:opacity-40"
                       >
@@ -1315,7 +1321,7 @@ export const FrenchView: React.FC<{ userId: string }> = ({ userId }) => {
                       onClick={() => {
                         if (!matchingSelected) {
                           setMatchingSelected(tile);
-                          if (tile.type === "fr") speakFrench(tile.text);
+                          if (tile.type === "fr") handleAudio(tile.text);
                         } else if (matchingSelected.id === tile.id) {
                           setMatchingSelected(null);
                         } else if (matchingSelected.cardId === tile.cardId && matchingSelected.type !== tile.type) {
@@ -1360,7 +1366,7 @@ export const FrenchView: React.FC<{ userId: string }> = ({ userId }) => {
                 {quizMode === "listening" ? (
                   <div className="space-y-2">
                     <button
-                      onClick={() => speakFrench(quizQuestions[quizQuestionIndex].french)}
+                      onClick={() => handleAudio(quizQuestions[quizQuestionIndex].french)}
                       className="px-6 py-4 rounded-3xl bg-pink-100 text-pink-700 font-bold hover:bg-pink-200 shadow inline-flex items-center gap-2"
                     >
                       <Volume2 size={24} /> Play Audio (Listen)
@@ -1612,7 +1618,7 @@ export const FrenchView: React.FC<{ userId: string }> = ({ userId }) => {
                           {dictResult.french}
                         </h4>
                         <button
-                          onClick={() => speakFrench(dictResult.french)}
+                          onClick={() => handleAudio(dictResult.french)}
                           className="p-1.5 rounded-xl bg-pink-50 text-pink-600 hover:bg-pink-100 transition-colors"
                           title="Listen to French pronunciation"
                         >
