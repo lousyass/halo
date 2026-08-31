@@ -408,7 +408,7 @@ async function processDailyMode(
 
   // Build digest email
   const lines: string[] = [
-    `Good morning! Here's everything still on your plate:\n`,
+    `Reminder: Here's everything still on your plate:\n`,
   ];
 
   for (const task of tasks as Task[]) {
