@@ -13,6 +13,11 @@ import {
 import { supabase } from "./lib/supabase";
 import { SUPPORT_CONTACT } from "./lib/contact";
 import { SyllabusView } from "./SyllabusView";
+import {
+  getDecorativeImage,
+  DEFAULT_VISUAL_SETTINGS,
+  VisualCustomizationSettings,
+} from "./lib/decorativeImages";
 
 // Code-split top-level modes with React.lazy
 const JournalView = lazy(() => import("./JournalView"));
@@ -813,11 +818,18 @@ function RoutineForm({ initial, onSave, onClose }: {
 
 /* ─────────────────────────── routine view ───────────────────────────── */
 
-function RoutineView({ routineEntries, onAdd, onEdit, onDelete }: {
+function RoutineView({
+  routineEntries,
+  onAdd,
+  onEdit,
+  onDelete,
+  routineBg = null,
+}: {
   routineEntries: RoutineEntry[];
   onAdd: (r: Omit<RoutineEntry, "id" | "user_id">) => void;
   onEdit: (id: string, r: Omit<RoutineEntry, "id" | "user_id">) => void;
   onDelete: (id: string) => void;
+  routineBg?: string | null;
 }) {
   const [formOpen, setFormOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<RoutineEntry | null>(null);
@@ -831,39 +843,51 @@ function RoutineView({ routineEntries, onAdd, onEdit, onDelete }: {
   }, [routineEntries]);
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-        <div>
-          <h2 className="text-xl font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>
-            Your weekly routine 🗓️
-          </h2>
-          <p className="text-xs opacity-60">Your recurring 7 day weekly schedule</p>
+    <div className="relative overflow-hidden rounded-3xl p-1">
+      {/* Decorative Routine Background */}
+      {routineBg && (
+        <div
+          className="absolute inset-0 pointer-events-none z-0 bg-cover bg-center rounded-3xl transition-opacity duration-500"
+          style={{
+            backgroundImage: `url(${routineBg})`,
+            opacity: 0.44,
+          }}
+        />
+      )}
+
+      <div className="relative z-10">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+          <div>
+            <h2 className="text-xl font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>
+              Your weekly routine 🗓️
+            </h2>
+            <p className="text-xs opacity-60">Your recurring 7 day weekly schedule</p>
+          </div>
+          <button
+            onClick={() => { setEditingEntry(null); setFormOpen(true); }}
+            className="px-4 py-2.5 rounded-2xl text-white font-semibold flex items-center gap-1.5 shadow-sm hover:opacity-95 transition-all text-sm"
+            style={{ background: "#A8D5BA", fontFamily: "Fredoka, sans-serif" }}
+          >
+            <Plus size={16} /> Add a class
+          </button>
         </div>
-        <button
-          onClick={() => { setEditingEntry(null); setFormOpen(true); }}
-          className="px-4 py-2.5 rounded-2xl text-white font-semibold flex items-center gap-1.5 shadow-sm hover:opacity-95 transition-all text-sm"
-          style={{ background: "#A8D5BA", fontFamily: "Fredoka, sans-serif" }}
-        >
-          <Plus size={16} /> Add a class
-        </button>
-      </div>
 
-      {/* 7-Day Timetable Grid */}
-      <div className="overflow-x-auto pb-4">
-        <div className="grid grid-cols-7 gap-2.5 min-w-[820px]">
-          {DAY_NAMES.map((dayName, dow) => {
-            const entries = [...(grouped[dow] || [])].sort((a, b) => a.start_time.localeCompare(b.start_time));
-            const shortName = dayName.slice(0, 3);
-            const isWeekend = dow === 0 || dow === 6;
+        {/* 7-Day Timetable Grid */}
+        <div className="overflow-x-auto pb-4">
+          <div className="grid grid-cols-7 gap-2.5 min-w-[820px]">
+            {DAY_NAMES.map((dayName, dow) => {
+              const entries = [...(grouped[dow] || [])].sort((a, b) => a.start_time.localeCompare(b.start_time));
+              const shortName = dayName.slice(0, 3);
+              const isWeekend = dow === 0 || dow === 6;
 
-            return (
-              <div
-                key={dow}
-                className={`flex flex-col rounded-3xl p-3 border transition-all ${
-                  isWeekend ? "bg-purple-50/40 border-purple-100/70" : "bg-white/80 border-black/5"
-                } shadow-xs min-h-[420px]`}
-              >
-                {/* Column Header */}
+              return (
+                <div
+                  key={dow}
+                  className={`flex flex-col rounded-3xl p-3 border transition-all ${
+                    isWeekend ? "bg-purple-50/70 border-purple-200/80" : "bg-white/85 border-black/5"
+                  } backdrop-blur-xs shadow-xs min-h-[420px]`}
+                >
+                  {/* Column Header */}
                 <div className="flex items-center justify-between border-b border-black/5 pb-2 mb-2.5">
                   <div>
                     <span className="font-bold text-sm text-[#5B4B6D]" style={{ fontFamily: "Fredoka, sans-serif" }}>
@@ -971,14 +995,23 @@ function RoutineView({ routineEntries, onAdd, onEdit, onDelete }: {
           onClose={() => { setFormOpen(false); setEditingEntry(null); }}
         />
       )}
+      </div>
     </div>
   );
 }
 
 /* ─────────────────────────── settings view ─────────────────────────── */
 
-function SettingsView({ profile, onSave, onSignOut }: {
+function SettingsView({
+  profile,
+  visualSettings,
+  onUpdateVisualSettings,
+  onSave,
+  onSignOut,
+}: {
   profile: UserProfile | null;
+  visualSettings: VisualCustomizationSettings;
+  onUpdateVisualSettings: (updates: Partial<VisualCustomizationSettings>) => Promise<void>;
   onSave: (updates: { reminder_mode: string; daily_digest_time: string }) => Promise<void>;
   onSignOut: () => void;
 }) {
@@ -1003,6 +1036,152 @@ function SettingsView({ profile, onSave, onSignOut }: {
 
   return (
     <div className="space-y-4">
+      {/* ── Visual Appearance & Decorations (Simple / Custom) ── */}
+      <Sticker className="p-4" rotate={-0.1}>
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <div>
+            <h3 className="font-bold text-base flex items-center gap-2" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>
+              <span>✨</span> Visual Appearance & Decorations
+            </h3>
+            <p className="text-xs opacity-60">Choose between clean minimal mode or cozy theme-decorated backgrounds</p>
+          </div>
+        </div>
+
+        {/* Master Mode Switch */}
+        <div className="mb-4">
+          <label className="text-xs font-semibold opacity-70 block mb-1.5">Visual Mode</label>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => onUpdateVisualSettings({ mode: "simple" })}
+              className={`flex-1 p-3 rounded-2xl border text-sm text-left transition-all ${
+                visualSettings.mode === "simple"
+                  ? "bg-white border-purple-300 shadow-md ring-2 ring-purple-200"
+                  : "bg-white/60 border-gray-200 hover:bg-white"
+              }`}
+            >
+              <div className="font-bold flex items-center gap-1.5 text-gray-800">
+                <span>🌿</span> Simple (Clean)
+              </div>
+              <div className="text-xs opacity-60 mt-0.5">Minimal, fast, solid theme colors without background pictures</div>
+            </button>
+            <button
+              type="button"
+              onClick={() => onUpdateVisualSettings({ mode: "custom" })}
+              className={`flex-1 p-3 rounded-2xl border text-sm text-left transition-all ${
+                visualSettings.mode === "custom"
+                  ? "bg-purple-50/90 border-purple-300 shadow-md ring-2 ring-purple-200"
+                  : "bg-white/60 border-gray-200 hover:bg-white"
+              }`}
+            >
+              <div className="font-bold flex items-center gap-1.5 text-purple-900">
+                <span>✨</span> Custom (Decorative)
+              </div>
+              <div className="text-xs opacity-60 mt-0.5">Picks cozy random theme pictures for your views every session</div>
+            </button>
+          </div>
+        </div>
+
+        {/* Sub-Toggles (Visible and active when Custom is enabled) */}
+        {visualSettings.mode === "custom" && (
+          <div className="p-3.5 rounded-2xl bg-purple-50/60 border border-purple-200/80 space-y-3 mt-3">
+            <div className="text-xs font-bold text-purple-900 uppercase tracking-wider">
+              Component Decorations
+            </div>
+
+            {/* Background theme toggle */}
+            <div className="flex items-center justify-between py-1">
+              <div>
+                <span className="text-sm font-semibold text-gray-800 block">🎨 Theme Wallpaper</span>
+                <span className="text-xs opacity-60">Full-page decorative background matching active theme</span>
+              </div>
+              <input
+                type="checkbox"
+                checked={visualSettings.background}
+                onChange={(e) => onUpdateVisualSettings({ background: e.target.checked })}
+                className="w-4 h-4 rounded text-purple-600 focus:ring-purple-400"
+              />
+            </div>
+
+            {/* Calendar toggle */}
+            <div className="flex items-center justify-between py-1 border-t border-purple-200/50 pt-2.5">
+              <div>
+                <span className="text-sm font-semibold text-gray-800 block">📅 Calendar Backdrop</span>
+                <span className="text-xs opacity-60">Shared calendar backdrop for Academics & Memory Wall</span>
+              </div>
+              <input
+                type="checkbox"
+                checked={visualSettings.calendar}
+                onChange={(e) => onUpdateVisualSettings({ calendar: e.target.checked })}
+                className="w-4 h-4 rounded text-purple-600 focus:ring-purple-400"
+              />
+            </div>
+
+            {/* Dashboard section */}
+            <div className="border-t border-purple-200/50 pt-2.5 space-y-2">
+              <span className="text-sm font-semibold text-gray-800 block">📋 Dashboard Task Cards</span>
+              <div className="pl-3 space-y-2 text-xs">
+                <label className="flex items-center justify-between cursor-pointer">
+                  <span className="text-gray-700">Coming Up Soon section</span>
+                  <input
+                    type="checkbox"
+                    checked={visualSettings.dashboard_coming_soon}
+                    onChange={(e) => onUpdateVisualSettings({ dashboard_coming_soon: e.target.checked })}
+                    className="w-4 h-4 rounded text-purple-600 focus:ring-purple-400"
+                  />
+                </label>
+                <label className="flex items-center justify-between cursor-pointer">
+                  <span className="text-gray-700">All Tasks section</span>
+                  <input
+                    type="checkbox"
+                    checked={visualSettings.dashboard_all_tasks}
+                    onChange={(e) => onUpdateVisualSettings({ dashboard_all_tasks: e.target.checked })}
+                    className="w-4 h-4 rounded text-purple-600 focus:ring-purple-400"
+                  />
+                </label>
+                <label className="flex items-center justify-between cursor-pointer pt-1 border-t border-purple-200/40">
+                  <span className="text-purple-900 font-semibold">Use same image for both sections</span>
+                  <input
+                    type="checkbox"
+                    checked={visualSettings.dashboard_same_image}
+                    onChange={(e) => onUpdateVisualSettings({ dashboard_same_image: e.target.checked })}
+                    className="w-4 h-4 rounded text-purple-600 focus:ring-purple-400"
+                  />
+                </label>
+              </div>
+            </div>
+
+            {/* Routine toggle */}
+            <div className="flex items-center justify-between py-1 border-t border-purple-200/50 pt-2.5">
+              <div>
+                <span className="text-sm font-semibold text-gray-800 block">🗓️ Routine Schedule Grid</span>
+                <span className="text-xs opacity-60">Decorative day card backdrops in the weekly routine</span>
+              </div>
+              <input
+                type="checkbox"
+                checked={visualSettings.routine}
+                onChange={(e) => onUpdateVisualSettings({ routine: e.target.checked })}
+                className="w-4 h-4 rounded text-purple-600 focus:ring-purple-400"
+              />
+            </div>
+
+            {/* Diary toggle */}
+            <div className="flex items-center justify-between py-1 border-t border-purple-200/50 pt-2.5">
+              <div>
+                <span className="text-sm font-semibold text-gray-800 block">📖 Diary Spread Wallpaper</span>
+                <span className="text-xs opacity-60">Soft backdrop behind the two-page diary book</span>
+              </div>
+              <input
+                type="checkbox"
+                checked={visualSettings.diary}
+                onChange={(e) => onUpdateVisualSettings({ diary: e.target.checked })}
+                className="w-4 h-4 rounded text-purple-600 focus:ring-purple-400"
+              />
+            </div>
+          </div>
+        )}
+      </Sticker>
+
       <Sticker className="p-4" rotate={-0.2}>
         <h3 className="font-bold mb-3" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>⚙️ Reminder Settings</h3>
         <p className="text-xs opacity-60 mb-3">Chose how and when you want to receive reminder emails to your inbox</p>
@@ -1098,6 +1277,7 @@ function CalendarView({
   onToggle,
   onDelete,
   onEdit,
+  calBg = null,
 }: {
   tasks: FrontendTask[];
   subjects: Subject[];
@@ -1106,6 +1286,7 @@ function CalendarView({
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
   onEdit: (t: FrontendTask) => void;
+  calBg?: string | null;
 }) {
   const [cursor, setCursor] = useState(new Date());
   const [selected, setSelected] = useState<string | null>(null);
@@ -1134,8 +1315,20 @@ function CalendarView({
     : [];
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
+    <div className="relative overflow-hidden rounded-3xl p-1">
+      {/* Decorative Calendar Background */}
+      {calBg && (
+        <div
+          className="absolute inset-0 pointer-events-none z-0 bg-cover bg-center rounded-3xl transition-opacity duration-500"
+          style={{
+            backgroundImage: `url(${calBg})`,
+            opacity: 0.36,
+          }}
+        />
+      )}
+
+      <div className="relative z-10">
+        <div className="flex items-center justify-between mb-4">
         <button onClick={() => setCursor(new Date(year, month - 1, 1))} className="p-2 rounded-xl hover:bg-black/5"><ChevronLeft size={18} /></button>
         <h3 className="font-bold text-lg" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>
           {cursor.toLocaleDateString(undefined, { month: "long", year: "numeric" })}
@@ -1270,6 +1463,7 @@ function CalendarView({
           </button>
         </Sticker>
       )}
+      </div>
     </div>
   );
 }
@@ -1324,6 +1518,13 @@ export default function StudyDen({ session }: { session: Session }) {
   const [dayBackgrounds, setDayBackgrounds] = useState<Record<string, string>>({});
   const [routineEntries, setRoutineEntries] = useState<RoutineEntry[]>([]);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [visualSettings, setVisualSettings] = useState<VisualCustomizationSettings>(() => {
+    try {
+      const local = localStorage.getItem(`halo-visual-settings-${userId}`);
+      if (local) return JSON.parse(local);
+    } catch (e) {}
+    return DEFAULT_VISUAL_SETTINGS;
+  });
 
   // UI
   const [loaded, setLoaded] = useState(false);
@@ -1392,8 +1593,27 @@ export default function StudyDen({ session }: { session: Session }) {
       .eq("id", userId)
       .single();
     if (error) { console.error("fetchProfile:", error.message); return; }
-    setProfile(data as UserProfile);
+    const prof = data as UserProfile;
+    setProfile(prof);
+    if (prof.preferences?.visual_customization) {
+      setVisualSettings(prof.preferences.visual_customization);
+    }
   }, [userId]);
+
+  const updateVisualSettings = async (updates: Partial<VisualCustomizationSettings>) => {
+    const next: VisualCustomizationSettings = { ...visualSettings, ...updates };
+    setVisualSettings(next);
+    localStorage.setItem(`halo-visual-settings-${userId}`, JSON.stringify(next));
+
+    const nextPref = { ...(profile?.preferences || {}), visual_customization: next };
+    setProfile((prev) => (prev ? { ...prev, preferences: nextPref } : null));
+
+    try {
+      await supabase.from("profiles").update({ preferences: nextPref }).eq("id", userId);
+    } catch (err) {
+      console.error("Failed to update visual customization:", err);
+    }
+  };
 
   /* ── derived ── */
   const subjById = useMemo(() => Object.fromEntries(subjects.map((s) => [s.id, s])), [subjects]);
@@ -1555,6 +1775,17 @@ export default function StudyDen({ session }: { session: Session }) {
     alert("Settings saved ✅");
   };
 
+  const isCustomMode = visualSettings.mode === "custom";
+  const bgWallpaper = isCustomMode && visualSettings.background ? getDecorativeImage("background", theme) : null;
+  const comingSoonBg = isCustomMode && visualSettings.dashboard_coming_soon
+    ? getDecorativeImage("dashboard-upper", theme, visualSettings.dashboard_same_image)
+    : null;
+  const allTasksBg = isCustomMode && visualSettings.dashboard_all_tasks
+    ? getDecorativeImage("dashboard-lower", theme, visualSettings.dashboard_same_image)
+    : null;
+  const routineBg = isCustomMode && visualSettings.routine ? getDecorativeImage("routine", theme) : null;
+  const calendarBg = isCustomMode && visualSettings.calendar ? getDecorativeImage("calendar", theme) : null;
+
   const pendingPrintList = [...tasks].filter((t) => t.status !== "completed").sort((a, b) => daysBetween(a.dueDate, todayStr()) - daysBetween(b.dueDate, todayStr()));
 
   if (!loaded) {
@@ -1578,10 +1809,21 @@ export default function StudyDen({ session }: { session: Session }) {
 
   /* ─── render ─── */
   return (
-    <div className="min-h-screen p-3 md:p-6" style={{ background: THEMES[theme].css, fontFamily: "Quicksand, sans-serif" }}>
+    <div className="min-h-screen p-3 md:p-6 relative overflow-x-hidden" style={{ background: THEMES[theme].css, fontFamily: "Quicksand, sans-serif" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@400;500;600;700&display=swap'); @media print { .no-print { display: none !important; } .print-only { display: block !important; } } .print-only { display: none; }`}</style>
 
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-6 items-start">
+      {/* Decorative Full-Page Theme Wallpaper */}
+      {bgWallpaper && (
+        <div
+          className="fixed inset-0 pointer-events-none z-0 bg-cover bg-center transition-opacity duration-700"
+          style={{
+            backgroundImage: `url(${bgWallpaper})`,
+            opacity: 0.50,
+          }}
+        />
+      )}
+
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-6 items-start relative z-10">
         {/* ── Left Sidebar (Desktop) / Top Nav (Mobile) ── */}
         <aside className="w-full md:w-64 shrink-0 no-print flex flex-col justify-between md:sticky md:top-6">
           <div className="space-y-4">
@@ -1639,27 +1881,52 @@ export default function StudyDen({ session }: { session: Session }) {
             </nav>
           </div>
 
-          {/* Sidebar Footer (Desktop Theme & Print) */}
-          <div className="hidden md:flex p-3 rounded-2xl bg-white/50 backdrop-blur-sm border border-white/50 items-center justify-between mt-6">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-gray-500">Theme:</span>
-              <select
-                value={theme}
-                onChange={(e) => setTheme(e.target.value as keyof typeof THEMES)}
-                className="text-xs p-1 rounded-xl border bg-white/80 focus:outline-none"
-              >
-                {Object.entries(THEMES).map(([k, v]) => (
-                  <option key={k} value={k}>{v.label}</option>
-                ))}
-              </select>
+          {/* Sidebar Footer (Desktop Theme, Visual Mode & Print) */}
+          <div className="hidden md:flex flex-col gap-2.5 mt-6">
+            {/* Quick Simple / Custom Visual Mode Toggle */}
+            <div className="p-2.5 px-3 rounded-2xl bg-white/50 backdrop-blur-sm border border-white/50 flex items-center justify-between text-xs font-bold shadow-2xs">
+              <span className="text-gray-600">Style:</span>
+              <div className="flex items-center gap-1 bg-black/5 p-0.5 rounded-xl">
+                <button
+                  onClick={() => updateVisualSettings({ mode: "simple" })}
+                  className={`px-2.5 py-1 rounded-lg transition-all ${
+                    visualSettings.mode === "simple" ? "bg-white text-gray-900 shadow-xs" : "text-gray-500 hover:text-gray-800"
+                  }`}
+                >
+                  Simple
+                </button>
+                <button
+                  onClick={() => updateVisualSettings({ mode: "custom" })}
+                  className={`px-2.5 py-1 rounded-lg transition-all ${
+                    visualSettings.mode === "custom" ? "bg-purple-600 text-white shadow-xs" : "text-gray-500 hover:text-gray-800"
+                  }`}
+                >
+                  Custom
+                </button>
+              </div>
             </div>
-            <button
-              onClick={() => window.print()}
-              className="p-1.5 rounded-xl bg-white/80 hover:bg-white text-gray-700 shadow-sm"
-              title="Print view"
-            >
-              <Printer size={15} />
-            </button>
+
+            <div className="p-3 rounded-2xl bg-white/50 backdrop-blur-sm border border-white/50 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-gray-500">Theme:</span>
+                <select
+                  value={theme}
+                  onChange={(e) => setTheme(e.target.value as keyof typeof THEMES)}
+                  className="text-xs p-1 rounded-xl border bg-white/80 focus:outline-none"
+                >
+                  {Object.entries(THEMES).map(([k, v]) => (
+                    <option key={k} value={k}>{v.label}</option>
+                  ))}
+                </select>
+              </div>
+              <button
+                onClick={() => window.print()}
+                className="p-1.5 rounded-xl bg-white/80 hover:bg-white text-gray-700 shadow-sm"
+                title="Print view"
+              >
+                <Printer size={15} />
+              </button>
+            </div>
           </div>
         </aside>
 
@@ -1738,55 +2005,79 @@ export default function StudyDen({ session }: { session: Session }) {
                     </Sticker>
                   )}
 
-                  <Sticker className="p-4 mb-4" rotate={-0.3}>
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>🌸 Coming up soon</h3>
-                      <button onClick={() => { setEditingTask(null); setFormOpen(true); }} className="flex items-center gap-1 text-sm px-3 py-1.5 rounded-xl text-white" style={{ background: "#E497B3" }}>
-                        <Plus size={14} /> Add task
-                      </button>
+                  {/* Coming up soon Section with optional decorative backdrop */}
+                  <Sticker className="p-4 mb-4 relative overflow-hidden" rotate={-0.3}>
+                    {comingSoonBg && (
+                      <div
+                        className="absolute inset-0 pointer-events-none z-0 bg-cover bg-center rounded-3xl transition-opacity duration-500"
+                        style={{
+                          backgroundImage: `url(${comingSoonBg})`,
+                          opacity: 0.20,
+                        }}
+                      />
+                    )}
+                    <div className="relative z-10">
+                      <div className="flex justify-between items-center mb-2">
+                        <h3 className="font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>🌸 Coming up soon</h3>
+                        <button onClick={() => { setEditingTask(null); setFormOpen(true); }} className="flex items-center gap-1 text-sm px-3 py-1.5 rounded-xl text-white" style={{ background: "#E497B3" }}>
+                          <Plus size={14} /> Add task
+                        </button>
+                      </div>
+                      {upcoming.length === 0
+                        ? <EmptyState emoji="🎀" text="Nothing pending — add a task to get started" />
+                        : upcoming.map((t) => <TaskCard key={t.id} task={t} subject={subjById[t.subjectId]} theme={theme} onToggle={toggleTask} onEdit={(t) => { setEditingTask(t); setFormOpen(true); }} onDelete={deleteTask} />)}
                     </div>
-                    {upcoming.length === 0
-                      ? <EmptyState emoji="🎀" text="Nothing pending — add a task to get started" />
-                      : upcoming.map((t) => <TaskCard key={t.id} task={t} subject={subjById[t.subjectId]} theme={theme} onToggle={toggleTask} onEdit={(t) => { setEditingTask(t); setFormOpen(true); }} onDelete={deleteTask} />)}
                   </Sticker>
 
-                  <Sticker className="p-4" rotate={0.2}>
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>All tasks</h3>
-                      <button onClick={() => setGroupBy(groupBy === "subject" ? "type" : "subject")} className="text-xs px-2.5 py-1 rounded-lg bg-black/5">
-                        Group by: {groupBy === "subject" ? "Subject" : "Type"}
-                      </button>
-                    </div>
-                    <div className="flex gap-1.5 mb-3 flex-wrap">
-                      <div className="flex items-center gap-1 bg-white rounded-lg px-2 flex-1 min-w-[140px]">
-                        <Search size={13} className="opacity-50" />
-                        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search..." className="p-1.5 text-sm outline-none w-full" />
+                  {/* All tasks Section with optional decorative backdrop */}
+                  <Sticker className="p-4 relative overflow-hidden" rotate={0.2}>
+                    {allTasksBg && (
+                      <div
+                        className="absolute inset-0 pointer-events-none z-0 bg-cover bg-center rounded-3xl transition-opacity duration-500"
+                        style={{
+                          backgroundImage: `url(${allTasksBg})`,
+                          opacity: 0.20,
+                        }}
+                      />
+                    )}
+                    <div className="relative z-10">
+                      <div className="flex justify-between items-center mb-2">
+                        <h3 className="font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>All tasks</h3>
+                        <button onClick={() => setGroupBy(groupBy === "subject" ? "type" : "subject")} className="text-xs px-2.5 py-1 rounded-lg bg-black/5">
+                          Group by: {groupBy === "subject" ? "Subject" : "Type"}
+                        </button>
                       </div>
-                      <select value={filterSubject} onChange={(e) => setFilterSubject(e.target.value)} className="text-xs p-1.5 rounded-lg border bg-white">
-                        <option value="all">All subjects</option>
-                        {subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-                      </select>
-                      <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="text-xs p-1.5 rounded-lg border bg-white">
-                        <option value="all">All types</option>
-                        {typeSuggestions.map((t) => <option key={t} value={t}>{t}</option>)}
-                      </select>
-                      <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="text-xs p-1.5 rounded-lg border bg-white">
-                        <option value="pending">Pending</option>
-                        <option value="completed">Completed</option>
-                        <option value="all">All</option>
-                      </select>
-                      <button onClick={() => setThisWeekOnly(!thisWeekOnly)} className={`text-xs px-2.5 py-1 rounded-lg ${thisWeekOnly ? "bg-pink-200" : "bg-black/5"}`}>This week</button>
+                      <div className="flex gap-1.5 mb-3 flex-wrap">
+                        <div className="flex items-center gap-1 bg-white rounded-lg px-2 flex-1 min-w-[140px]">
+                          <Search size={13} className="opacity-50" />
+                          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search..." className="p-1.5 text-sm outline-none w-full" />
+                        </div>
+                        <select value={filterSubject} onChange={(e) => setFilterSubject(e.target.value)} className="text-xs p-1.5 rounded-lg border bg-white">
+                          <option value="all">All subjects</option>
+                          {subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                        </select>
+                        <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="text-xs p-1.5 rounded-lg border bg-white">
+                          <option value="all">All types</option>
+                          {typeSuggestions.map((t) => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="text-xs p-1.5 rounded-lg border bg-white">
+                          <option value="pending">Pending</option>
+                          <option value="completed">Completed</option>
+                          <option value="all">All</option>
+                        </select>
+                        <button onClick={() => setThisWeekOnly(!thisWeekOnly)} className={`text-xs px-2.5 py-1 rounded-lg ${thisWeekOnly ? "bg-pink-200" : "bg-black/5"}`}>This week</button>
+                      </div>
+                      {filterStatus === "pending" && Object.keys(grouped).length === 0
+                        ? <EmptyState emoji="🐱" text="No tasks match your filters" />
+                        : filterStatus !== "pending"
+                        ? filtered.map((t) => <TaskCard key={t.id} task={t} subject={subjById[t.subjectId]} theme={theme} onToggle={toggleTask} onEdit={(t) => { setEditingTask(t); setFormOpen(true); }} onDelete={deleteTask} />)
+                        : Object.entries(grouped).map(([key, list]) => (
+                            <div key={key} className="mb-3">
+                              <div className="text-xs font-bold opacity-60 mb-1 uppercase tracking-wide">{groupBy === "type" ? (TYPE_ICON[key] || "📝") + " " + key : key}</div>
+                              {list.map((t) => <TaskCard key={t.id} task={t} subject={subjById[t.subjectId]} theme={theme} onToggle={toggleTask} onEdit={(t) => { setEditingTask(t); setFormOpen(true); }} onDelete={deleteTask} />)}
+                            </div>
+                          ))}
                     </div>
-                    {filterStatus === "pending" && Object.keys(grouped).length === 0
-                      ? <EmptyState emoji="🐱" text="No tasks match your filters" />
-                      : filterStatus !== "pending"
-                      ? filtered.map((t) => <TaskCard key={t.id} task={t} subject={subjById[t.subjectId]} theme={theme} onToggle={toggleTask} onEdit={(t) => { setEditingTask(t); setFormOpen(true); }} onDelete={deleteTask} />)
-                      : Object.entries(grouped).map(([key, list]) => (
-                          <div key={key} className="mb-3">
-                            <div className="text-xs font-bold opacity-60 mb-1 uppercase tracking-wide">{groupBy === "type" ? (TYPE_ICON[key] || "📝") + " " + key : key}</div>
-                            {list.map((t) => <TaskCard key={t.id} task={t} subject={subjById[t.subjectId]} theme={theme} onToggle={toggleTask} onEdit={(t) => { setEditingTask(t); setFormOpen(true); }} onDelete={deleteTask} />)}
-                          </div>
-                        ))}
                   </Sticker>
                 </div>
               )}
@@ -1803,6 +2094,7 @@ export default function StudyDen({ session }: { session: Session }) {
                       onToggle={toggleTask}
                       onDelete={deleteTask}
                       onEdit={(t) => { setEditingTask(t); setFormOpen(true); }}
+                      calBg={calendarBg}
                     />
                   </Sticker>
                 </div>
@@ -1818,13 +2110,13 @@ export default function StudyDen({ session }: { session: Session }) {
                       {subjects.map((s) => (
                         <div key={s.id} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl" style={{ background: s.color + "33" }}>
                           <span className="w-2.5 h-2.5 rounded-full" style={{ background: s.color }} />
-                          <span className="text-sm font-semibold">{s.name}</span>
-                          <button onClick={() => deleteSubject(s.id)}><X size={12} /></button>
+                          <span className="text-xs font-semibold">{s.name}</span>
+                          <button onClick={() => deleteSubject(s.id)} className="opacity-40 hover:opacity-100"><X size={12} /></button>
                         </div>
                       ))}
                     </div>
-                    <div className="flex gap-1.5 items-center flex-wrap">
-                      <input value={subjectDraft.name} onChange={(e) => setSubjectDraft({ ...subjectDraft, name: e.target.value })} onKeyDown={(e) => e.key === "Enter" && addSubject()} placeholder="Subject name" className="p-1.5 rounded-lg border text-sm flex-1 min-w-[140px]" />
+                    <div className="flex gap-2 items-center flex-wrap">
+                      <input value={subjectDraft.name} onChange={(e) => setSubjectDraft({ ...subjectDraft, name: e.target.value })} placeholder="New subject name" className="p-2 rounded-xl border text-sm flex-1 min-w-[160px]" />
                       <div className="flex gap-1">
                         {COLOR_PRESETS.map((c) => (
                           <button key={c.hex} onClick={() => setSubjectDraft({ ...subjectDraft, color: c.hex })} className="w-5 h-5 rounded-full border-2" style={{ background: c.hex, borderColor: subjectDraft.color === c.hex ? "#5B4B6D" : "transparent" }} />
@@ -1857,6 +2149,7 @@ export default function StudyDen({ session }: { session: Session }) {
                     onAdd={addRoutineEntry}
                     onEdit={editRoutineEntry}
                     onDelete={deleteRoutineEntry}
+                    routineBg={routineBg}
                   />
                 </div>
               )}
@@ -1884,7 +2177,7 @@ export default function StudyDen({ session }: { session: Session }) {
                   </div>
                 }
               >
-                <JournalView userId={userId} session={session} />
+                <JournalView userId={userId} session={session} theme={theme} visualSettings={visualSettings} />
               </Suspense>
             </div>
           )}
@@ -1948,6 +2241,8 @@ export default function StudyDen({ session }: { session: Session }) {
             <div className="no-print">
               <SettingsView
                 profile={profile}
+                visualSettings={visualSettings}
+                onUpdateVisualSettings={updateVisualSettings}
                 onSave={saveProfile}
                 onSignOut={() => supabase.auth.signOut()}
               />
