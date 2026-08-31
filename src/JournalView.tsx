@@ -1243,7 +1243,8 @@ export default function JournalView({
 
   const uploadPhoto = async (file: File, entryId: string, entryDate: string): Promise<JournalPhoto> => {
     const ext = file.name.split(".").pop() || "jpg";
-    const path = `${userId}/${entryId}/${crypto.randomUUID()}.${ext}`;
+    const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+    const path = `journal/${userId}/${entryId}/${Date.now()}-${cleanName}`;
     const compressed = await compressImage(file);
     const { error: upErr } = await supabase.storage
       .from("journal-photos")
