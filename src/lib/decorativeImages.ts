@@ -38,7 +38,7 @@ export const THEME_FOLDER_MAP: Record<string, string> = {
 
 // Discover all decorative image files at build/bundle time via Vite glob
 const rawImages = import.meta.glob<string>(
-  "/src/assets/decorative/**/*.{png,jpg,jpeg,webp,svg,avif,PNG,JPG,JPEG}",
+  "/src/assets/decorative/**/*.{png,jpg,jpeg,webp,svg,avif,PNG,JPG,JPEG,WEBP,SVG,AVIF}",
   { eager: true, import: "default" }
 );
 
@@ -70,17 +70,18 @@ function buildImagePools(): ImagePools {
   Object.entries(rawImages).forEach(([path, url]) => {
     // Ignore .gitkeep or non-string imports
     if (typeof url !== "string" || path.endsWith(".gitkeep")) return;
+    const normalized = path.replace(/\\/g, "/").toLowerCase();
 
-    if (path.includes("/decorative/calendar/")) {
+    if (normalized.includes("/calendar/")) {
       pools.calendar.push(url);
-    } else if (path.includes("/decorative/diary/")) {
+    } else if (normalized.includes("/diary/")) {
       pools.diary.push(url);
     } else {
       for (const [folderName, catMap] of Object.entries(pools.themes)) {
-        if (path.includes(`/decorative/themes/${folderName}/`)) {
-          if (path.includes("/background/")) catMap.background.push(url);
-          else if (path.includes("/dashboard/")) catMap.dashboard.push(url);
-          else if (path.includes("/routine/")) catMap.routine.push(url);
+        if (normalized.includes(`/themes/${folderName}/`)) {
+          if (normalized.includes("/background/")) catMap.background.push(url);
+          else if (normalized.includes("/dashboard/")) catMap.dashboard.push(url);
+          else if (normalized.includes("/routine/")) catMap.routine.push(url);
         }
       }
     }
@@ -122,12 +123,11 @@ function pickRandom(arr: string[]): string | null {
  */
 export const CALENDAR_12_MONTHS: string[] = (() => {
   const calendarEntries = Object.entries(rawImages)
-    .filter(
-      ([path, url]) =>
-        typeof url === "string" &&
-        !path.endsWith(".gitkeep") &&
-        path.includes("/decorative/calendar/")
-    )
+    .filter(([path, url]) => {
+      if (typeof url !== "string" || path.endsWith(".gitkeep")) return false;
+      const normalized = path.replace(/\\/g, "/").toLowerCase();
+      return normalized.includes("/calendar/") || normalized.includes("/decorative/calendar/");
+    })
     .sort(([pathA], [pathB]) =>
       pathA.localeCompare(pathB, undefined, { numeric: true, sensitivity: "base" })
     )
@@ -147,9 +147,10 @@ if (typeof window !== "undefined") {
  * 100% stable, synchronous, O(1), no random reassignment, no race conditions.
  */
 export function getCalendarMonthImage(monthIndex: number): string | null {
-  if (CALENDAR_12_MONTHS.length === 0) return null;
-  const idx = ((monthIndex % 12) + 12) % 12;
-  return CALENDAR_12_MONTHS[idx] || null;
+  const list = CALENDAR_12_MONTHS.length > 0 ? CALENDAR_12_MONTHS : POOLS.calendar;
+  if (!list || list.length === 0) return null;
+  const idx = ((monthIndex % list.length) + list.length) % list.length;
+  return list[idx] || null;
 }
 
 /**
