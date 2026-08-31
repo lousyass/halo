@@ -97,27 +97,54 @@ const sessionPicks: Record<string, string | null> = {};
 // Session-scoped 12 monthly calendar picks (indexed 0 to 11 for Jan..Dec)
 let monthlyCalendarPicks: (string | null)[] | null = null;
 
+/**
+ * Helper to preload an image URL into browser cache for instant rendering
+ */
+function preloadImage(url: string | null) {
+  if (typeof window !== "undefined" && url) {
+    const img = new Image();
+    img.src = url;
+  }
+}
+
 function pickRandom(arr: string[]): string | null {
   if (!arr || arr.length === 0) return null;
   const idx = Math.floor(Math.random() * arr.length);
-  return arr[idx];
+  const picked = arr[idx];
+  preloadImage(picked);
+  return picked;
 }
 
 /**
  * Returns a distinct session-scoped decorative image for each of the 12 calendar months.
- * Pre-assigns 12 varied images from the shared calendar image pool upon first call.
+ * Pre-assigns 12 strictly unique images from the shared calendar image pool upon first call
+ * and preloads all 12 into the browser cache for zero-lag month switching.
  */
 export function getCalendarMonthImage(monthIndex: number): string | null {
-  const pool = POOLS.calendar;
-  if (!pool || pool.length === 0) return null;
+  const pool = Array.from(new Set(POOLS.calendar));
+  if (pool.length === 0) return null;
 
   if (!monthlyCalendarPicks) {
-    const shuffled: string[] = [];
-    while (shuffled.length < 12) {
-      const copy = [...pool].sort(() => Math.random() - 0.5);
-      shuffled.push(...copy);
+    const shuffled = [...pool];
+    // Fisher-Yates shuffle
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
-    monthlyCalendarPicks = shuffled.slice(0, 12);
+
+    if (shuffled.length >= 12) {
+      monthlyCalendarPicks = shuffled.slice(0, 12);
+    } else {
+      // If pool has fewer than 12 images, cycle them after exhausting unique ones
+      const repeated: string[] = [];
+      while (repeated.length < 12) {
+        repeated.push(...shuffled);
+      }
+      monthlyCalendarPicks = repeated.slice(0, 12);
+    }
+
+    // Preload all 12 images into browser cache immediately
+    monthlyCalendarPicks.forEach(preloadImage);
   }
 
   const idx = ((monthIndex % 12) + 12) % 12;

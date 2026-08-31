@@ -761,11 +761,18 @@ function MemoryWallCalendar({
   const cells = monthGrid(year, month);
   const calBg = isCustomVisual ? getCalendarMonthImage(month) : null;
 
-  const entryByDate = useMemo(() => {
-    const map: Record<string, JournalEntry> = {};
-    entries.forEach((e) => { map[e.entry_date] = e; });
-    return map;
-  }, [entries]);
+  const { entriesByDate, photosByDate } = useMemo(() => {
+    const eMap: Record<string, JournalEntry[]> = {};
+    const pMap: Record<string, JournalPhoto[]> = {};
+    entries.forEach((e) => {
+      (eMap[e.entry_date] = eMap[e.entry_date] || []).push(e);
+      const entryPhotos = photosByEntry[e.id] || [];
+      if (entryPhotos.length > 0) {
+        (pMap[e.entry_date] = pMap[e.entry_date] || []).push(...entryPhotos);
+      }
+    });
+    return { entriesByDate: eMap, photosByDate: pMap };
+  }, [entries, photosByEntry]);
 
   return (
     <div className="relative overflow-hidden bg-white/85 rounded-3xl p-5 border border-white/60 shadow-lg">
@@ -806,30 +813,33 @@ function MemoryWallCalendar({
         {cells.map((d, i) => {
           if (!d) return <div key={i} className="aspect-square" />;
           const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-          const entry = entryByDate[dateStr];
-          const photos = entry ? photosByEntry[entry.id] || [] : [];
-          const hasPhotos = photos.length > 0;
-          const moodInfo = entry ? MOODS.find((m) => m.value === entry.mood) : null;
+          const dayEntries = entriesByDate[dateStr] || [];
+          const dayPhotos = photosByDate[dateStr] || [];
+          const hasPhotos = dayPhotos.length > 0;
+          const hasEntries = dayEntries.length > 0;
+          const primaryEntry = dayEntries[0] || null;
+          const moodInfo = primaryEntry ? MOODS.find((m) => m.value === primaryEntry.mood) : null;
+          const isPinned = dayEntries.some((e) => e.is_pinned);
           const isToday = dateStr === todayStr();
 
           return (
             <button
               key={i}
               type="button"
-              onClick={() => onOpenEntry(entry || null, dateStr)}
+              onClick={() => onOpenEntry(primaryEntry, dateStr)}
               className={`relative aspect-square rounded-2xl flex flex-col justify-between p-2 text-left border transition-all overflow-hidden group shadow-2xs ${
                 isToday ? "ring-2 ring-[#C9B6E4]" : "border-black/5"
               } ${
                 hasPhotos
                   ? "hover:scale-105 shadow-md"
-                  : entry
+                  : hasEntries
                   ? "bg-[#FAF7F2] hover:bg-[#F3EFE8]"
                   : "bg-white/60 hover:bg-white"
               }`}
             >
               {hasPhotos && (
                 <>
-                  <PhotoCollageCell photos={photos} />
+                  <PhotoCollageCell photos={dayPhotos} />
                   <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/60 pointer-events-none rounded-2xl" />
                 </>
               )}
@@ -842,9 +852,16 @@ function MemoryWallCalendar({
                 >
                   {d}
                 </span>
-                {entry?.is_pinned && (
-                  <span className="text-[10px] drop-shadow-xs">📌</span>
-                )}
+                <div className="flex items-center gap-1">
+                  {dayEntries.length > 1 && !hasPhotos && (
+                    <span className="text-[9px] bg-[#C9B6E4]/40 text-[#5B4B6D] font-bold px-1 rounded-md">
+                      {dayEntries.length}
+                    </span>
+                  )}
+                  {isPinned && (
+                    <span className="text-[10px] drop-shadow-xs">📌</span>
+                  )}
+                </div>
               </div>
 
               <div className="relative z-10 flex items-center justify-between w-full">
@@ -858,12 +875,12 @@ function MemoryWallCalendar({
                     {moodInfo.emoji}
                   </span>
                 )}
-                {entry && !hasPhotos && (
+                {hasEntries && !hasPhotos && (
                   <span className="text-[10px] opacity-40">📖</span>
                 )}
-                {hasPhotos && photos.length > 1 && (
-                  <span className="text-[9px] text-white/90 font-bold bg-black/40 px-1 py-0.2 rounded-md">
-                    {photos.length} 📷
+                {hasPhotos && dayPhotos.length > 1 && (
+                  <span className="text-[9px] text-white/90 font-bold bg-black/50 px-1.5 py-0.5 rounded-md backdrop-blur-2xs">
+                    {dayPhotos.length} 📷
                   </span>
                 )}
               </div>
