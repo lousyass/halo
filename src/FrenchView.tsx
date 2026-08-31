@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { motion } from "framer-motion";
 import { supabase } from "./lib/supabase";
 import {
   Volume2,
@@ -1460,7 +1461,14 @@ export const FrenchView: React.FC<{ userId: string }> = ({ userId }) => {
                   />
 
                   {typeAnswerFeedback && (
-                    <div
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: -4 }}
+                      animate={
+                        typeAnswerFeedback === "correct"
+                          ? { opacity: 1, scale: [0.95, 1.03, 1], y: 0 }
+                          : { opacity: 1, scale: 1, x: [-6, 6, -4, 4, 0] }
+                      }
+                      transition={{ duration: 0.28, ease: "easeOut" }}
                       className={`p-3 rounded-2xl text-center font-bold text-xs ${
                         typeAnswerFeedback === "correct"
                           ? "bg-emerald-100 text-emerald-800"
@@ -1472,7 +1480,7 @@ export const FrenchView: React.FC<{ userId: string }> = ({ userId }) => {
                       ) : (
                         `❌ Incorrect! Correct answer: ${quizQuestions[quizQuestionIndex].french}`
                       )}
-                    </div>
+                    </motion.div>
                   )}
 
                   <div className="flex justify-end">
@@ -1524,23 +1532,37 @@ export const FrenchView: React.FC<{ userId: string }> = ({ userId }) => {
 
                     let btnStyle = "bg-white hover:bg-purple-50 text-gray-800 border-gray-200";
                     if (quizAnswerSelected) {
-                      if (isCorrect) btnStyle = "bg-emerald-500 text-white border-emerald-600";
-                      else if (isSelected) btnStyle = "bg-rose-500 text-white border-rose-600";
-                      else btnStyle = "bg-white opacity-50 border-gray-200";
+                      if (isCorrect) btnStyle = "bg-emerald-500 text-white border-emerald-600 shadow-md";
+                      else if (isSelected) btnStyle = "bg-rose-500 text-white border-rose-600 shadow-md";
+                      else btnStyle = "bg-white opacity-40 border-gray-200";
                     }
 
                     return (
-                      <button
+                      <motion.button
                         key={idx}
                         disabled={!!quizAnswerSelected}
+                        whileHover={!quizAnswerSelected ? { scale: 1.015, x: 2 } : {}}
+                        whileTap={!quizAnswerSelected ? { scale: 0.985 } : {}}
+                        animate={
+                          quizAnswerSelected && isCorrect
+                            ? { scale: [1, 1.03, 1], y: [0, -3, 0] }
+                            : quizAnswerSelected && isSelected && !isCorrect
+                            ? { x: [-6, 6, -5, 5, -2, 2, 0] }
+                            : {}
+                        }
+                        transition={{ duration: 0.28, ease: "easeOut" }}
                         onClick={() => {
                           setQuizAnswerSelected(opt);
                           if (isCorrect) setQuizScore((prev) => prev + 1);
                         }}
-                        className={`w-full p-4 rounded-2xl font-bold text-sm border shadow-sm text-left transition-all ${btnStyle}`}
+                        className={`w-full p-4 rounded-2xl font-bold text-sm border shadow-sm text-left transition-colors cursor-pointer ${btnStyle}`}
                       >
-                        {opt}
-                      </button>
+                        <div className="flex items-center justify-between">
+                          <span>{opt}</span>
+                          {quizAnswerSelected && isCorrect && <span className="text-white text-base">✓</span>}
+                          {quizAnswerSelected && isSelected && !isCorrect && <span className="text-white text-base">✗</span>}
+                        </div>
+                      </motion.button>
                     );
                   })}
 

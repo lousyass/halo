@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Session } from "@supabase/supabase-js";
+import { motion } from "framer-motion";
 import { supabase } from "./lib/supabase";
 import {
   getDecorativeImage,
@@ -830,15 +831,18 @@ function MemoryWallCalendar({
           const isToday = dateStr === todayStr();
 
           return (
-            <button
+            <motion.button
               key={i}
               type="button"
+              whileHover={{ scale: 1.04, y: -2 }}
+              whileTap={{ scale: 0.96 }}
+              transition={{ duration: 0.15 }}
               onClick={() => onOpenEntry(primaryEntry, dateStr)}
-              className={`relative aspect-square rounded-2xl flex flex-col justify-between p-2 text-left border transition-all overflow-hidden group shadow-2xs ${
+              className={`relative aspect-square rounded-2xl flex flex-col justify-between p-2 text-left border transition-colors overflow-hidden group shadow-2xs cursor-pointer ${
                 isToday ? "ring-2 ring-[#C9B6E4]" : "border-black/5"
               } ${
                 hasPhotos
-                  ? "hover:scale-105 shadow-md"
+                  ? "shadow-md"
                   : hasEntries
                   ? "bg-[#FAF7F2]/90 hover:bg-[#F3EFE8]"
                   : "bg-white/50 hover:bg-white/80 backdrop-blur-2xs"
@@ -891,7 +895,7 @@ function MemoryWallCalendar({
                   </span>
                 )}
               </div>
-            </button>
+            </motion.button>
           );
         })}
       </div>

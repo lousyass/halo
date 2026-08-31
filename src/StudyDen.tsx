@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, Suspense, lazy } from "react";
 import { Session } from "@supabase/supabase-js";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceLine,
@@ -419,7 +420,9 @@ function TaskCountdown({
   const subTextClass = timeLeft.overdue ? "text-rose-600 font-semibold" : tStyle.subText;
 
   return (
-    <div
+    <motion.div
+      animate={isUrgent ? { scale: [1, 1.018, 1], opacity: [0.96, 1, 0.96] } : {}}
+      transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
       className={`flex items-center justify-between md:justify-center gap-3.5 px-4 py-2 rounded-2xl border transition-all w-full max-w-md ${badgeClass}`}
       title={timeLeft.overdue ? "Task is overdue" : "Time remaining to deadline (23:59 local)"}
     >
@@ -458,7 +461,7 @@ function TaskCountdown({
           Soon
         </span>
       ) : null}
-    </div>
+    </motion.div>
   );
 }
 
@@ -492,23 +495,38 @@ function TaskCard({
     >
       {/* Left: Checkbox + Title + Subject + Work Type + Sub-info */}
       <div className="flex items-start gap-3 flex-1 min-w-[200px]">
-        <button
+        <motion.button
+          whileHover={{ scale: 1.15 }}
+          whileTap={{ scale: 0.85 }}
           onClick={() => onToggle(task.id)}
-          className="mt-0.5 w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors"
+          className="mt-0.5 w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors cursor-pointer"
           style={{ borderColor: color, background: task.status === "completed" ? color : "transparent" }}
         >
-          {task.status === "completed" && <Check size={12} color="white" strokeWidth={3} />}
-        </button>
+          {task.status === "completed" && (
+            <motion.div
+              initial={{ scale: 0, rotate: -45 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: "spring", stiffness: 450, damping: 22 }}
+            >
+              <Check size={12} color="white" strokeWidth={3} />
+            </motion.div>
+          )}
+        </motion.button>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-base shrink-0">{task.customIcon || TYPE_ICON[task.type] || "📝"}</span>
-            <span
-              className={`font-bold text-sm text-gray-900 ${task.status === "completed" ? "line-through opacity-50" : ""}`}
+            <motion.span
+              animate={{
+                opacity: task.status === "completed" ? 0.5 : 1,
+                textDecoration: task.status === "completed" ? "line-through" : "none",
+              }}
+              transition={{ duration: 0.2 }}
+              className="font-bold text-sm text-gray-900"
               style={{ fontFamily: "Quicksand, sans-serif" }}
             >
               {task.title}
-            </span>
+            </motion.span>
 
             {/* Subject Badge */}
             <span
@@ -1356,10 +1374,13 @@ function CalendarView({
           const dayTasks = tasksByDate[dateStr] || [];
           const isToday = dateStr === todayStr();
           return (
-            <button
+            <motion.button
               key={i}
+              whileHover={{ scale: 1.03, y: -2 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ duration: 0.15 }}
               onClick={() => setSelected(dateStr)}
-              className={`min-h-[90px] rounded-2xl p-2 text-left relative overflow-hidden border transition-all ${
+              className={`min-h-[90px] rounded-2xl p-2 text-left relative overflow-hidden border transition-colors cursor-pointer ${
                 isToday ? "border-2 shadow-sm bg-white/95" : "border-white/70 hover:border-purple-200 bg-white/50 hover:bg-white/85"
               } backdrop-blur-2xs flex flex-col justify-between`}
               style={{ borderColor: isToday ? "#C9B6E4" : undefined }}
@@ -1405,7 +1426,7 @@ function CalendarView({
                   </span>
                 )}
               </div>
-            </button>
+            </motion.button>
           );
         })}
       </div>
@@ -1800,19 +1821,33 @@ export default function StudyDen({ session }: { session: Session }) {
 
   if (!loaded) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: THEMES[theme].css, fontFamily: "Quicksand, sans-serif" }}>
-        <style>{`
-          @keyframes pulseLanding {
-            0%, 100% { transform: scale(1); opacity: 0.85; }
-            50% { transform: scale(1.08) translateY(-4px); opacity: 1; }
-          }
-        `}</style>
-        <div style={{ animation: "pulseLanding 2.4s ease-in-out infinite", fontSize: "2.5rem", marginBottom: "1rem" }}>
-          ✨ 🦌 ✨
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden" style={{ background: THEMES[theme].css, fontFamily: "Quicksand, sans-serif" }}>
+        <motion.div
+          animate={{ y: [-8, 8, -8], rotate: [-2, 2, -2] }}
+          transition={{ repeat: Infinity, duration: 2.6, ease: "easeInOut" }}
+          className="relative flex items-center justify-center w-24 h-24 mb-4"
+        >
+          <motion.div
+            animate={{ scale: [1, 1.25, 1], opacity: [0.35, 0.65, 0.35] }}
+            transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }}
+            className="absolute inset-0 rounded-full bg-purple-300/40 blur-md"
+          />
+          <div className="relative text-5xl select-none">
+            {CREATURES[new Date().getDate() % CREATURES.length] || "🌸"}
+          </div>
+        </motion.div>
+        <div className="flex items-center gap-2">
+          <p style={{ color: "#5B4B6D", fontSize: "1.2rem", fontWeight: 600, letterSpacing: "0.02em", fontFamily: "Fredoka, sans-serif" }}>
+            Landing to earth
+          </p>
+          <motion.span
+            animate={{ opacity: [0, 1, 0] }}
+            transition={{ repeat: Infinity, duration: 1.4, ease: "easeInOut" }}
+            className="text-lg font-bold text-purple-600"
+          >
+            ✨
+          </motion.span>
         </div>
-        <p style={{ color: "#5B4B6D", fontSize: "1.15rem", fontWeight: 600, letterSpacing: "0.02em", fontFamily: "Fredoka, sans-serif" }}>
-          Landing to earth
-        </p>
       </div>
     );
   }
@@ -1868,23 +1903,30 @@ export default function StudyDen({ session }: { session: Session }) {
                   <button
                     key={m.id}
                     onClick={() => setMode(m.id)}
-                    className={`flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs md:text-sm font-bold transition-all text-left whitespace-nowrap md:whitespace-normal w-full ${
-                      isActive
-                        ? "bg-white text-purple-900 shadow-md scale-[1.02]"
-                        : "text-gray-700 hover:bg-white/50 opacity-80 hover:opacity-100"
-                    }`}
+                    className="relative flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs md:text-sm font-bold text-left whitespace-nowrap md:whitespace-normal w-full cursor-pointer group"
                     style={{ fontFamily: "Fredoka, sans-serif" }}
                   >
-                    {"customIcon" in m && m.customIcon ? (
-                      <div className="w-8 h-8 flex items-center justify-center shrink-0">
-                        <m.customIcon size={26} />
-                      </div>
-                    ) : "emoji" in m && m.emoji ? (
-                      <span className="w-8 h-8 flex items-center justify-center text-2xl shrink-0 leading-none">{m.emoji}</span>
-                    ) : "icon" in m && m.icon ? (
-                      <m.icon size={24} className="text-gray-600 shrink-0 p-0.5" />
-                    ) : null}
-                    <span>{m.label}</span>
+                    {isActive && (
+                      <motion.div
+                        layoutId="sidebarActivePill"
+                        className="absolute inset-0 bg-white rounded-2xl shadow-md"
+                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                      />
+                    )}
+                    <span className={`relative z-10 flex items-center gap-3 w-full transition-colors ${
+                      isActive ? "text-purple-900" : "text-gray-700 opacity-80 group-hover:opacity-100"
+                    }`}>
+                      {"customIcon" in m && m.customIcon ? (
+                        <div className="w-8 h-8 flex items-center justify-center shrink-0">
+                          <m.customIcon size={26} />
+                        </div>
+                      ) : "emoji" in m && m.emoji ? (
+                        <span className="w-8 h-8 flex items-center justify-center text-2xl shrink-0 leading-none">{m.emoji}</span>
+                      ) : "icon" in m && m.icon ? (
+                        <m.icon size={24} className="text-gray-600 shrink-0 p-0.5" />
+                      ) : null}
+                      <span>{m.label}</span>
+                    </span>
                   </button>
                 );
               })}
@@ -1942,35 +1984,49 @@ export default function StudyDen({ session }: { session: Session }) {
 
         {/* ── Main Workspace Area ── */}
         <main className="flex-1 min-w-0 w-full">
-          {/* Mode 1: ACADEMICS */}
-          {mode === "academics" && (
-            <div>
-              {/* Academics Sub-Tabs Switcher */}
-              <div className="flex items-center justify-between mb-5 no-print flex-wrap gap-2">
-                <div className="flex gap-1.5 p-1.5 rounded-2xl bg-white/60 backdrop-blur-md border border-white/60 shadow-sm overflow-x-auto">
-                  {[
-                    { id: "dashboard" as const, label: "Dashboard", icon: LayoutDashboard },
-                    { id: "calendar" as const, label: "Calendar", icon: CalendarDays },
-                    { id: "tasks" as const, label: "Tasks", icon: BookOpen },
-                    { id: "routine" as const, label: "Routine", icon: Clock },
-                    { id: "stats" as const, label: "Syllabus & Stats", icon: BarChart3 },
-                  ].map((st) => {
-                    const isSubActive = academicTab === st.id;
-                    return (
-                      <button
-                        key={st.id}
-                        onClick={() => setAcademicTab(st.id)}
-                        className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                          isSubActive
-                            ? "bg-purple-600 text-white shadow-sm"
-                            : "text-gray-700 hover:bg-white/60 opacity-80 hover:opacity-100"
-                        }`}
-                      >
-                        <st.icon size={14} /> <span>{st.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
+          <AnimatePresence mode="wait">
+            {/* Mode 1: ACADEMICS */}
+            {mode === "academics" && (
+              <motion.div
+                key="academics"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+              >
+                {/* Academics Sub-Tabs Switcher */}
+                <div className="flex items-center justify-between mb-5 no-print flex-wrap gap-2">
+                  <div className="flex gap-1.5 p-1.5 rounded-2xl bg-white/60 backdrop-blur-md border border-white/60 shadow-sm overflow-x-auto">
+                    {[
+                      { id: "dashboard" as const, label: "Dashboard", icon: LayoutDashboard },
+                      { id: "calendar" as const, label: "Calendar", icon: CalendarDays },
+                      { id: "tasks" as const, label: "Tasks", icon: BookOpen },
+                      { id: "routine" as const, label: "Routine", icon: Clock },
+                      { id: "stats" as const, label: "Syllabus & Stats", icon: BarChart3 },
+                    ].map((st) => {
+                      const isSubActive = academicTab === st.id;
+                      return (
+                        <button
+                          key={st.id}
+                          onClick={() => setAcademicTab(st.id)}
+                          className="relative flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap cursor-pointer"
+                        >
+                          {isSubActive && (
+                            <motion.div
+                              layoutId="academicsSubtabPill"
+                              className="absolute inset-0 bg-purple-600 rounded-xl shadow-sm"
+                              transition={{ type: "spring", stiffness: 420, damping: 32 }}
+                            />
+                          )}
+                          <span className={`relative z-10 flex items-center gap-1.5 transition-colors ${
+                            isSubActive ? "text-white" : "text-gray-700 hover:text-gray-900"
+                          }`}>
+                            <st.icon size={14} /> <span>{st.label}</span>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
 
                 {academicTab === "tasks" && (
                   <div className="flex items-center gap-2">
@@ -2171,12 +2227,19 @@ export default function StudyDen({ session }: { session: Session }) {
                   <StatsView tasks={tasks} />
                 </div>
               )}
-            </div>
+            </motion.div>
           )}
 
           {/* Mode 2: JOURNAL */}
           {mode === "journal" && (
-            <div className="no-print">
+            <motion.div
+              key="journal"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="no-print"
+            >
               <Suspense
                 fallback={
                   <div className="p-12 text-center rounded-3xl bg-white/60 backdrop-blur-sm border border-white/60 shadow-sm max-w-md mx-auto my-8">
@@ -2189,12 +2252,19 @@ export default function StudyDen({ session }: { session: Session }) {
               >
                 <JournalView userId={userId} session={session} theme={theme} visualSettings={visualSettings} />
               </Suspense>
-            </div>
+            </motion.div>
           )}
 
           {/* Mode 3: LE COIN FRANÇAIS */}
           {mode === "french" && (
-            <div className="no-print">
+            <motion.div
+              key="french"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="no-print"
+            >
               <Suspense
                 fallback={
                   <div className="p-12 text-center rounded-3xl bg-white/60 backdrop-blur-sm border border-white/60 shadow-sm max-w-md mx-auto my-8">
@@ -2207,12 +2277,19 @@ export default function StudyDen({ session }: { session: Session }) {
               >
                 <FrenchView userId={userId} />
               </Suspense>
-            </div>
+            </motion.div>
           )}
 
           {/* Mode 4: ENTERTAINMENT */}
           {mode === "entertainment" && (
-            <div className="no-print">
+            <motion.div
+              key="entertainment"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="no-print"
+            >
               <Suspense
                 fallback={
                   <div className="p-12 text-center rounded-3xl bg-white/60 backdrop-blur-sm border border-white/60 shadow-sm max-w-md mx-auto my-8">
@@ -2225,12 +2302,19 @@ export default function StudyDen({ session }: { session: Session }) {
               >
                 <EntertainmentView userId={userId} />
               </Suspense>
-            </div>
+            </motion.div>
           )}
 
           {/* Mode 5: GAMES */}
           {mode === "games" && (
-            <div className="no-print">
+            <motion.div
+              key="games"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="no-print"
+            >
               <Suspense
                 fallback={
                   <div className="p-12 text-center rounded-3xl bg-white/60 backdrop-blur-sm border border-white/60 shadow-sm max-w-md mx-auto my-8">
@@ -2243,12 +2327,19 @@ export default function StudyDen({ session }: { session: Session }) {
               >
                 <GamesView userId={userId} />
               </Suspense>
-            </div>
+            </motion.div>
           )}
 
           {/* Mode 6: SETTINGS */}
           {mode === "settings" && (
-            <div className="no-print">
+            <motion.div
+              key="settings"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="no-print"
+            >
               <SettingsView
                 profile={profile}
                 visualSettings={visualSettings}
@@ -2259,8 +2350,9 @@ export default function StudyDen({ session }: { session: Session }) {
                   supabase.auth.signOut();
                 }}
               />
-            </div>
+            </motion.div>
           )}
+          </AnimatePresence>
         </main>
       </div>
 
