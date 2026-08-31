@@ -1724,6 +1724,8 @@ export default function StudyDen({ session }: { session: Session }) {
   }, [filtered, groupBy, subjById]);
 
   /* ── task CRUD ── */
+  const [completingTask, setCompletingTask] = useState<FrontendTask | null>(null);
+
   const saveTask = async (t: FrontendTask) => {
     const payload = frontendToDb(t, subjects, userId);
     const { error } = await supabase.from("tasks").upsert(payload, { onConflict: "id" });
@@ -1733,15 +1735,25 @@ export default function StudyDen({ session }: { session: Session }) {
     setFormOpen(false); setEditingTask(null);
   };
 
-  const toggleTask = async (id: string) => {
+  const toggleTask = (id: string) => {
     const task = tasks.find((t) => t.id === id);
     if (!task) return;
-    const nowCompleted = task.status !== "completed";
+    if (task.status === "completed") {
+      // Re-opening a completed task to pending doesn't require confirmation
+      executeToggleTask(task, false);
+    } else {
+      // Marking task complete requires explicit instant confirmation
+      setCompletingTask(task);
+    }
+  };
+
+  const executeToggleTask = async (task: FrontendTask, nowCompleted: boolean) => {
     const completedAt = nowCompleted ? new Date().toISOString() : null;
-    const { error } = await supabase.from("tasks").update({ completed: nowCompleted }).eq("id", id);
+    const { error } = await supabase.from("tasks").update({ completed: nowCompleted }).eq("id", task.id);
     if (error) { alert("Toggle failed: " + error.message); return; }
-    setTaskExtras((prev) => ({ ...prev, [id]: { ...(prev[id] || { topics: [], rescheduledFrom: null }), completedAt } }));
-    setTasks((prev) => prev.map((t) => t.id === id ? { ...t, status: nowCompleted ? "completed" : "pending", completedAt } : t));
+    setTaskExtras((prev) => ({ ...prev, [task.id]: { ...(prev[task.id] || { topics: [], rescheduledFrom: null }), completedAt } }));
+    setTasks((prev) => prev.map((t) => t.id === task.id ? { ...t, status: nowCompleted ? "completed" : "pending", completedAt } : t));
+    setCompletingTask(null);
   };
 
   const deleteTask = async (id: string) => {
@@ -2376,6 +2388,47 @@ export default function StudyDen({ session }: { session: Session }) {
           onHideTypeSuggestion={hideTypeSuggestion}
         />
       )}
+
+      {/* Confirmation Modal on Marking Task Complete */}
+      <AnimatePresence>
+        {completingTask && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/35 backdrop-blur-xs no-print">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 12 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 12 }}
+              transition={{ duration: 0.18, ease: "easeOut" }}
+              className="bg-white/95 backdrop-blur-md rounded-3xl p-6 shadow-2xl border border-white/80 max-w-sm w-full text-center relative overflow-hidden"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3 text-2xl shadow-xs">
+                ✨
+              </div>
+              <h3 className="font-bold text-base text-gray-900 mb-1" style={{ fontFamily: "Fredoka, sans-serif" }}>
+                Complete Task?
+              </h3>
+              <p className="text-xs text-gray-600 mb-5 px-2">
+                Mark <strong className="text-gray-900 font-bold">"{completingTask.title}"</strong> as finished?
+              </p>
+              <div className="flex gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setCompletingTask(null)}
+                  className="flex-1 py-2.5 rounded-xl border border-gray-200 text-xs font-bold text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => executeToggleTask(completingTask, true)}
+                  className="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-sm transition-all cursor-pointer"
+                >
+                  Mark Complete ✓
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
