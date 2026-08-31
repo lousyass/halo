@@ -883,7 +883,7 @@ function RoutineView({
                   <div
                     className="absolute inset-0 pointer-events-none z-0 bg-cover bg-center transition-opacity duration-500"
                     style={{
-                      backgroundImage: `url(${routineBg})`,
+                      backgroundImage: `url("${routineBg}")`,
                       opacity: 0.44,
                     }}
                   />
@@ -1329,10 +1329,10 @@ function CalendarView({
       {/* Decorative Calendar Background */}
       {calBg && (
         <div
-          className="absolute inset-0 pointer-events-none z-0 bg-cover bg-center rounded-3xl transition-opacity duration-500"
+          className="absolute inset-0 pointer-events-none z-0 bg-cover bg-center rounded-3xl transition-opacity duration-300"
           style={{
-            backgroundImage: `url(${calBg})`,
-            opacity: 0.36,
+            backgroundImage: `url("${calBg}")`,
+            opacity: 0.42,
           }}
         />
       )}
@@ -1360,8 +1360,8 @@ function CalendarView({
               key={i}
               onClick={() => setSelected(dateStr)}
               className={`min-h-[90px] rounded-2xl p-2 text-left relative overflow-hidden border transition-all ${
-                isToday ? "border-2 shadow-sm bg-white/95" : "border-white/70 hover:border-purple-200 bg-white/75 hover:bg-white/95"
-              } backdrop-blur-sm flex flex-col justify-between`}
+                isToday ? "border-2 shadow-sm bg-white/95" : "border-white/70 hover:border-purple-200 bg-white/50 hover:bg-white/85"
+              } backdrop-blur-2xs flex flex-col justify-between`}
               style={{ borderColor: isToday ? "#C9B6E4" : undefined }}
             >
               <div className="flex items-center justify-between w-full">
@@ -1827,7 +1827,7 @@ export default function StudyDen({ session }: { session: Session }) {
         <div
           className="fixed inset-0 pointer-events-none z-0 bg-cover bg-center transition-opacity duration-700"
           style={{
-            backgroundImage: `url(${bgWallpaper})`,
+            backgroundImage: `url("${bgWallpaper}")`,
             opacity: 0.50,
           }}
         />
@@ -2021,7 +2021,7 @@ export default function StudyDen({ session }: { session: Session }) {
                       <div
                         className="absolute inset-0 pointer-events-none z-0 bg-cover bg-center rounded-3xl transition-opacity duration-500"
                         style={{
-                          backgroundImage: `url(${comingSoonBg})`,
+                          backgroundImage: `url("${comingSoonBg}")`,
                           opacity: 0.25,
                         }}
                       />
@@ -2045,7 +2045,7 @@ export default function StudyDen({ session }: { session: Session }) {
                       <div
                         className="absolute inset-0 pointer-events-none z-0 bg-cover bg-center rounded-3xl transition-opacity duration-500"
                         style={{
-                          backgroundImage: `url(${allTasksBg})`,
+                          backgroundImage: `url("${allTasksBg}")`,
                           opacity: 0.25,
                         }}
                       />

@@ -782,14 +782,14 @@ function MemoryWallCalendar({
   }, [entries, photosByEntry]);
 
   return (
-    <div className="relative overflow-hidden bg-white/85 rounded-3xl p-5 border border-white/60 shadow-lg">
+    <div className="relative overflow-hidden bg-white/75 rounded-3xl p-5 border border-white/60 shadow-lg">
       {/* Decorative Calendar Background */}
       {calBg && (
         <div
-          className="absolute inset-0 pointer-events-none z-0 bg-cover bg-center rounded-3xl transition-opacity duration-500"
+          className="absolute inset-0 pointer-events-none z-0 bg-cover bg-center rounded-3xl transition-opacity duration-300"
           style={{
-            backgroundImage: `url(${calBg})`,
-            opacity: 0.36,
+            backgroundImage: `url("${calBg}")`,
+            opacity: 0.42,
           }}
         />
       )}
@@ -840,8 +840,8 @@ function MemoryWallCalendar({
                 hasPhotos
                   ? "hover:scale-105 shadow-md"
                   : hasEntries
-                  ? "bg-[#FAF7F2] hover:bg-[#F3EFE8]"
-                  : "bg-white/60 hover:bg-white"
+                  ? "bg-[#FAF7F2]/90 hover:bg-[#F3EFE8]"
+                  : "bg-white/50 hover:bg-white/80 backdrop-blur-2xs"
               }`}
             >
               {hasPhotos && (
@@ -1457,7 +1457,7 @@ export default function JournalView({
             <div
               className="absolute inset-0 pointer-events-none z-0 bg-cover bg-center rounded-[36px] transition-opacity duration-700 shadow-inner"
               style={{
-                backgroundImage: `url(${diaryBg})`,
+                backgroundImage: `url("${diaryBg}")`,
                 opacity: 0.50,
               }}
             />
