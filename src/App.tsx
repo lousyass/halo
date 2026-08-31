@@ -25,8 +25,23 @@ export default function App() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #FDF2F6 0%, #F7E4EE 50%, #EFE2F7 100%)', fontFamily: 'Quicksand, sans-serif' }}>
-        <p style={{ color: '#5B4B6D', fontSize: '1.1rem' }}>Loading your den... 🦌</p>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #FDF2F6 0%, #F7E4EE 50%, #EFE2F7 100%)', fontFamily: 'Quicksand, sans-serif' }}>
+        <style>{`
+          @keyframes pulseLanding {
+            0%, 100% { transform: scale(1); opacity: 0.85; }
+            50% { transform: scale(1.08) translateY(-4px); opacity: 1; }
+          }
+          @keyframes shimmerGlow {
+            0%, 100% { filter: drop-shadow(0 0 8px rgba(201, 182, 228, 0.4)); }
+            50% { filter: drop-shadow(0 0 18px rgba(201, 182, 228, 0.8)); }
+          }
+        `}</style>
+        <div style={{ animation: 'pulseLanding 2.4s ease-in-out infinite, shimmerGlow 2.4s ease-in-out infinite', fontSize: '2.5rem', marginBottom: '1rem' }}>
+          ✨ 🪽 ✨
+        </div>
+        <p style={{ color: '#5B4B6D', fontSize: '1.15rem', fontWeight: 600, letterSpacing: '0.02em', fontFamily: 'Fredoka, sans-serif' }}>
+          Landing to earth
+        </p>
       </div>
     )
   }
@@ -82,7 +97,7 @@ function LoginScreen() {
         <h1 style={{ fontFamily: 'Fredoka, sans-serif', color: '#5B4B6D', fontSize: '2.2rem', marginBottom: '0.25rem' }}>
           Halo 🌸
         </h1>
-        <p style={{ color: '#9B8BAD', fontSize: '0.95rem', marginBottom: '2rem' }}>your cozy deadline tracker</p>
+        <p style={{ color: '#9B8BAD', fontSize: '0.95rem', marginBottom: '2rem' }}>Hope you will like it</p>
         <button
           onClick={handleGoogleLogin}
           disabled={loading}
