@@ -94,15 +94,16 @@ const POOLS = buildImagePools();
 
 // Session-scoped cache to ensure each component gets constant random image per session
 const sessionPicks: Record<string, string | null> = {};
+const preloadedUrls = new Set<string>();
 
 /**
  * Helper to preload an image URL into browser cache for instant rendering
  */
-function preloadImage(url: string | null) {
-  if (typeof window !== "undefined" && url) {
-    const img = new Image();
-    img.src = url;
-  }
+export function preloadImage(url: string | null) {
+  if (typeof window === "undefined" || !url || preloadedUrls.has(url)) return;
+  preloadedUrls.add(url);
+  const img = new Image();
+  img.src = url;
 }
 
 function pickRandom(arr: string[]): string | null {
@@ -115,11 +116,12 @@ function pickRandom(arr: string[]): string | null {
 
 /**
  * Exactly 12 unique, deterministically-ordered calendar images.
- * Sorted naturally by file path to guarantee a stable 1-to-1 month cycle:
- * Month 1 (Jan, index 0) -> Image 0
- * Month 2 (Feb, index 1) -> Image 1
+ * Deduplicates files sharing the same base name (e.g. '1 (1).jpeg' vs '1 (1).jpg')
+ * and sorts using numeric natural key comparison:
+ * Month 1 (Jan, index 0) -> "1 (1)"
+ * Month 2 (Feb, index 1) -> "1 (2)"
  * ...
- * Month 12 (Dec, index 11) -> Image 11
+ * Month 12 (Dec, index 11) -> "1 (12)"
  */
 export const CALENDAR_12_MONTHS: string[] = (() => {
   const calendarEntries = Object.entries(rawImages)
@@ -130,16 +132,55 @@ export const CALENDAR_12_MONTHS: string[] = (() => {
     })
     .sort(([pathA], [pathB]) =>
       pathA.localeCompare(pathB, undefined, { numeric: true, sensitivity: "base" })
-    )
-    .map(([, url]) => url as string);
+    );
 
-  const unique = Array.from(new Set(calendarEntries));
-  return unique.slice(0, 12);
+  const seenBases = new Set<string>();
+  const uniqueUrls: string[] = [];
+
+  for (const [path, url] of calendarEntries) {
+    const filename = path.split("/").pop() || path;
+    const base = filename.replace(/\.[^/.]+$/, "").toLowerCase();
+    if (!seenBases.has(base)) {
+      seenBases.add(base);
+      uniqueUrls.push(url as string);
+    }
+  }
+
+  return uniqueUrls.slice(0, 12);
 })();
 
-// Preload all 12 calendar images in browser cache immediately on module load
-if (typeof window !== "undefined") {
-  CALENDAR_12_MONTHS.forEach(preloadImage);
+/**
+ * Phased preloading strategy:
+ * Tier 1: Current month image (immediate render)
+ * Tier 2: Adjacent (previous & next) months (micro-task / 50ms deferral)
+ * Tier 3: Remaining pool of 12 months (deferred idle background queue)
+ */
+export function preloadCalendarAround(monthIndex: number) {
+  if (typeof window === "undefined" || CALENDAR_12_MONTHS.length === 0) return;
+
+  const currentIdx = ((monthIndex % 12) + 12) % 12;
+  const currentImg = CALENDAR_12_MONTHS[currentIdx];
+
+  // Tier 1: Load current month immediately
+  preloadImage(currentImg);
+
+  // Tier 2: Preload adjacent (previous & next) months with micro-delay
+  setTimeout(() => {
+    const prevIdx = (currentIdx + 11) % 12;
+    const nextIdx = (currentIdx + 1) % 12;
+    preloadImage(CALENDAR_12_MONTHS[prevIdx]);
+    preloadImage(CALENDAR_12_MONTHS[nextIdx]);
+
+    // Tier 3: Preload the rest during browser idle time
+    const scheduleIdle =
+      typeof window.requestIdleCallback === "function"
+        ? window.requestIdleCallback
+        : (cb: () => void) => setTimeout(cb, 1000);
+
+    scheduleIdle(() => {
+      CALENDAR_12_MONTHS.forEach((src) => preloadImage(src));
+    });
+  }, 50);
 }
 
 /**

@@ -4,6 +4,7 @@ import { supabase } from "./lib/supabase";
 import {
   getDecorativeImage,
   getCalendarMonthImage,
+  preloadCalendarAround,
   DEFAULT_VISUAL_SETTINGS,
   VisualCustomizationSettings,
 } from "./lib/decorativeImages";
@@ -760,6 +761,12 @@ function MemoryWallCalendar({
   const year = cursor.getFullYear(), month = cursor.getMonth();
   const cells = monthGrid(year, month);
   const calBg = isCustomVisual ? getCalendarMonthImage(month) : null;
+
+  useEffect(() => {
+    if (isCustomVisual) {
+      preloadCalendarAround(cursor.getMonth());
+    }
+  }, [cursor, isCustomVisual]);
 
   const { entriesByDate, photosByDate } = useMemo(() => {
     const eMap: Record<string, JournalEntry[]> = {};

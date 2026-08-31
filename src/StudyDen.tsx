@@ -16,6 +16,7 @@ import { SyllabusView } from "./SyllabusView";
 import {
   getDecorativeImage,
   getCalendarMonthImage,
+  preloadCalendarAround,
   DEFAULT_VISUAL_SETTINGS,
   VisualCustomizationSettings,
 } from "./lib/decorativeImages";
@@ -1296,6 +1297,12 @@ function CalendarView({
   const cells = monthGrid(year, month);
   const subjById = Object.fromEntries(subjects.map((s) => [s.id, s]));
   const calBg = isCustomVisual ? getCalendarMonthImage(month) : null;
+
+  useEffect(() => {
+    if (isCustomVisual) {
+      preloadCalendarAround(cursor.getMonth());
+    }
+  }, [cursor, isCustomVisual]);
 
   const tasksByDate = useMemo(() => {
     const map: Record<string, FrontendTask[]> = {};
