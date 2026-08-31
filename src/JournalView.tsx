@@ -116,6 +116,101 @@ async function compressImage(file: File): Promise<Blob> {
   });
 }
 
+/* ─────────────────────────── Diary Book Theme Color Palettes ─────────────────────────── */
+
+const DIARY_THEME_PALETTES: Record<string, {
+  coverBg: string;
+  coverBorder: string;
+  pageBgStart: string;
+  pageBgEnd: string;
+  pageBorder: string;
+  lineColor: string;
+  ribbonBg: string;
+  accentBtn: string;
+  inkColor: string;
+  headerColor: string;
+  subColor: string;
+}> = {
+  bloom: {
+    coverBg: "#F6E4EC",
+    coverBorder: "#E8C9D7",
+    pageBgStart: "#FFFDFC",
+    pageBgEnd: "#FDF4F7",
+    pageBorder: "#F1D6E2",
+    lineColor: "#F2D8E3",
+    ribbonBg: "#ED88A8",
+    accentBtn: "#E08CA8",
+    inkColor: "#4F2E42",
+    headerColor: "#6B3B59",
+    subColor: "#A56F8D",
+  },
+  meadow: {
+    coverBg: "#E2EFE7",
+    coverBorder: "#C6DFD1",
+    pageBgStart: "#FBFCFA",
+    pageBgEnd: "#EFF7F2",
+    pageBorder: "#D1E6DA",
+    lineColor: "#D5EADC",
+    ribbonBg: "#6FB588",
+    accentBtn: "#78BE91",
+    inkColor: "#223F2C",
+    headerColor: "#2F543C",
+    subColor: "#5C876C",
+  },
+  dusk: {
+    coverBg: "#F7ECE1",
+    coverBorder: "#E8D2BE",
+    pageBgStart: "#FFFDFB",
+    pageBgEnd: "#FBF2E7",
+    pageBorder: "#EEDCC9",
+    lineColor: "#EFE0CD",
+    ribbonBg: "#E59858",
+    accentBtn: "#DF914F",
+    inkColor: "#4A2E19",
+    headerColor: "#634026",
+    subColor: "#9E6E48",
+  },
+  lilac: {
+    coverBg: "#EFE6F7",
+    coverBorder: "#DAC8EC",
+    pageBgStart: "#FDFBFF",
+    pageBgEnd: "#F6EFFC",
+    pageBorder: "#E4D4F3",
+    lineColor: "#E7DAF3",
+    ribbonBg: "#AC80DD",
+    accentBtn: "#B78FE0",
+    inkColor: "#3E2457",
+    headerColor: "#52346E",
+    subColor: "#8462A5",
+  },
+  babyblue: {
+    coverBg: "#E1EDF8",
+    coverBorder: "#BFD7EB",
+    pageBgStart: "#FAFCFF",
+    pageBgEnd: "#EEF6FC",
+    pageBorder: "#CEE2F2",
+    lineColor: "#D5E7F6",
+    ribbonBg: "#5DA5E0",
+    accentBtn: "#6BB0E8",
+    inkColor: "#1D3A54",
+    headerColor: "#284C6C",
+    subColor: "#5681A6",
+  },
+  monochrome: {
+    coverBg: "#E8E8E8",
+    coverBorder: "#CECECE",
+    pageBgStart: "#FFFFFF",
+    pageBgEnd: "#F4F4F4",
+    pageBorder: "#DCDCDC",
+    lineColor: "#E2E2E2",
+    ribbonBg: "#666666",
+    accentBtn: "#555555",
+    inkColor: "#1F1F1F",
+    headerColor: "#2A2A2A",
+    subColor: "#707070",
+  },
+};
+
 /* ─────────────────────────── Diary Book: Writing Page Component (2-Page Spread) ─────────────────────────── */
 
 function DiaryWritePage({
@@ -123,12 +218,15 @@ function DiaryWritePage({
   initial,
   onSave,
   onCancel,
+  theme = "bloom",
 }: {
   userId: string;
   initial?: Partial<JournalEntry> | null;
   onSave: (entry: JournalEntry, newFiles: File[], deletedPhotoIds: string[]) => Promise<void>;
   onCancel: () => void;
+  theme?: string;
 }) {
+  const pal = DIARY_THEME_PALETTES[theme] || DIARY_THEME_PALETTES.bloom;
   const [date, setDate] = useState(initial?.entry_date || todayStr());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [content, setContent] = useState(initial?.content || "");
@@ -193,28 +291,52 @@ function DiaryWritePage({
   return (
     <div className="w-full max-w-6xl mx-auto my-2">
       {/* Hardcover Open Book Frame */}
-      <div className="relative bg-[#F4EFE6] rounded-[32px] p-4 sm:p-7 md:p-8 border-2 border-[#E5DAC8] shadow-2xl overflow-hidden">
+      <div
+        className="relative rounded-[32px] p-4 sm:p-7 md:p-8 border-2 shadow-2xl overflow-hidden transition-colors duration-300"
+        style={{ backgroundColor: pal.coverBg, borderColor: pal.coverBorder }}
+      >
         {/* Top Bookmark Ribbon */}
-        <div className="absolute top-0 right-16 sm:right-24 w-6 h-14 bg-pink-400/90 rounded-b-md shadow-md z-20 flex items-center justify-center">
+        <div
+          className="absolute top-0 right-16 sm:right-24 w-6 h-14 rounded-b-md shadow-md z-20 flex items-center justify-center transition-colors duration-300"
+          style={{ backgroundColor: pal.ribbonBg }}
+        >
           <span className="text-xs text-white font-bold">♥</span>
         </div>
 
         {/* 2-Page Spread Container */}
-        <div className="grid grid-cols-1 md:grid-cols-2 rounded-2xl bg-[#FFFDF9] border border-[#E8DFD1] shadow-inner overflow-hidden relative min-h-[580px] md:min-h-[640px]">
+        <div
+          className="grid grid-cols-1 md:grid-cols-2 rounded-2xl border shadow-inner overflow-hidden relative min-h-[580px] md:min-h-[640px] transition-colors duration-300"
+          style={{ backgroundColor: pal.pageBgStart, borderColor: pal.pageBorder }}
+        >
           {/* Center Spine Shadow Overlay */}
           <div className="hidden md:block absolute inset-y-0 left-1/2 -translate-x-1/2 w-10 pointer-events-none z-10 bg-gradient-to-r from-black/[0.07] via-black/[0.01] to-black/[0.07]" />
 
           {/* ── LEFT PAGE: Photos & Polaroids ── */}
-          <div className="p-6 sm:p-8 md:p-10 border-b md:border-b-0 md:border-r border-[#EFE8DC] flex flex-col justify-between bg-gradient-to-br from-[#FFFDF9] to-[#FAF5EC]/70">
+          <div
+            className="p-6 sm:p-8 md:p-10 border-b md:border-b-0 md:border-r flex flex-col justify-between transition-colors duration-300"
+            style={{
+              background: `linear-gradient(135deg, ${pal.pageBgStart} 0%, ${pal.pageBgEnd} 100%)`,
+              borderColor: pal.pageBorder,
+            }}
+          >
             <div>
-              <div className="flex items-center justify-between border-b border-[#EFE8DC] pb-3 mb-5">
+              <div
+                className="flex items-center justify-between border-b pb-3 mb-5"
+                style={{ borderColor: pal.pageBorder }}
+              >
                 <div className="flex items-center gap-2.5">
                   <span className="text-xl">📷</span>
-                  <h4 className="font-bold text-base sm:text-lg text-[#5B4B6D]" style={{ fontFamily: "Fredoka, sans-serif" }}>
+                  <h4
+                    className="font-bold text-base sm:text-lg"
+                    style={{ fontFamily: "Fredoka, sans-serif", color: pal.headerColor }}
+                  >
                     Polaroid Memories
                   </h4>
                 </div>
-                <span className="text-sm text-[#9B8BAD] italic" style={{ fontFamily: "'Patrick Hand', cursive", fontSize: "16px" }}>
+                <span
+                  className="text-sm italic"
+                  style={{ fontFamily: "'Patrick Hand', cursive", fontSize: "16px", color: pal.subColor }}
+                >
                   tuck in your photos ~
                 </span>
               </div>
@@ -281,27 +403,34 @@ function DiaryWritePage({
             </div>
 
             {/* Left Page Footer Note */}
-            <div className="pt-3 border-t border-[#EFE8DC] text-center">
-              <span className="text-xs text-[#A89CB5] italic" style={{ fontFamily: "'Patrick Hand', cursive", fontSize: "15px" }}>
+            <div className="pt-3 border-t text-center" style={{ borderColor: pal.pageBorder }}>
+              <span className="text-xs italic" style={{ fontFamily: "'Patrick Hand', cursive", fontSize: "15px", color: pal.subColor }}>
                 Left Page · Keepsakes & Polaroids
               </span>
             </div>
           </div>
 
           {/* ── RIGHT PAGE: Writing & Thoughts ── */}
-          <div className="p-6 sm:p-8 md:p-10 flex flex-col justify-between bg-[#FFFDF9]">
+          <div
+            className="p-6 sm:p-8 md:p-10 flex flex-col justify-between transition-colors duration-300"
+            style={{ background: `linear-gradient(135deg, ${pal.pageBgStart} 0%, ${pal.pageBgEnd} 100%)` }}
+          >
             <div>
               {/* Header & Date */}
-              <div className="flex items-start justify-between border-b border-[#EFE8DC] pb-3 mb-4 flex-wrap gap-2">
+              <div
+                className="flex items-start justify-between border-b pb-3 mb-4 flex-wrap gap-2"
+                style={{ borderColor: pal.pageBorder }}
+              >
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-xl font-bold text-[#5B4B6D]" style={{ fontFamily: "Fredoka, sans-serif" }}>
+                    <h3 className="text-xl font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: pal.headerColor }}>
                       {niceDate(date)}
                     </h3>
                     <button
                       type="button"
                       onClick={() => setShowDatePicker(!showDatePicker)}
-                      className="text-xs px-2.5 py-1 bg-[#F5EFEB] hover:bg-[#EDE5DA] text-[#8A7B9D] rounded-xl font-medium flex items-center gap-1 transition-colors"
+                      className="text-xs px-2.5 py-1 rounded-xl font-medium flex items-center gap-1 transition-colors bg-white/70 hover:bg-white"
+                      style={{ color: pal.subColor, border: `1px solid ${pal.pageBorder}` }}
                       title="Change entry date"
                     >
                       <Calendar size={12} />
@@ -315,7 +444,8 @@ function DiaryWritePage({
                         type="date"
                         value={date}
                         onChange={(e) => setDate(e.target.value)}
-                        className="p-1.5 px-3 rounded-xl border border-[#D8CFC0] bg-white text-xs font-semibold text-[#5B4B6D]"
+                        className="p-1.5 px-3 rounded-xl border bg-white text-xs font-semibold"
+                        style={{ borderColor: pal.pageBorder, color: pal.headerColor }}
                       />
                     </div>
                   )}
@@ -329,8 +459,9 @@ function DiaryWritePage({
                     className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border transition-all ${
                       isPinned
                         ? "bg-amber-100 border-amber-300 text-amber-900 shadow-2xs"
-                        : "bg-white/80 border-[#E8E2D8] text-gray-500 hover:bg-white"
+                        : "bg-white/80 text-gray-500 hover:bg-white"
                     }`}
+                    style={!isPinned ? { borderColor: pal.pageBorder } : {}}
                   >
                     <Pin size={12} className={isPinned ? "fill-amber-600 text-amber-600" : ""} />
                     <span>{isPinned ? "Pinned" : "Pin"}</span>
@@ -348,7 +479,7 @@ function DiaryWritePage({
 
               {/* Mood Selector */}
               <div className="mb-4">
-                <div className="text-xs text-[#8A7B9D] mb-1.5 italic" style={{ fontFamily: "'Patrick Hand', cursive", fontSize: "15px" }}>
+                <div className="text-xs mb-1.5 italic" style={{ fontFamily: "'Patrick Hand', cursive", fontSize: "15px", color: pal.subColor }}>
                   how was today feeling? ~
                 </div>
                 <div className="flex gap-1.5 flex-wrap mb-2">
@@ -389,7 +520,8 @@ function DiaryWritePage({
                     setCustomMoodInput(e.target.value);
                     setMood(e.target.value.trim() || null);
                   }}
-                  className="w-full text-xs p-2 rounded-xl border border-[#E8E2D8] bg-white/70 focus:bg-white outline-none focus:border-purple-300 transition-colors"
+                  className="w-full text-xs p-2 rounded-xl border bg-white/70 focus:bg-white outline-none transition-colors"
+                  style={{ borderColor: pal.pageBorder }}
                 />
               </div>
 
@@ -399,11 +531,12 @@ function DiaryWritePage({
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder={placeholderPrompt}
-                  className="w-full min-h-[380px] p-3 text-xl sm:text-2xl leading-loose bg-transparent border-none outline-none resize-none text-[#4A3B5D]"
+                  className="w-full min-h-[380px] p-3 text-xl sm:text-2xl leading-loose bg-transparent border-none outline-none resize-none"
                   style={{
                     fontFamily: "'Caveat', cursive, sans-serif",
                     lineHeight: "2.1",
-                    backgroundImage: "repeating-linear-gradient(transparent, transparent 41px, #EFE8DC 42px)",
+                    color: pal.inkColor,
+                    backgroundImage: `repeating-linear-gradient(transparent, transparent 41px, ${pal.lineColor} 42px)`,
                     backgroundAttachment: "local",
                   }}
                   autoFocus
@@ -412,11 +545,12 @@ function DiaryWritePage({
             </div>
 
             {/* Right Page Footer Actions */}
-            <div className="pt-3 border-t border-[#EFE8DC] flex items-center justify-between mt-4">
+            <div className="pt-3 border-t flex items-center justify-between mt-4" style={{ borderColor: pal.pageBorder }}>
               <button
                 type="button"
                 onClick={onCancel}
-                className="text-xs text-[#8A7B9D] hover:text-[#5B4B6D] font-bold"
+                className="text-xs font-bold transition-colors"
+                style={{ color: pal.subColor }}
               >
                 Turn back
               </button>
@@ -424,8 +558,8 @@ function DiaryWritePage({
                 type="button"
                 onClick={handleSave}
                 disabled={saving || !content.trim()}
-                className="px-6 py-2.5 rounded-2xl text-xs font-bold text-white shadow-md hover:opacity-95 disabled:opacity-50 transition-all flex items-center gap-1.5"
-                style={{ background: "#C9B6E4", fontFamily: "Fredoka, sans-serif" }}
+                className="px-6 py-2.5 rounded-2xl text-xs font-bold text-white shadow-md hover:opacity-95 disabled:opacity-50 transition-all flex items-center gap-1.5 cursor-pointer"
+                style={{ backgroundColor: pal.accentBtn, fontFamily: "Fredoka, sans-serif" }}
               >
                 <Check size={14} />
                 <span>{saving ? "Saving..." : "Keep this Memory"}</span>
@@ -448,6 +582,7 @@ function DiaryReadPage({
   onWriteNew,
   onEdit,
   onDelete,
+  theme = "bloom",
 }: {
   entries: JournalEntry[];
   photosByEntry: Record<string, JournalPhoto[]>;
@@ -456,7 +591,9 @@ function DiaryReadPage({
   onWriteNew: () => void;
   onEdit: (e: JournalEntry) => void;
   onDelete: (id: string) => void;
+  theme?: string;
 }) {
+  const pal = DIARY_THEME_PALETTES[theme] || DIARY_THEME_PALETTES.bloom;
   const [flipDirection, setFlipDirection] = useState<"next" | "prev" | null>(null);
 
   const safeIndex = Math.max(0, Math.min(entries.length - 1, currentIndex));
@@ -475,20 +612,26 @@ function DiaryReadPage({
 
   if (entries.length === 0) {
     return (
-      <div className="relative max-w-xl mx-auto my-6 p-10 bg-[#FFFDF9] rounded-3xl border-2 border-[#E9E4DC] shadow-xl text-center">
-        <div className="w-16 h-16 mx-auto mb-4 bg-purple-50 rounded-2xl flex items-center justify-center text-3xl">
+      <div
+        className="relative max-w-xl mx-auto my-6 p-10 rounded-3xl border-2 shadow-xl text-center transition-colors duration-300"
+        style={{ backgroundColor: pal.pageBgStart, borderColor: pal.coverBorder }}
+      >
+        <div
+          className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center text-3xl"
+          style={{ backgroundColor: pal.coverBg }}
+        >
           📖
         </div>
-        <h3 className="text-2xl font-bold mb-2" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>
+        <h3 className="text-2xl font-bold mb-2" style={{ fontFamily: "Fredoka, sans-serif", color: pal.headerColor }}>
           Your Cozy Diary
         </h3>
-        <p className="text-sm opacity-70 mb-6 max-w-sm mx-auto">
+        <p className="text-sm opacity-70 mb-6 max-w-sm mx-auto" style={{ color: pal.inkColor }}>
           Start recording your memories, thoughts, and polaroids. Each page becomes part of your story.
         </p>
         <button
           onClick={onWriteNew}
-          className="px-6 py-3 rounded-2xl text-white font-bold shadow-md hover:opacity-95 transition-all inline-flex items-center gap-2"
-          style={{ background: "#C9B6E4", fontFamily: "Fredoka, sans-serif" }}
+          className="px-6 py-3 rounded-2xl text-white font-bold shadow-md hover:opacity-95 transition-all inline-flex items-center gap-2 cursor-pointer"
+          style={{ backgroundColor: pal.accentBtn, fontFamily: "Fredoka, sans-serif" }}
         >
           <Plus size={18} /> Write Your First Page
         </button>
@@ -499,36 +642,58 @@ function DiaryReadPage({
   return (
     <div className="w-full max-w-6xl mx-auto my-2">
       {/* Hardcover Open Book Frame */}
-      <div className="relative bg-[#F4EFE6] rounded-[32px] p-4 sm:p-7 md:p-8 border-2 border-[#E5DAC8] shadow-2xl overflow-hidden">
+      <div
+        className="relative rounded-[32px] p-4 sm:p-7 md:p-8 border-2 shadow-2xl overflow-hidden transition-colors duration-300"
+        style={{ backgroundColor: pal.coverBg, borderColor: pal.coverBorder }}
+      >
         {/* Top Bookmark Ribbon */}
-        <div className="absolute top-0 right-16 sm:right-24 w-6 h-14 bg-pink-400/90 rounded-b-md shadow-md z-20 flex items-center justify-center">
+        <div
+          className="absolute top-0 right-16 sm:right-24 w-6 h-14 rounded-b-md shadow-md z-20 flex items-center justify-center transition-colors duration-300"
+          style={{ backgroundColor: pal.ribbonBg }}
+        >
           <span className="text-xs text-white font-bold">♥</span>
         </div>
 
         {/* 2-Page Spread Container with CSS 3D Page Turn Animation */}
         <div
-          className={`grid grid-cols-1 md:grid-cols-2 rounded-2xl bg-[#FFFDF9] border border-[#E8DFD1] shadow-inner overflow-hidden relative min-h-[580px] md:min-h-[640px] transition-all duration-300 ${
+          className={`grid grid-cols-1 md:grid-cols-2 rounded-2xl border shadow-inner overflow-hidden relative min-h-[580px] md:min-h-[640px] transition-all duration-300 ${
             flipDirection === "next"
               ? "opacity-60 translate-x-1 rotate-[-0.3deg] scale-[0.99]"
               : flipDirection === "prev"
               ? "opacity-60 -translate-x-1 rotate-[0.3deg] scale-[0.99]"
               : "opacity-100 translate-x-0 rotate-0 scale-100"
           }`}
+          style={{ backgroundColor: pal.pageBgStart, borderColor: pal.pageBorder }}
         >
           {/* Center Spine Shadow Overlay */}
           <div className="hidden md:block absolute inset-y-0 left-1/2 -translate-x-1/2 w-10 pointer-events-none z-10 bg-gradient-to-r from-black/[0.07] via-black/[0.01] to-black/[0.07]" />
 
           {/* ── LEFT PAGE: Photos & Polaroids ── */}
-          <div className="p-6 sm:p-8 md:p-10 border-b md:border-b-0 md:border-r border-[#EFE8DC] flex flex-col justify-between bg-gradient-to-br from-[#FFFDF9] to-[#FAF5EC]/70">
+          <div
+            className="p-6 sm:p-8 md:p-10 border-b md:border-b-0 md:border-r flex flex-col justify-between transition-colors duration-300"
+            style={{
+              background: `linear-gradient(135deg, ${pal.pageBgStart} 0%, ${pal.pageBgEnd} 100%)`,
+              borderColor: pal.pageBorder,
+            }}
+          >
             <div>
-              <div className="flex items-center justify-between border-b border-[#EFE8DC] pb-3 mb-5">
+              <div
+                className="flex items-center justify-between border-b pb-3 mb-5"
+                style={{ borderColor: pal.pageBorder }}
+              >
                 <div className="flex items-center gap-2.5">
                   <span className="text-xl">📷</span>
-                  <h4 className="font-bold text-base sm:text-lg text-[#5B4B6D]" style={{ fontFamily: "Fredoka, sans-serif" }}>
+                  <h4
+                    className="font-bold text-base sm:text-lg"
+                    style={{ fontFamily: "Fredoka, sans-serif", color: pal.headerColor }}
+                  >
                     Polaroids & Prints
                   </h4>
                 </div>
-                <span className="text-sm text-[#9B8BAD] italic" style={{ fontFamily: "'Patrick Hand', cursive", fontSize: "16px" }}>
+                <span
+                  className="text-sm italic"
+                  style={{ fontFamily: "'Patrick Hand', cursive", fontSize: "16px", color: pal.subColor }}
+                >
                   captured moments ~
                 </span>
               </div>
@@ -538,9 +703,10 @@ function DiaryReadPage({
                   {currentPhotos.map((photo, i) => (
                     <div
                       key={photo.id}
-                      className={`bg-white p-2.5 pb-4 rounded-2xl shadow-md border border-[#E8E2D8] transition-transform duration-200 hover:scale-105 hover:rotate-0 ${
+                      className={`bg-white p-2.5 pb-4 rounded-2xl shadow-md border transition-transform duration-200 hover:scale-105 hover:rotate-0 ${
                         i % 2 === 0 ? "rotate-[-1.5deg]" : "rotate-[1.5deg]"
                       }`}
+                      style={{ borderColor: pal.pageBorder }}
                     >
                       <img
                         src={photo.image_url}
@@ -553,7 +719,8 @@ function DiaryReadPage({
                             href={photo.original_drive_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-[10px] text-[#8A7B9D] hover:underline flex items-center gap-0.5 font-medium"
+                            className="text-[10px] hover:underline flex items-center gap-0.5 font-medium"
+                            style={{ color: pal.subColor }}
                           >
                             <span>Drive Original</span>
                             <ExternalLink size={9} />
@@ -564,8 +731,11 @@ function DiaryReadPage({
                   ))}
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center p-8 text-center text-[#9B8BAD] my-auto">
-                  <div className="w-16 h-16 rounded-2xl bg-purple-50/80 flex items-center justify-center text-3xl mb-2">
+                <div className="flex flex-col items-center justify-center p-8 text-center my-auto" style={{ color: pal.subColor }}>
+                  <div
+                    className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-2"
+                    style={{ backgroundColor: pal.coverBg }}
+                  >
                     🌸
                   </div>
                   <p className="text-base italic" style={{ fontFamily: "'Patrick Hand', cursive", fontSize: "17px" }}>
@@ -573,7 +743,8 @@ function DiaryReadPage({
                   </p>
                   <button
                     onClick={() => onEdit(currentEntry)}
-                    className="mt-4 text-xs px-4 py-2 rounded-xl bg-white border border-[#E8DFD1] text-[#5B4B6D] hover:bg-purple-50 font-bold transition-colors shadow-xs"
+                    className="mt-4 text-xs px-4 py-2 rounded-xl bg-white border font-bold transition-colors shadow-xs"
+                    style={{ borderColor: pal.pageBorder, color: pal.headerColor }}
                   >
                     + Tuck in photo
                   </button>
@@ -582,21 +753,27 @@ function DiaryReadPage({
             </div>
 
             {/* Left Page Footer */}
-            <div className="pt-3 border-t border-[#EFE8DC] text-center">
-              <span className="text-xs text-[#A89CB5] italic" style={{ fontFamily: "'Patrick Hand', cursive", fontSize: "15px" }}>
+            <div className="pt-3 border-t text-center" style={{ borderColor: pal.pageBorder }}>
+              <span className="text-xs italic" style={{ fontFamily: "'Patrick Hand', cursive", fontSize: "15px", color: pal.subColor }}>
                 Left Page · Keepsakes
               </span>
             </div>
           </div>
 
           {/* ── RIGHT PAGE: Written Entry Content ── */}
-          <div className="p-6 sm:p-8 md:p-10 flex flex-col justify-between bg-[#FFFDF9]">
+          <div
+            className="p-6 sm:p-8 md:p-10 flex flex-col justify-between transition-colors duration-300"
+            style={{ background: `linear-gradient(135deg, ${pal.pageBgStart} 0%, ${pal.pageBgEnd} 100%)` }}
+          >
             <div>
               {/* Header with Date, Mood, Pin, Actions */}
-              <div className="flex items-start justify-between border-b border-[#EFE8DC] pb-3 mb-4">
+              <div
+                className="flex items-start justify-between border-b pb-3 mb-4"
+                style={{ borderColor: pal.pageBorder }}
+              >
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xl font-bold text-[#5B4B6D]" style={{ fontFamily: "Fredoka, sans-serif" }}>
+                    <span className="text-xl font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: pal.headerColor }}>
                       {niceDate(currentEntry.entry_date)}
                     </span>
                     {moodInfo && (
@@ -614,7 +791,7 @@ function DiaryReadPage({
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-[#9B8BAD] mt-1">
+                  <p className="text-xs mt-1" style={{ color: pal.subColor }}>
                     Page {safeIndex + 1} of {entries.length}
                   </p>
                 </div>
@@ -623,7 +800,8 @@ function DiaryReadPage({
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => onEdit(currentEntry)}
-                    className="p-2 rounded-xl text-gray-500 hover:bg-black/5 hover:text-[#5B4B6D] transition-colors"
+                    className="p-2 rounded-xl text-gray-500 hover:bg-black/5 transition-colors"
+                    style={{ color: pal.subColor }}
                     title="Edit this entry"
                   >
                     <Pencil size={16} />
@@ -638,36 +816,44 @@ function DiaryReadPage({
                 </div>
               </div>
 
-              {/* Diary Entry Content (With Handwriting Font) */}
+              {/* Diary Entry Content (With Handwriting Font & Lined Paper) */}
               <div
-                className="text-[#3F324D] text-[1.5rem] sm:text-[1.65rem] leading-loose whitespace-pre-wrap min-h-[320px] pt-1"
-                style={{ fontFamily: "'Caveat', cursive, sans-serif", lineHeight: "2.1" }}
+                className="text-[1.5rem] sm:text-[1.65rem] leading-loose whitespace-pre-wrap min-h-[320px] pt-1"
+                style={{
+                  fontFamily: "'Caveat', cursive, sans-serif",
+                  lineHeight: "2.1",
+                  color: pal.inkColor,
+                  backgroundImage: `repeating-linear-gradient(transparent, transparent 41px, ${pal.lineColor} 42px)`,
+                  backgroundAttachment: "local",
+                }}
               >
                 {currentEntry.content}
               </div>
             </div>
 
             {/* Right Page Navigation Footer */}
-            <div className="pt-3 border-t border-[#EFE8DC] flex items-center justify-between mt-4">
+            <div className="pt-3 border-t flex items-center justify-between mt-4" style={{ borderColor: pal.pageBorder }}>
               <button
                 onClick={() => handlePageTurn(safeIndex - 1, "prev")}
                 disabled={safeIndex === 0}
                 className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                   safeIndex === 0
                     ? "opacity-30 cursor-not-allowed text-gray-400"
-                    : "bg-white text-[#5B4B6D] hover:bg-[#F3EDE3] shadow-xs"
+                    : "bg-white hover:bg-black/5 shadow-xs"
                 }`}
+                style={safeIndex !== 0 ? { color: pal.headerColor } : {}}
               >
                 <ChevronLeft size={15} /> Prev Page
               </button>
 
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-[#8A7B9D]">
+                <span className="text-xs font-bold" style={{ color: pal.subColor }}>
                   {safeIndex + 1} / {entries.length}
                 </span>
                 <button
                   onClick={onWriteNew}
-                  className="px-2.5 py-1 rounded-xl bg-white text-[#5B4B6D] hover:bg-purple-100/60 text-xs font-bold shadow-2xs flex items-center gap-1"
+                  className="px-2.5 py-1 rounded-xl bg-white text-xs font-bold shadow-2xs flex items-center gap-1 hover:bg-black/5"
+                  style={{ color: pal.headerColor }}
                 >
                   <Plus size={12} /> Write
                 </button>
@@ -679,8 +865,9 @@ function DiaryReadPage({
                 className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                   safeIndex === entries.length - 1
                     ? "opacity-30 cursor-not-allowed text-gray-400"
-                    : "bg-white text-[#5B4B6D] hover:bg-[#F3EDE3] shadow-xs"
+                    : "bg-white hover:bg-black/5 shadow-xs"
                 }`}
+                style={safeIndex !== entries.length - 1 ? { color: pal.headerColor } : {}}
               >
                 Next Page <ChevronRight size={15} />
               </button>
@@ -1476,6 +1663,7 @@ export default function JournalView({
                   setDiaryMode("read");
                   setEditingEntry(null);
                 }}
+                theme={theme}
               />
             ) : (
               <DiaryReadPage
@@ -1486,6 +1674,7 @@ export default function JournalView({
                 onWriteNew={() => openWriteMode(null)}
                 onEdit={(entry) => openWriteMode(entry)}
                 onDelete={deleteEntry}
+                theme={theme}
               />
             )}
           </div>
