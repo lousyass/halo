@@ -2014,7 +2014,7 @@ export default function StudyDen({ session }: { session: Session }) {
                         className="absolute inset-0 pointer-events-none z-0 bg-cover bg-center rounded-3xl transition-opacity duration-500"
                         style={{
                           backgroundImage: `url(${comingSoonBg})`,
-                          opacity: 0.20,
+                          opacity: 0.25,
                         }}
                       />
                     )}
@@ -2038,7 +2038,7 @@ export default function StudyDen({ session }: { session: Session }) {
                         className="absolute inset-0 pointer-events-none z-0 bg-cover bg-center rounded-3xl transition-opacity duration-500"
                         style={{
                           backgroundImage: `url(${allTasksBg})`,
-                          opacity: 0.20,
+                          opacity: 0.25,
                         }}
                       />
                     )}

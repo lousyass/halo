@@ -94,9 +94,6 @@ const POOLS = buildImagePools();
 // Session-scoped cache to ensure each component gets constant random image per session
 const sessionPicks: Record<string, string | null> = {};
 
-// Session-scoped 12 monthly calendar picks (indexed 0 to 11 for Jan..Dec)
-let monthlyCalendarPicks: (string | null)[] | null = null;
-
 /**
  * Helper to preload an image URL into browser cache for instant rendering
  */
@@ -116,39 +113,43 @@ function pickRandom(arr: string[]): string | null {
 }
 
 /**
- * Returns a distinct session-scoped decorative image for each of the 12 calendar months.
- * Pre-assigns 12 strictly unique images from the shared calendar image pool upon first call
- * and preloads all 12 into the browser cache for zero-lag month switching.
+ * Exactly 12 unique, deterministically-ordered calendar images.
+ * Sorted naturally by file path to guarantee a stable 1-to-1 month cycle:
+ * Month 1 (Jan, index 0) -> Image 0
+ * Month 2 (Feb, index 1) -> Image 1
+ * ...
+ * Month 12 (Dec, index 11) -> Image 11
+ */
+export const CALENDAR_12_MONTHS: string[] = (() => {
+  const calendarEntries = Object.entries(rawImages)
+    .filter(
+      ([path, url]) =>
+        typeof url === "string" &&
+        !path.endsWith(".gitkeep") &&
+        path.includes("/decorative/calendar/")
+    )
+    .sort(([pathA], [pathB]) =>
+      pathA.localeCompare(pathB, undefined, { numeric: true, sensitivity: "base" })
+    )
+    .map(([, url]) => url as string);
+
+  const unique = Array.from(new Set(calendarEntries));
+  return unique.slice(0, 12);
+})();
+
+// Preload all 12 calendar images in browser cache immediately on module load
+if (typeof window !== "undefined") {
+  CALENDAR_12_MONTHS.forEach(preloadImage);
+}
+
+/**
+ * Returns the deterministic calendar image for a given month index (0 = January, 11 = December).
+ * 100% stable, synchronous, O(1), no random reassignment, no race conditions.
  */
 export function getCalendarMonthImage(monthIndex: number): string | null {
-  const pool = Array.from(new Set(POOLS.calendar));
-  if (pool.length === 0) return null;
-
-  if (!monthlyCalendarPicks) {
-    const shuffled = [...pool];
-    // Fisher-Yates shuffle
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-
-    if (shuffled.length >= 12) {
-      monthlyCalendarPicks = shuffled.slice(0, 12);
-    } else {
-      // If pool has fewer than 12 images, cycle them after exhausting unique ones
-      const repeated: string[] = [];
-      while (repeated.length < 12) {
-        repeated.push(...shuffled);
-      }
-      monthlyCalendarPicks = repeated.slice(0, 12);
-    }
-
-    // Preload all 12 images into browser cache immediately
-    monthlyCalendarPicks.forEach(preloadImage);
-  }
-
+  if (CALENDAR_12_MONTHS.length === 0) return null;
   const idx = ((monthIndex % 12) + 12) % 12;
-  return monthlyCalendarPicks[idx] || null;
+  return CALENDAR_12_MONTHS[idx] || null;
 }
 
 /**
