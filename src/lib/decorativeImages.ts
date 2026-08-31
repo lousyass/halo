@@ -91,13 +91,37 @@ function buildImagePools(): ImagePools {
 
 const POOLS = buildImagePools();
 
-// Session-scoped cache to ensure each component gets ONE constant random image per session
+// Session-scoped cache to ensure each component gets constant random image per session
 const sessionPicks: Record<string, string | null> = {};
+
+// Session-scoped 12 monthly calendar picks (indexed 0 to 11 for Jan..Dec)
+let monthlyCalendarPicks: (string | null)[] | null = null;
 
 function pickRandom(arr: string[]): string | null {
   if (!arr || arr.length === 0) return null;
   const idx = Math.floor(Math.random() * arr.length);
   return arr[idx];
+}
+
+/**
+ * Returns a distinct session-scoped decorative image for each of the 12 calendar months.
+ * Pre-assigns 12 varied images from the shared calendar image pool upon first call.
+ */
+export function getCalendarMonthImage(monthIndex: number): string | null {
+  const pool = POOLS.calendar;
+  if (!pool || pool.length === 0) return null;
+
+  if (!monthlyCalendarPicks) {
+    const shuffled: string[] = [];
+    while (shuffled.length < 12) {
+      const copy = [...pool].sort(() => Math.random() - 0.5);
+      shuffled.push(...copy);
+    }
+    monthlyCalendarPicks = shuffled.slice(0, 12);
+  }
+
+  const idx = ((monthIndex % 12) + 12) % 12;
+  return monthlyCalendarPicks[idx] || null;
 }
 
 /**
@@ -112,11 +136,7 @@ export function getDecorativeImage(
   const folder = THEME_FOLDER_MAP[themeKey] || "blush-bloom";
 
   if (category === "calendar") {
-    const key = "calendar";
-    if (sessionPicks[key] === undefined) {
-      sessionPicks[key] = pickRandom(POOLS.calendar);
-    }
-    return sessionPicks[key];
+    return getCalendarMonthImage(new Date().getMonth());
   }
 
   if (category === "diary") {

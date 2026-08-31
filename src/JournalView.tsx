@@ -3,6 +3,7 @@ import { Session } from "@supabase/supabase-js";
 import { supabase } from "./lib/supabase";
 import {
   getDecorativeImage,
+  getCalendarMonthImage,
   DEFAULT_VISUAL_SETTINGS,
   VisualCustomizationSettings,
 } from "./lib/decorativeImages";
@@ -188,52 +189,52 @@ function DiaryWritePage({
   };
 
   return (
-    <div className="max-w-5xl mx-auto my-2">
+    <div className="w-full max-w-6xl mx-auto my-2">
       {/* Hardcover Open Book Frame */}
-      <div className="relative bg-[#F4EFE6] rounded-3xl p-3 sm:p-5 border-2 border-[#E5DAC8] shadow-2xl overflow-hidden">
+      <div className="relative bg-[#F4EFE6] rounded-[32px] p-4 sm:p-7 md:p-8 border-2 border-[#E5DAC8] shadow-2xl overflow-hidden">
         {/* Top Bookmark Ribbon */}
-        <div className="absolute top-0 right-16 w-5 h-12 bg-pink-400/90 rounded-b-md shadow-md z-20 flex items-center justify-center">
-          <span className="text-[10px] text-white font-bold">♥</span>
+        <div className="absolute top-0 right-16 sm:right-24 w-6 h-14 bg-pink-400/90 rounded-b-md shadow-md z-20 flex items-center justify-center">
+          <span className="text-xs text-white font-bold">♥</span>
         </div>
 
         {/* 2-Page Spread Container */}
-        <div className="grid grid-cols-1 md:grid-cols-2 rounded-2xl bg-[#FFFDF9] border border-[#E8DFD1] shadow-inner overflow-hidden relative">
+        <div className="grid grid-cols-1 md:grid-cols-2 rounded-2xl bg-[#FFFDF9] border border-[#E8DFD1] shadow-inner overflow-hidden relative min-h-[580px] md:min-h-[640px]">
           {/* Center Spine Shadow Overlay */}
-          <div className="hidden md:block absolute inset-y-0 left-1/2 -translate-x-1/2 w-8 pointer-events-none z-10 bg-gradient-to-r from-black/[0.06] via-black/[0.01] to-black/[0.06]" />
+          <div className="hidden md:block absolute inset-y-0 left-1/2 -translate-x-1/2 w-10 pointer-events-none z-10 bg-gradient-to-r from-black/[0.07] via-black/[0.01] to-black/[0.07]" />
 
           {/* ── LEFT PAGE: Photos & Polaroids ── */}
-          <div className="p-6 sm:p-7 border-b md:border-b-0 md:border-r border-[#EFE8DC] flex flex-col justify-between bg-gradient-to-br from-[#FFFDF9] to-[#FAF5EC]/70">
+          <div className="p-6 sm:p-8 md:p-10 border-b md:border-b-0 md:border-r border-[#EFE8DC] flex flex-col justify-between bg-gradient-to-br from-[#FFFDF9] to-[#FAF5EC]/70">
             <div>
-              <div className="flex items-center justify-between border-b border-[#EFE8DC] pb-3 mb-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">📷</span>
-                  <h4 className="font-bold text-[#5B4B6D]" style={{ fontFamily: "Fredoka, sans-serif" }}>
+              <div className="flex items-center justify-between border-b border-[#EFE8DC] pb-3 mb-5">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-xl">📷</span>
+                  <h4 className="font-bold text-base sm:text-lg text-[#5B4B6D]" style={{ fontFamily: "Fredoka, sans-serif" }}>
                     Polaroid Memories
                   </h4>
                 </div>
-                <span className="text-xs text-[#9B8BAD] italic" style={{ fontFamily: "'Patrick Hand', cursive", fontSize: "14px" }}>
+                <span className="text-sm text-[#9B8BAD] italic" style={{ fontFamily: "'Patrick Hand', cursive", fontSize: "16px" }}>
                   tuck in your photos ~
                 </span>
               </div>
 
               {/* Polaroids Grid */}
-              <div className="grid grid-cols-2 gap-3.5 mb-4">
+              <div className="grid grid-cols-2 gap-4 mb-4">
                 {/* Existing Photos */}
                 {photos.map((p) => (
                   <div
                     key={p.id}
-                    className="relative bg-white p-2 pb-3 rounded-2xl shadow-md border border-[#E8E2D8] transform rotate-[-1.5deg] group hover:rotate-0 transition-transform"
+                    className="relative bg-white p-2.5 pb-4 rounded-2xl shadow-md border border-[#E8E2D8] transform rotate-[-1.5deg] group hover:rotate-0 transition-transform"
                   >
-                    <img src={p.image_url} alt="" className="w-full h-28 object-cover rounded-xl" />
+                    <img src={p.image_url} alt="" className="w-full h-36 sm:h-44 object-cover rounded-xl" />
                     <button
                       type="button"
                       onClick={() => removeExistingPhoto(p.id)}
-                      className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute -top-2 -right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
                     >
-                      <X size={12} />
+                      <X size={14} />
                     </button>
                     {p.original_drive_url && (
-                      <span className="text-[9px] text-[#8A7B9D] mt-1 block text-right font-medium">Drive saved</span>
+                      <span className="text-[10px] text-[#8A7B9D] mt-1.5 block text-right font-medium">Drive saved</span>
                     )}
                   </div>
                 ))}
@@ -242,17 +243,17 @@ function DiaryWritePage({
                 {newFiles.map((f, i) => (
                   <div
                     key={i}
-                    className="relative bg-white p-2 pb-3 rounded-2xl shadow-md border border-[#E8E2D8] transform rotate-[1.5deg] group hover:rotate-0 transition-transform"
+                    className="relative bg-white p-2.5 pb-4 rounded-2xl shadow-md border border-[#E8E2D8] transform rotate-[1.5deg] group hover:rotate-0 transition-transform"
                   >
-                    <img src={URL.createObjectURL(f)} alt="" className="w-full h-28 object-cover rounded-xl" />
+                    <img src={URL.createObjectURL(f)} alt="" className="w-full h-36 sm:h-44 object-cover rounded-xl" />
                     <button
                       type="button"
                       onClick={() => removeNewFile(i)}
-                      className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute -top-2 -right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
                     >
-                      <X size={12} />
+                      <X size={14} />
                     </button>
-                    <span className="text-[10px] text-purple-600 mt-1 block text-center font-bold" style={{ fontFamily: "'Patrick Hand', cursive" }}>
+                    <span className="text-xs text-purple-600 mt-1.5 block text-center font-bold" style={{ fontFamily: "'Patrick Hand', cursive" }}>
                       new print ✨
                     </span>
                   </div>
@@ -260,18 +261,18 @@ function DiaryWritePage({
 
                 {/* Polaroid Photo Attach Trigger */}
                 <label
-                  className="relative bg-white/80 hover:bg-white p-3 rounded-2xl shadow-xs border-2 border-dashed border-[#C9B6E4] transform rotate-[-1deg] hover:rotate-0 transition-all flex flex-col items-center justify-center text-center cursor-pointer group min-h-[135px]"
+                  className="relative bg-white/80 hover:bg-white p-4 rounded-2xl shadow-xs border-2 border-dashed border-[#C9B6E4] transform rotate-[-1deg] hover:rotate-0 transition-all flex flex-col items-center justify-center text-center cursor-pointer group min-h-[160px]"
                 >
-                  <div className="w-9 h-9 rounded-full bg-purple-50 flex items-center justify-center text-[#9B8BAD] group-hover:text-[#5B4B6D] mb-1.5 transition-colors">
-                    <ImageIcon size={18} />
+                  <div className="w-11 h-11 rounded-full bg-purple-50 flex items-center justify-center text-[#9B8BAD] group-hover:text-[#5B4B6D] mb-2 transition-colors">
+                    <ImageIcon size={22} />
                   </div>
                   <span
-                    className="text-xs text-[#5B4B6D] font-bold group-hover:text-[#7C3AED] leading-tight"
-                    style={{ fontFamily: "'Patrick Hand', cursive", fontSize: "14px" }}
+                    className="text-sm text-[#5B4B6D] font-bold group-hover:text-[#7C3AED] leading-tight"
+                    style={{ fontFamily: "'Patrick Hand', cursive", fontSize: "16px" }}
                   >
                     + Tuck in photo
                   </span>
-                  <span className="text-[9px] text-[#9B8BAD] mt-0.5">JPEG / PNG</span>
+                  <span className="text-[10px] text-[#9B8BAD] mt-1">JPEG / PNG</span>
                   <input type="file" accept="image/*" multiple onChange={handleFileChange} className="hidden" />
                 </label>
               </div>
@@ -279,29 +280,29 @@ function DiaryWritePage({
 
             {/* Left Page Footer Note */}
             <div className="pt-3 border-t border-[#EFE8DC] text-center">
-              <span className="text-xs text-[#A89CB5] italic" style={{ fontFamily: "'Patrick Hand', cursive", fontSize: "14px" }}>
+              <span className="text-xs text-[#A89CB5] italic" style={{ fontFamily: "'Patrick Hand', cursive", fontSize: "15px" }}>
                 Left Page · Keepsakes & Polaroids
               </span>
             </div>
           </div>
 
           {/* ── RIGHT PAGE: Writing & Thoughts ── */}
-          <div className="p-6 sm:p-7 flex flex-col justify-between bg-[#FFFDF9]">
+          <div className="p-6 sm:p-8 md:p-10 flex flex-col justify-between bg-[#FFFDF9]">
             <div>
               {/* Header & Date */}
               <div className="flex items-start justify-between border-b border-[#EFE8DC] pb-3 mb-4 flex-wrap gap-2">
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-lg font-bold text-[#5B4B6D]" style={{ fontFamily: "Fredoka, sans-serif" }}>
+                    <h3 className="text-xl font-bold text-[#5B4B6D]" style={{ fontFamily: "Fredoka, sans-serif" }}>
                       {niceDate(date)}
                     </h3>
                     <button
                       type="button"
                       onClick={() => setShowDatePicker(!showDatePicker)}
-                      className="text-xs px-2 py-0.5 bg-[#F5EFEB] hover:bg-[#EDE5DA] text-[#8A7B9D] rounded-lg font-medium flex items-center gap-1 transition-colors"
+                      className="text-xs px-2.5 py-1 bg-[#F5EFEB] hover:bg-[#EDE5DA] text-[#8A7B9D] rounded-xl font-medium flex items-center gap-1 transition-colors"
                       title="Change entry date"
                     >
-                      <Calendar size={11} />
+                      <Calendar size={12} />
                       <span>{showDatePicker ? "Done" : "Change date"}</span>
                     </button>
                   </div>
@@ -312,43 +313,43 @@ function DiaryWritePage({
                         type="date"
                         value={date}
                         onChange={(e) => setDate(e.target.value)}
-                        className="p-1 px-2 rounded-xl border border-[#D8CFC0] bg-white text-xs font-semibold text-[#5B4B6D]"
+                        className="p-1.5 px-3 rounded-xl border border-[#D8CFC0] bg-white text-xs font-semibold text-[#5B4B6D]"
                       />
                     </div>
                   )}
                 </div>
 
                 {/* Pin & Close */}
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => setIsPinned(!isPinned)}
-                    className={`px-2.5 py-1 rounded-xl text-xs font-semibold flex items-center gap-1 border transition-all ${
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border transition-all ${
                       isPinned
                         ? "bg-amber-100 border-amber-300 text-amber-900 shadow-2xs"
                         : "bg-white/80 border-[#E8E2D8] text-gray-500 hover:bg-white"
                     }`}
                   >
-                    <Pin size={11} className={isPinned ? "fill-amber-600 text-amber-600" : ""} />
+                    <Pin size={12} className={isPinned ? "fill-amber-600 text-amber-600" : ""} />
                     <span>{isPinned ? "Pinned" : "Pin"}</span>
                   </button>
                   <button
                     type="button"
                     onClick={onCancel}
-                    className="p-1 rounded-xl text-gray-400 hover:bg-black/5 hover:text-gray-700"
+                    className="p-1.5 rounded-xl text-gray-400 hover:bg-black/5 hover:text-gray-700"
                     title="Cancel"
                   >
-                    <X size={16} />
+                    <X size={18} />
                   </button>
                 </div>
               </div>
 
               {/* Mood Selector */}
-              <div className="mb-3.5">
-                <div className="text-xs text-[#8A7B9D] mb-1 italic" style={{ fontFamily: "'Patrick Hand', cursive", fontSize: "14px" }}>
+              <div className="mb-4">
+                <div className="text-xs text-[#8A7B9D] mb-1.5 italic" style={{ fontFamily: "'Patrick Hand', cursive", fontSize: "15px" }}>
                   how was today feeling? ~
                 </div>
-                <div className="flex gap-1 flex-wrap mb-1.5">
+                <div className="flex gap-1.5 flex-wrap mb-2">
                   {MOODS.map((m) => {
                     const isSelected = mood?.toLowerCase() === m.value.toLowerCase() || mood?.toLowerCase() === m.label.toLowerCase();
                     return (
@@ -358,84 +359,74 @@ function DiaryWritePage({
                         onClick={() => {
                           if (isSelected) {
                             setMood(null);
-                            setCustomMoodInput("");
                           } else {
                             setMood(m.value);
                             setCustomMoodInput("");
                           }
                         }}
-                        className={`flex items-center gap-1 px-2 py-0.5 rounded-xl border text-[11px] font-semibold transition-all ${
+                        className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 border transition-all ${
                           isSelected
-                            ? "ring-2 ring-[#C9B6E4] shadow-2xs scale-105"
-                            : "bg-white/80 border-[#EADEF0] opacity-80 hover:opacity-100"
+                            ? "border-current shadow-xs scale-105"
+                            : "bg-white/60 border-black/5 hover:bg-white text-gray-600"
                         }`}
-                        style={{ backgroundColor: isSelected ? m.bg : undefined }}
+                        style={isSelected ? { backgroundColor: m.bg, color: m.color, borderColor: m.color } : {}}
                       >
-                        <span className="text-xs leading-none">{m.emoji}</span>
-                        <span style={{ color: isSelected ? m.color : "#5B4B6D" }}>{m.label}</span>
+                        <span>{m.emoji}</span>
+                        <span>{m.label}</span>
                       </button>
                     );
                   })}
                 </div>
+
+                {/* Custom Mood Input */}
                 <input
                   type="text"
+                  placeholder="or type custom mood..."
                   value={customMoodInput}
                   onChange={(e) => {
-                    const val = e.target.value;
-                    setCustomMoodInput(val);
-                    const trimmed = val.trim();
-                    if (!trimmed) {
-                      setMood(null);
-                      return;
-                    }
-                    const normalized = trimmed.toLowerCase().replace(/[\s-]+/g, "_");
-                    const matched = MOODS.find(m => m.value === normalized || m.value === trimmed.toLowerCase() || m.label.toLowerCase() === trimmed.toLowerCase());
-                    setMood(matched ? matched.value : trimmed);
+                    setCustomMoodInput(e.target.value);
+                    setMood(e.target.value.trim() || null);
                   }}
-                  placeholder="or type custom mood..."
-                  className="w-full text-xs p-1.5 px-2.5 rounded-xl border border-[#EADEF0] bg-white/90 text-[#5B4B6D] placeholder:text-[#B3A6C4] focus:outline-none focus:ring-1 focus:ring-[#C9B6E4]"
+                  className="w-full text-xs p-2 rounded-xl border border-[#E8E2D8] bg-white/70 focus:bg-white outline-none focus:border-purple-300 transition-colors"
                 />
               </div>
 
-              {/* Handwriting Diary Textarea */}
+              {/* Lined Writing Surface */}
               <div className="relative">
                 <textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  rows={8}
                   placeholder={placeholderPrompt}
-                  className="w-full p-3 rounded-2xl border border-[#E8E2D8] bg-[#FFFDF9] resize-none focus:ring-2 focus:ring-[#C9B6E4] focus:outline-none shadow-inner"
+                  className="w-full min-h-[380px] p-3 text-xl sm:text-2xl leading-loose bg-transparent border-none outline-none resize-none text-[#4A3B5D]"
                   style={{
                     fontFamily: "'Caveat', cursive, sans-serif",
-                    fontSize: "1.35rem",
-                    lineHeight: "1.8",
-                    color: "#3F324D",
+                    lineHeight: "2.1",
+                    backgroundImage: "repeating-linear-gradient(transparent, transparent 41px, #EFE8DC 42px)",
+                    backgroundAttachment: "local",
                   }}
+                  autoFocus
                 />
               </div>
             </div>
 
-            {/* Action Footer */}
-            <div className="pt-4 border-t border-[#EFE8DC] flex items-center justify-between mt-3">
+            {/* Right Page Footer Actions */}
+            <div className="pt-3 border-t border-[#EFE8DC] flex items-center justify-between mt-4">
               <button
                 type="button"
                 onClick={onCancel}
-                className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-gray-500 hover:bg-[#F3EDE3] transition-colors"
+                className="text-xs text-[#8A7B9D] hover:text-[#5B4B6D] font-bold"
               >
                 Turn back
               </button>
-
               <button
                 type="button"
                 onClick={handleSave}
                 disabled={saving || !content.trim()}
-                className="px-5 py-2 rounded-2xl text-xs font-bold text-white shadow-md transition-all flex items-center gap-1.5 hover:opacity-95 disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{
-                  background: saving ? "#C9B6E4AA" : "linear-gradient(135deg, #C9B6E4 0%, #B8A3D8 100%)",
-                  fontFamily: "Fredoka, sans-serif",
-                }}
+                className="px-6 py-2.5 rounded-2xl text-xs font-bold text-white shadow-md hover:opacity-95 disabled:opacity-50 transition-all flex items-center gap-1.5"
+                style={{ background: "#C9B6E4", fontFamily: "Fredoka, sans-serif" }}
               >
-                {saving ? "Saving..." : initial?.id ? "Update Page ✨" : "Save in Diary 🌸"}
+                <Check size={14} />
+                <span>{saving ? "Saving..." : "Keep this Memory"}</span>
               </button>
             </div>
           </div>
@@ -504,17 +495,17 @@ function DiaryReadPage({
   }
 
   return (
-    <div className="max-w-5xl mx-auto my-2">
+    <div className="w-full max-w-6xl mx-auto my-2">
       {/* Hardcover Open Book Frame */}
-      <div className="relative bg-[#F4EFE6] rounded-3xl p-3 sm:p-5 border-2 border-[#E5DAC8] shadow-2xl overflow-hidden">
+      <div className="relative bg-[#F4EFE6] rounded-[32px] p-4 sm:p-7 md:p-8 border-2 border-[#E5DAC8] shadow-2xl overflow-hidden">
         {/* Top Bookmark Ribbon */}
-        <div className="absolute top-0 right-16 w-5 h-12 bg-pink-400/90 rounded-b-md shadow-md z-20 flex items-center justify-center">
-          <span className="text-[10px] text-white font-bold">♥</span>
+        <div className="absolute top-0 right-16 sm:right-24 w-6 h-14 bg-pink-400/90 rounded-b-md shadow-md z-20 flex items-center justify-center">
+          <span className="text-xs text-white font-bold">♥</span>
         </div>
 
         {/* 2-Page Spread Container with CSS 3D Page Turn Animation */}
         <div
-          className={`grid grid-cols-1 md:grid-cols-2 rounded-2xl bg-[#FFFDF9] border border-[#E8DFD1] shadow-inner overflow-hidden relative transition-all duration-300 ${
+          className={`grid grid-cols-1 md:grid-cols-2 rounded-2xl bg-[#FFFDF9] border border-[#E8DFD1] shadow-inner overflow-hidden relative min-h-[580px] md:min-h-[640px] transition-all duration-300 ${
             flipDirection === "next"
               ? "opacity-60 translate-x-1 rotate-[-0.3deg] scale-[0.99]"
               : flipDirection === "prev"
@@ -523,36 +514,36 @@ function DiaryReadPage({
           }`}
         >
           {/* Center Spine Shadow Overlay */}
-          <div className="hidden md:block absolute inset-y-0 left-1/2 -translate-x-1/2 w-8 pointer-events-none z-10 bg-gradient-to-r from-black/[0.06] via-black/[0.01] to-black/[0.06]" />
+          <div className="hidden md:block absolute inset-y-0 left-1/2 -translate-x-1/2 w-10 pointer-events-none z-10 bg-gradient-to-r from-black/[0.07] via-black/[0.01] to-black/[0.07]" />
 
           {/* ── LEFT PAGE: Photos & Polaroids ── */}
-          <div className="p-6 sm:p-7 border-b md:border-b-0 md:border-r border-[#EFE8DC] flex flex-col justify-between bg-gradient-to-br from-[#FFFDF9] to-[#FAF5EC]/70 min-h-[380px]">
+          <div className="p-6 sm:p-8 md:p-10 border-b md:border-b-0 md:border-r border-[#EFE8DC] flex flex-col justify-between bg-gradient-to-br from-[#FFFDF9] to-[#FAF5EC]/70">
             <div>
-              <div className="flex items-center justify-between border-b border-[#EFE8DC] pb-3 mb-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">📷</span>
-                  <h4 className="font-bold text-[#5B4B6D]" style={{ fontFamily: "Fredoka, sans-serif" }}>
+              <div className="flex items-center justify-between border-b border-[#EFE8DC] pb-3 mb-5">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-xl">📷</span>
+                  <h4 className="font-bold text-base sm:text-lg text-[#5B4B6D]" style={{ fontFamily: "Fredoka, sans-serif" }}>
                     Polaroids & Prints
                   </h4>
                 </div>
-                <span className="text-xs text-[#9B8BAD] italic" style={{ fontFamily: "'Patrick Hand', cursive", fontSize: "14px" }}>
+                <span className="text-sm text-[#9B8BAD] italic" style={{ fontFamily: "'Patrick Hand', cursive", fontSize: "16px" }}>
                   captured moments ~
                 </span>
               </div>
 
               {currentPhotos.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                   {currentPhotos.map((photo, i) => (
                     <div
                       key={photo.id}
-                      className={`bg-white p-2 pb-3 rounded-2xl shadow-md border border-[#E8E2D8] transition-transform duration-200 hover:scale-105 hover:rotate-0 ${
+                      className={`bg-white p-2.5 pb-4 rounded-2xl shadow-md border border-[#E8E2D8] transition-transform duration-200 hover:scale-105 hover:rotate-0 ${
                         i % 2 === 0 ? "rotate-[-1.5deg]" : "rotate-[1.5deg]"
                       }`}
                     >
                       <img
                         src={photo.image_url}
                         alt=""
-                        className="w-full h-36 object-cover rounded-xl"
+                        className="w-full h-36 sm:h-44 object-cover rounded-xl"
                       />
                       {photo.original_drive_url && (
                         <div className="mt-1.5 flex justify-end">
@@ -572,15 +563,15 @@ function DiaryReadPage({
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center p-8 text-center text-[#9B8BAD] my-auto">
-                  <div className="w-14 h-14 rounded-2xl bg-purple-50/80 flex items-center justify-center text-2xl mb-2">
+                  <div className="w-16 h-16 rounded-2xl bg-purple-50/80 flex items-center justify-center text-3xl mb-2">
                     🌸
                   </div>
-                  <p className="text-sm italic" style={{ fontFamily: "'Patrick Hand', cursive", fontSize: "16px" }}>
+                  <p className="text-base italic" style={{ fontFamily: "'Patrick Hand', cursive", fontSize: "17px" }}>
                     no polaroids tucked on this page yet ~
                   </p>
                   <button
                     onClick={() => onEdit(currentEntry)}
-                    className="mt-3 text-xs px-3 py-1.5 rounded-xl bg-white border border-[#E8DFD1] text-[#5B4B6D] hover:bg-purple-50 font-bold transition-colors"
+                    className="mt-4 text-xs px-4 py-2 rounded-xl bg-white border border-[#E8DFD1] text-[#5B4B6D] hover:bg-purple-50 font-bold transition-colors shadow-xs"
                   >
                     + Tuck in photo
                   </button>
@@ -590,25 +581,25 @@ function DiaryReadPage({
 
             {/* Left Page Footer */}
             <div className="pt-3 border-t border-[#EFE8DC] text-center">
-              <span className="text-xs text-[#A89CB5] italic" style={{ fontFamily: "'Patrick Hand', cursive", fontSize: "14px" }}>
+              <span className="text-xs text-[#A89CB5] italic" style={{ fontFamily: "'Patrick Hand', cursive", fontSize: "15px" }}>
                 Left Page · Keepsakes
               </span>
             </div>
           </div>
 
           {/* ── RIGHT PAGE: Written Entry Content ── */}
-          <div className="p-6 sm:p-7 flex flex-col justify-between bg-[#FFFDF9] min-h-[380px]">
+          <div className="p-6 sm:p-8 md:p-10 flex flex-col justify-between bg-[#FFFDF9]">
             <div>
               {/* Header with Date, Mood, Pin, Actions */}
               <div className="flex items-start justify-between border-b border-[#EFE8DC] pb-3 mb-4">
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-lg font-bold text-[#5B4B6D]" style={{ fontFamily: "Fredoka, sans-serif" }}>
+                    <span className="text-xl font-bold text-[#5B4B6D]" style={{ fontFamily: "Fredoka, sans-serif" }}>
                       {niceDate(currentEntry.entry_date)}
                     </span>
                     {moodInfo && (
                       <span
-                        className="px-2.5 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1 shadow-2xs"
+                        className="px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-2xs"
                         style={{ backgroundColor: moodInfo.bg, color: moodInfo.color }}
                       >
                         <span>{moodInfo.emoji}</span>
@@ -616,12 +607,12 @@ function DiaryReadPage({
                       </span>
                     )}
                     {currentEntry.is_pinned && (
-                      <span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full text-xs font-bold flex items-center gap-1">
+                      <span className="px-2.5 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-bold flex items-center gap-1">
                         <Pin size={11} className="fill-amber-600" /> Pinned
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-[#9B8BAD] mt-0.5">
+                  <p className="text-xs text-[#9B8BAD] mt-1">
                     Page {safeIndex + 1} of {entries.length}
                   </p>
                 </div>
@@ -630,25 +621,25 @@ function DiaryReadPage({
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => onEdit(currentEntry)}
-                    className="p-1.5 rounded-xl text-gray-500 hover:bg-black/5 hover:text-[#5B4B6D] transition-colors"
+                    className="p-2 rounded-xl text-gray-500 hover:bg-black/5 hover:text-[#5B4B6D] transition-colors"
                     title="Edit this entry"
                   >
-                    <Pencil size={15} />
+                    <Pencil size={16} />
                   </button>
                   <button
                     onClick={() => onDelete(currentEntry.id)}
-                    className="p-1.5 rounded-xl text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                    className="p-2 rounded-xl text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
                     title="Delete this entry"
                   >
-                    <Trash2 size={15} />
+                    <Trash2 size={16} />
                   </button>
                 </div>
               </div>
 
               {/* Diary Entry Content (With Handwriting Font) */}
               <div
-                className="text-[#3F324D] text-[1.4rem] leading-relaxed whitespace-pre-wrap min-h-[200px]"
-                style={{ fontFamily: "'Caveat', cursive, sans-serif", lineHeight: "1.9" }}
+                className="text-[#3F324D] text-[1.5rem] sm:text-[1.65rem] leading-loose whitespace-pre-wrap min-h-[320px] pt-1"
+                style={{ fontFamily: "'Caveat', cursive, sans-serif", lineHeight: "2.1" }}
               >
                 {currentEntry.content}
               </div>
@@ -758,16 +749,17 @@ function MemoryWallCalendar({
   entries,
   photosByEntry,
   onOpenEntry,
-  calBg = null,
+  isCustomVisual = false,
 }: {
   entries: JournalEntry[];
   photosByEntry: Record<string, JournalPhoto[]>;
   onOpenEntry: (entry: JournalEntry | null, date: string) => void;
-  calBg?: string | null;
+  isCustomVisual?: boolean;
 }) {
   const [cursor, setCursor] = useState(new Date());
   const year = cursor.getFullYear(), month = cursor.getMonth();
   const cells = monthGrid(year, month);
+  const calBg = isCustomVisual ? getCalendarMonthImage(month) : null;
 
   const entryByDate = useMemo(() => {
     const map: Record<string, JournalEntry> = {};
@@ -1435,14 +1427,14 @@ export default function JournalView({
 
       {/* Sub-Views */}
       {activeSubTab === "diary" && (
-        <div className="relative">
+        <div className="relative p-2 sm:p-5 md:p-8 rounded-[36px] overflow-hidden transition-all">
           {/* Decorative Diary Background */}
           {diaryBg && (
             <div
-              className="absolute inset-0 pointer-events-none z-0 bg-cover bg-center rounded-3xl transition-opacity duration-700"
+              className="absolute inset-0 pointer-events-none z-0 bg-cover bg-center rounded-[36px] transition-opacity duration-700 shadow-inner"
               style={{
                 backgroundImage: `url(${diaryBg})`,
-                opacity: 0.24,
+                opacity: 0.50,
               }}
             />
           )}
@@ -1476,7 +1468,7 @@ export default function JournalView({
         <MemoryWallCalendar
           entries={entries}
           photosByEntry={photosByEntry}
-          calBg={calBg}
+          isCustomVisual={isCustom && visualSettings.calendar}
           onOpenEntry={(entry, date) => {
             if (entry) {
               openReadMode(entry);

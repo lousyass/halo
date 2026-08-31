@@ -15,6 +15,7 @@ import { SUPPORT_CONTACT } from "./lib/contact";
 import { SyllabusView } from "./SyllabusView";
 import {
   getDecorativeImage,
+  getCalendarMonthImage,
   DEFAULT_VISUAL_SETTINGS,
   VisualCustomizationSettings,
 } from "./lib/decorativeImages";
@@ -843,60 +844,60 @@ function RoutineView({
   }, [routineEntries]);
 
   return (
-    <div className="relative overflow-hidden rounded-3xl p-1">
-      {/* Decorative Routine Background */}
-      {routineBg && (
-        <div
-          className="absolute inset-0 pointer-events-none z-0 bg-cover bg-center rounded-3xl transition-opacity duration-500"
-          style={{
-            backgroundImage: `url(${routineBg})`,
-            opacity: 0.44,
-          }}
-        />
-      )}
-
-      <div className="relative z-10">
-        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-          <div>
-            <h2 className="text-xl font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>
-              Your weekly routine 🗓️
-            </h2>
-            <p className="text-xs opacity-60">Your recurring 7 day weekly schedule</p>
-          </div>
-          <button
-            onClick={() => { setEditingEntry(null); setFormOpen(true); }}
-            className="px-4 py-2.5 rounded-2xl text-white font-semibold flex items-center gap-1.5 shadow-sm hover:opacity-95 transition-all text-sm"
-            style={{ background: "#A8D5BA", fontFamily: "Fredoka, sans-serif" }}
-          >
-            <Plus size={16} /> Add a class
-          </button>
+    <div>
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+        <div>
+          <h2 className="text-xl font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>
+            Your weekly routine 🗓️
+          </h2>
+          <p className="text-xs opacity-60">Your recurring 7 day weekly schedule</p>
         </div>
+        <button
+          onClick={() => { setEditingEntry(null); setFormOpen(true); }}
+          className="px-4 py-2.5 rounded-2xl text-white font-semibold flex items-center gap-1.5 shadow-sm hover:opacity-95 transition-all text-sm"
+          style={{ background: "#A8D5BA", fontFamily: "Fredoka, sans-serif" }}
+        >
+          <Plus size={16} /> Add a class
+        </button>
+      </div>
 
-        {/* 7-Day Timetable Grid */}
-        <div className="overflow-x-auto pb-4">
-          <div className="grid grid-cols-7 gap-2.5 min-w-[820px]">
-            {DAY_NAMES.map((dayName, dow) => {
-              const entries = [...(grouped[dow] || [])].sort((a, b) => a.start_time.localeCompare(b.start_time));
-              const shortName = dayName.slice(0, 3);
-              const isWeekend = dow === 0 || dow === 6;
+      {/* 7-Day Timetable Grid */}
+      <div className="overflow-x-auto pb-4">
+        <div className="grid grid-cols-7 gap-2.5 min-w-[820px]">
+          {DAY_NAMES.map((dayName, dow) => {
+            const entries = [...(grouped[dow] || [])].sort((a, b) => a.start_time.localeCompare(b.start_time));
+            const shortName = dayName.slice(0, 3);
+            const isWeekend = dow === 0 || dow === 6;
 
-              return (
-                <div
-                  key={dow}
-                  className={`flex flex-col rounded-3xl p-3 border transition-all ${
-                    isWeekend ? "bg-purple-50/70 border-purple-200/80" : "bg-white/85 border-black/5"
-                  } backdrop-blur-xs shadow-xs min-h-[420px]`}
-                >
+            return (
+              <div
+                key={dow}
+                className={`relative overflow-hidden flex flex-col rounded-3xl p-3 border transition-all ${
+                  isWeekend ? "bg-purple-50/75 border-purple-200/80" : "bg-white/90 border-black/5"
+                } shadow-xs min-h-[440px]`}
+              >
+                {/* Decorative Day Column Background */}
+                {routineBg && (
+                  <div
+                    className="absolute inset-0 pointer-events-none z-0 bg-cover bg-center transition-opacity duration-500"
+                    style={{
+                      backgroundImage: `url(${routineBg})`,
+                      opacity: 0.44,
+                    }}
+                  />
+                )}
+
+                <div className="relative z-10 flex flex-col h-full">
                   {/* Column Header */}
-                <div className="flex items-center justify-between border-b border-black/5 pb-2 mb-2.5">
-                  <div>
-                    <span className="font-bold text-sm text-[#5B4B6D]" style={{ fontFamily: "Fredoka, sans-serif" }}>
-                      {shortName}
-                    </span>
-                    <span className="text-[10px] opacity-50 block font-medium">
-                      {entries.length === 0 ? "Free" : `${entries.length} ${entries.length === 1 ? "class" : "classes"}`}
-                    </span>
-                  </div>
+                  <div className="flex items-center justify-between border-b border-black/5 pb-2 mb-2.5">
+                    <div>
+                      <span className="font-bold text-sm text-[#5B4B6D]" style={{ fontFamily: "Fredoka, sans-serif" }}>
+                        {shortName}
+                      </span>
+                      <span className="text-[10px] opacity-60 block font-medium">
+                        {entries.length === 0 ? "Free" : `${entries.length} ${entries.length === 1 ? "class" : "classes"}`}
+                      </span>
+                    </div>
                   <button
                     onClick={() => {
                       setEditingEntry({
@@ -978,6 +979,7 @@ function RoutineView({
                     ))
                   )}
                 </div>
+                </div>
               </div>
             );
           })}
@@ -995,7 +997,6 @@ function RoutineView({
           onClose={() => { setFormOpen(false); setEditingEntry(null); }}
         />
       )}
-      </div>
     </div>
   );
 }
@@ -1277,7 +1278,7 @@ function CalendarView({
   onToggle,
   onDelete,
   onEdit,
-  calBg = null,
+  isCustomVisual = false,
 }: {
   tasks: FrontendTask[];
   subjects: Subject[];
@@ -1286,7 +1287,7 @@ function CalendarView({
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
   onEdit: (t: FrontendTask) => void;
-  calBg?: string | null;
+  isCustomVisual?: boolean;
 }) {
   const [cursor, setCursor] = useState(new Date());
   const [selected, setSelected] = useState<string | null>(null);
@@ -1294,6 +1295,7 @@ function CalendarView({
   const year = cursor.getFullYear(), month = cursor.getMonth();
   const cells = monthGrid(year, month);
   const subjById = Object.fromEntries(subjects.map((s) => [s.id, s]));
+  const calBg = isCustomVisual ? getCalendarMonthImage(month) : null;
 
   const tasksByDate = useMemo(() => {
     const map: Record<string, FrontendTask[]> = {};
@@ -2094,7 +2096,7 @@ export default function StudyDen({ session }: { session: Session }) {
                       onToggle={toggleTask}
                       onDelete={deleteTask}
                       onEdit={(t) => { setEditingTask(t); setFormOpen(true); }}
-                      calBg={calendarBg}
+                      isCustomVisual={isCustomMode && visualSettings.calendar}
                     />
                   </Sticker>
                 </div>
