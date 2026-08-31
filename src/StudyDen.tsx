@@ -132,7 +132,7 @@ const THEMES = {
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const TYPE_ICON: Record<string, string> = { assignment: "📝", exam: "📖" };
-const CREATURES = ["🦌", "🐉", "🐱", "🦋", "🌸"];
+const CREATURES = ["🪽", "🦌", "🐉", "🐱", "🦋"];
 
 const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 
@@ -1833,7 +1833,7 @@ export default function StudyDen({ session }: { session: Session }) {
             className="absolute inset-0 rounded-full bg-purple-300/40 blur-md"
           />
           <div className="relative text-5xl select-none">
-            {CREATURES[new Date().getDate() % CREATURES.length] || "🌸"}
+            {CREATURES[new Date().getDate() % CREATURES.length] || "🪽"}
           </div>
         </motion.div>
         <div className="flex items-center gap-2">

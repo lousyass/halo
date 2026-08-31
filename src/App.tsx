@@ -37,7 +37,7 @@ export default function App() {
           }
         `}</style>
         <div style={{ animation: 'pulseLanding 2.4s ease-in-out infinite, shimmerGlow 2.4s ease-in-out infinite', fontSize: '2.5rem', marginBottom: '1rem' }}>
-          ✨ 🌸 ✨
+          ✨ 🪽 ✨
         </div>
         <p style={{ color: '#5B4B6D', fontSize: '1.15rem', fontWeight: 600, letterSpacing: '0.02em', fontFamily: 'Fredoka, sans-serif' }}>
           Landing to earth
@@ -95,7 +95,7 @@ function LoginScreen() {
         width: '100%',
       }}>
         <h1 style={{ fontFamily: 'Fredoka, sans-serif', color: '#5B4B6D', fontSize: '2.2rem', marginBottom: '0.25rem' }}>
-          Halo 🌸
+          Halo 🪽
         </h1>
         <p style={{ color: '#9B8BAD', fontSize: '0.95rem', marginBottom: '2rem' }}>Hope you will like it</p>
         <button
