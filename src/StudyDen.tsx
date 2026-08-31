@@ -17,6 +17,7 @@ import {
   getDecorativeImage,
   getCalendarMonthImage,
   preloadCalendarAround,
+  resetSessionCalendar,
   DEFAULT_VISUAL_SETTINGS,
   VisualCustomizationSettings,
 } from "./lib/decorativeImages";
@@ -2253,7 +2254,10 @@ export default function StudyDen({ session }: { session: Session }) {
                 visualSettings={visualSettings}
                 onUpdateVisualSettings={updateVisualSettings}
                 onSave={saveProfile}
-                onSignOut={() => supabase.auth.signOut()}
+                onSignOut={() => {
+                  resetSessionCalendar();
+                  supabase.auth.signOut();
+                }}
               />
             </div>
           )}

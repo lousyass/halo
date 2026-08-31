@@ -115,15 +115,11 @@ function pickRandom(arr: string[]): string | null {
 }
 
 /**
- * Exactly 12 unique, deterministically-ordered calendar images.
+ * Full deduplicated pool of all available calendar images in src/assets/decorative/calendar.
  * Deduplicates files sharing the same base name (e.g. '1 (1).jpeg' vs '1 (1).jpg')
- * and sorts using numeric natural key comparison:
- * Month 1 (Jan, index 0) -> "1 (1)"
- * Month 2 (Feb, index 1) -> "1 (2)"
- * ...
- * Month 12 (Dec, index 11) -> "1 (12)"
+ * and naturally sorts them so every unique asset is cataloged.
  */
-export const CALENDAR_12_MONTHS: string[] = (() => {
+export const CALENDAR_POOL: string[] = (() => {
   const calendarEntries = Object.entries(rawImages)
     .filter(([path, url]) => {
       if (typeof url !== "string" || path.endsWith(".gitkeep")) return false;
@@ -146,8 +142,34 @@ export const CALENDAR_12_MONTHS: string[] = (() => {
     }
   }
 
-  return uniqueUrls.slice(0, 12);
+  return uniqueUrls;
 })();
+
+// Session-scoped 12 distinct picks (chosen once per session/login via Fisher-Yates)
+let sessionCalendar12: string[] | null = null;
+
+export function getSessionCalendar12(): string[] {
+  if (sessionCalendar12) return sessionCalendar12;
+
+  const pool = [...CALENDAR_POOL];
+  if (pool.length === 0) return [];
+
+  // Fisher-Yates shuffle on the full deduplicated pool
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+
+  sessionCalendar12 = pool.slice(0, Math.min(12, pool.length));
+  return sessionCalendar12;
+}
+
+/**
+ * Resets the session calendar picks (e.g. on logout/new session)
+ */
+export function resetSessionCalendar(): void {
+  sessionCalendar12 = null;
+}
 
 /**
  * Phased preloading strategy:
@@ -156,10 +178,12 @@ export const CALENDAR_12_MONTHS: string[] = (() => {
  * Tier 3: Remaining pool of 12 months (deferred idle background queue)
  */
 export function preloadCalendarAround(monthIndex: number) {
-  if (typeof window === "undefined" || CALENDAR_12_MONTHS.length === 0) return;
+  if (typeof window === "undefined") return;
+  const list = getSessionCalendar12();
+  if (list.length === 0) return;
 
   const currentIdx = ((monthIndex % 12) + 12) % 12;
-  const currentImg = CALENDAR_12_MONTHS[currentIdx];
+  const currentImg = list[currentIdx];
 
   // Tier 1: Load current month immediately
   preloadImage(currentImg);
@@ -168,8 +192,8 @@ export function preloadCalendarAround(monthIndex: number) {
   setTimeout(() => {
     const prevIdx = (currentIdx + 11) % 12;
     const nextIdx = (currentIdx + 1) % 12;
-    preloadImage(CALENDAR_12_MONTHS[prevIdx]);
-    preloadImage(CALENDAR_12_MONTHS[nextIdx]);
+    preloadImage(list[prevIdx]);
+    preloadImage(list[nextIdx]);
 
     // Tier 3: Preload the rest during browser idle time
     const scheduleIdle =
@@ -178,17 +202,17 @@ export function preloadCalendarAround(monthIndex: number) {
         : (cb: () => void) => setTimeout(cb, 1000);
 
     scheduleIdle(() => {
-      CALENDAR_12_MONTHS.forEach((src) => preloadImage(src));
+      list.forEach((src) => preloadImage(src));
     });
   }, 50);
 }
 
 /**
- * Returns the deterministic calendar image for a given month index (0 = January, 11 = December).
- * 100% stable, synchronous, O(1), no random reassignment, no race conditions.
+ * Returns the session-stable random calendar image for a given month index (0 = January, 11 = December).
+ * Fresh random 12 unique images chosen per login/session, 100% stable during the session.
  */
 export function getCalendarMonthImage(monthIndex: number): string | null {
-  const list = CALENDAR_12_MONTHS.length > 0 ? CALENDAR_12_MONTHS : POOLS.calendar;
+  const list = getSessionCalendar12();
   if (!list || list.length === 0) return null;
   const idx = ((monthIndex % list.length) + list.length) % list.length;
   return list[idx] || null;
