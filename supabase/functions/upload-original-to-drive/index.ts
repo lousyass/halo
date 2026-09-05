@@ -4,119 +4,33 @@ import { corsHeaders } from "../_shared/cors.ts";
 /**
  * upload-original-to-drive
  *
- * Receives the original (uncompressed) image bytes from the frontend,
- * uploads them to Aurittro's Google Drive folder, sets the file to
- * "anyone with the link can view", and returns the shareable link.
+ * Receives the original (uncompressed) image from the frontend, converts it to
+ * base64, and relays it to the Google Apps Script Web App.
  *
- * This is best-effort — the frontend still saves the compressed copy
- * in Supabase Storage regardless of whether this succeeds.
+ * The Apps Script uses DriveApp.createFile() to save the image directly into the
+ * "Halo Journal Originals" folder under the user's Google account, sets link-sharing
+ * to viewable, and returns the shareable URL.
+ *
+ * This replaces the direct OAuth refresh token relay, eliminating the 7-day token
+ * expiry for Google Cloud apps in "Testing" publishing status.
  *
  * Expected request: multipart/form-data
  *   - file: the original image file
- *   - filename: suggested filename (e.g. "photo.jpg")
- *   - entry_date: ISO date string (used to name the file in Drive)
+ *   - entry_date: ISO date string (used for file naming)
  *
  * Returns: { drive_url: string } or { error: string }
  */
 
-const DRIVE_TOKEN_URL = "https://oauth2.googleapis.com/token";
-const DRIVE_UPLOAD_URL =
-  "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart";
-const DRIVE_FILES_URL = "https://www.googleapis.com/drive/v3/files";
-
-async function getAccessToken(): Promise<string> {
-  const clientId = Deno.env.get("GOOGLE_DRIVE_CLIENT_ID")!;
-  const clientSecret = Deno.env.get("GOOGLE_DRIVE_CLIENT_SECRET")!;
-  const refreshToken = Deno.env.get("GOOGLE_DRIVE_REFRESH_TOKEN")!;
-
-  const res = await fetch(DRIVE_TOKEN_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      client_id: clientId,
-      client_secret: clientSecret,
-      refresh_token: refreshToken,
-      grant_type: "refresh_token",
-    }),
-  });
-
-  if (!res.ok) {
-    throw new Error(`Token refresh failed: ${res.status} ${await res.text()}`);
+// Chunked Uint8Array to base64 conversion to prevent stack overflow on large files
+function uint8ArrayToBase64(bytes: Uint8Array): string {
+  let binary = "";
+  const len = bytes.byteLength;
+  const chunkSize = 8192;
+  for (let i = 0; i < len; i += chunkSize) {
+    const chunk = bytes.subarray(i, Math.min(i + chunkSize, len));
+    binary += String.fromCharCode(...chunk);
   }
-
-  const data = await res.json();
-  return data.access_token as string;
-}
-
-async function uploadToDrive(
-  accessToken: string,
-  fileBytes: Uint8Array,
-  filename: string,
-  mimeType: string,
-  folderId: string
-): Promise<string> {
-  // Build multipart body (metadata + file bytes)
-  const metadata = JSON.stringify({
-    name: filename,
-    parents: [folderId],
-  });
-
-  const boundary = "boundary_" + crypto.randomUUID().replace(/-/g, "");
-  const metaPart =
-    `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadata}\r\n`;
-  const filePart = `--${boundary}\r\nContent-Type: ${mimeType}\r\n\r\n`;
-  const closePart = `\r\n--${boundary}--`;
-
-  const encoder = new TextEncoder();
-  const body = new Uint8Array([
-    ...encoder.encode(metaPart),
-    ...encoder.encode(filePart),
-    ...fileBytes,
-    ...encoder.encode(closePart),
-  ]);
-
-  const uploadRes = await fetch(DRIVE_UPLOAD_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": `multipart/related; boundary=${boundary}`,
-      "Content-Length": String(body.length),
-    },
-    body,
-  });
-
-  if (!uploadRes.ok) {
-    throw new Error(
-      `Drive upload failed: ${uploadRes.status} ${await uploadRes.text()}`
-    );
-  }
-
-  const uploaded = await uploadRes.json();
-  const fileId = uploaded.id as string;
-
-  // Set permission: anyone with the link can view
-  const permRes = await fetch(`${DRIVE_FILES_URL}/${fileId}/permissions`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ role: "reader", type: "anyone" }),
-  });
-
-  if (!permRes.ok) {
-    throw new Error(
-      `Permission set failed: ${permRes.status} ${await permRes.text()}`
-    );
-  }
-
-  // Return the shareable webViewLink
-  const metaRes = await fetch(
-    `${DRIVE_FILES_URL}/${fileId}?fields=webViewLink`,
-    { headers: { Authorization: `Bearer ${accessToken}` } }
-  );
-  const meta = await metaRes.json();
-  return meta.webViewLink as string;
+  return btoa(binary);
 }
 
 Deno.serve(async (req) => {
@@ -135,18 +49,28 @@ Deno.serve(async (req) => {
       });
     }
 
-    const rawFolderId = Deno.env.get("GOOGLE_DRIVE_FOLDER_ID")?.trim();
-    if (!rawFolderId) {
+    const webhookUrl =
+      Deno.env.get("APPS_SCRIPT_DRIVE_WEBHOOK_URL") ||
+      Deno.env.get("APPS_SCRIPT_WEBHOOK_URL");
+    const sharedSecret = Deno.env.get("APPS_SCRIPT_SHARED_SECRET");
+
+    if (!webhookUrl || !sharedSecret) {
       return new Response(
-        JSON.stringify({ error: "GOOGLE_DRIVE_FOLDER_ID not configured" }),
+        JSON.stringify({
+          error:
+            "Missing APPS_SCRIPT_WEBHOOK_URL (or APPS_SCRIPT_DRIVE_WEBHOOK_URL) or APPS_SCRIPT_SHARED_SECRET in secrets",
+        }),
         {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
     }
-    // Extract pure folder ID if a full Google Drive URL was entered in secrets
-    const folderId = rawFolderId.match(/([a-zA-Z0-9_-]{25,})/)?.[1] || rawFolderId;
+
+    // Optional folder ID if set in secrets, otherwise Apps Script will use "Halo Journal Originals"
+    const rawFolderId = Deno.env.get("GOOGLE_DRIVE_FOLDER_ID")?.trim();
+    const folderId =
+      rawFolderId?.match(/([a-zA-Z0-9_-]{25,})/)?.[1] || rawFolderId;
 
     // Parse multipart form data
     const formData = await req.formData();
@@ -160,25 +84,41 @@ Deno.serve(async (req) => {
       });
     }
 
-    const filename = `halo-journal-${entryDate}-${Date.now()}.${
-      file.name.split(".").pop() || "jpg"
-    }`;
+    const ext = file.name.split(".").pop() || "jpg";
+    const filename = `halo-journal-${entryDate}-${Date.now()}.${ext}`;
     const mimeType = file.type || "image/jpeg";
-    const bytes = new Uint8Array(await file.arrayBuffer());
+    const arrayBuffer = await file.arrayBuffer();
+    const bytes = new Uint8Array(arrayBuffer);
+    const fileBase64 = uint8ArrayToBase64(bytes);
 
-    // Get a short-lived access token via refresh token
-    const accessToken = await getAccessToken();
+    // Call Google Apps Script Web App
+    const appsScriptRes = await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "uploadDrive",
+        secret: sharedSecret,
+        fileBase64,
+        filename,
+        mimeType,
+        folderName: "Halo Journal Originals",
+        folderId: folderId || undefined,
+      }),
+    });
 
-    // Upload and share
-    const driveUrl = await uploadToDrive(
-      accessToken,
-      bytes,
-      filename,
-      mimeType,
-      folderId
-    );
+    if (!appsScriptRes.ok) {
+      const text = await appsScriptRes.text();
+      throw new Error(
+        `Apps Script returned HTTP ${appsScriptRes.status}: ${text}`
+      );
+    }
 
-    return new Response(JSON.stringify({ drive_url: driveUrl }), {
+    const result = await appsScriptRes.json();
+    if (!result.success || !result.drive_url) {
+      throw new Error(result.error || "Apps Script Drive upload failed");
+    }
+
+    return new Response(JSON.stringify({ drive_url: result.drive_url }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

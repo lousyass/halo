@@ -69,7 +69,7 @@ npm run dev
 The following are configured via `supabase secrets set` (never committed):
 
 - `CRON_SECRET` — shared with cron-job.org
-- `APPS_SCRIPT_WEBHOOK_URL` — Apps Script deployment URL
+- `APPS_SCRIPT_WEBHOOK_URL` — Apps Script Web App deployment URL (relays both email reminders and journal photo uploads to Google Drive, see `docs/apps-script-setup.md`)
 - `APPS_SCRIPT_SHARED_SECRET` — must match the Apps Script `SHARED_SECRET` property
 
 ### 6. cron-job.org
