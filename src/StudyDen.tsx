@@ -1875,7 +1875,7 @@ export default function StudyDen({ session }: { session: Session }) {
           className="fixed inset-0 pointer-events-none z-0 bg-cover bg-center transition-opacity duration-700"
           style={{
             backgroundImage: `url("${bgWallpaper}")`,
-            opacity: 0.50,
+            opacity: theme === "lilac" ? 0.85 : 0.50,
           }}
         />
       )}
