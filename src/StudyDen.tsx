@@ -125,7 +125,7 @@ const THEMES = {
   bloom:      { label: "Blush Bloom",        css: "linear-gradient(135deg, #FDF2F6 0%, #F7E4EE 50%, #EFE2F7 100%)" },
   meadow:     { label: "Mint Meadow",        css: "linear-gradient(135deg, #F3FAF5 0%, #E3F3E8 50%, #DDEFE9 100%)" },
   dusk:       { label: "Golden Dusk",        css: "linear-gradient(135deg, #FFF6E9 0%, #FBE7D4 50%, #F3D9E6 100%)" },
-  lilac:      { label: "Lilac Dream",        css: "linear-gradient(135deg, #1a0f2e 0%, #150a26 50%, #10061d 100%)" },
+  lilac:      { label: "Lilac Dream",        css: "linear-gradient(135deg, #42005e 0%, #2b003e 50%, #180026 100%)" },
   babyblue:   { label: "Baby Blue",          css: "linear-gradient(135deg, #F0F7FD 0%, #E1EFFB 50%, #D4E6F8 100%)" },
   monochrome: { label: "Monochrome Minimal", css: "linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 50%, #E5E7EB 100%)" },
 };
@@ -319,13 +319,13 @@ const THEME_TIMER_STYLES: Record<string, {
     badgeBg: "bg-amber-600 text-white",
   },
   lilac: {
-    bg: "bg-[#22123b]/90 hover:bg-[#2d184d]/90",
-    border: "border-[#6b2fa0]/50",
-    text: "text-[#f3e8ff]",
-    subText: "text-[#c4b5fd] font-semibold",
-    icon: "text-[#c4b5fd]",
-    colon: "text-[#c4b5fd]/60",
-    badgeBg: "bg-[#6b2fa0] text-[#f3e8ff]",
+    bg: "bg-[#380550]/90 hover:bg-[#4a0868]/90",
+    border: "border-[#9614d0]/60",
+    text: "text-[#fbf5ff]",
+    subText: "text-[#d16aff] font-semibold",
+    icon: "text-[#d16aff]",
+    colon: "text-[#bb44f0]/70",
+    badgeBg: "bg-[#9614d0] text-white",
   },
   babyblue: {
     bg: "bg-sky-50/90 hover:bg-sky-100/80",
@@ -492,7 +492,7 @@ function TaskCard({
     <div
       className={`rounded-2xl p-3.5 mb-2.5 border transition-all hover:shadow-md backdrop-blur-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3 ${
         theme === "lilac"
-          ? "bg-[#25133c]/90 border-[#3d1d66]/70 shadow-purple-950/20"
+          ? "bg-[#380550]/90 border-[#9614d0]/40 shadow-lg shadow-[#660094]/20"
           : "bg-white/85"
       }`}
       style={{ borderColor: color + "44" }}
@@ -526,7 +526,7 @@ function TaskCard({
                 textDecoration: task.status === "completed" ? "line-through" : "none",
               }}
               transition={{ duration: 0.2 }}
-              className={`font-bold text-sm ${theme === "lilac" ? "text-[#f3e8ff]" : "text-gray-900"}`}
+              className={`font-bold text-sm ${theme === "lilac" ? "text-[#fbf5ff]" : "text-gray-900"}`}
               style={{ fontFamily: "Quicksand, sans-serif" }}
             >
               {task.title}
@@ -537,7 +537,7 @@ function TaskCard({
               className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full"
               style={{
                 background: color + (theme === "lilac" ? "40" : "28"),
-                color: theme === "lilac" ? "#f3e8ff" : "#4A3B59",
+                color: theme === "lilac" ? "#fbf5ff" : "#4A3B59",
                 border: `1px solid ${color}55`,
               }}
             >
@@ -547,7 +547,7 @@ function TaskCard({
             {/* Work Type Badge */}
             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg uppercase tracking-wider ${
               theme === "lilac"
-                ? "bg-[#351957] text-[#c4b5fd] border border-[#6b2fa0]/50"
+                ? "bg-[#660094] text-[#d16aff] border border-[#9614d0]/60"
                 : "bg-gray-100/90 text-gray-700 border border-gray-200"
             }`}>
               {task.type || "Assignment"}
@@ -556,7 +556,7 @@ function TaskCard({
             {urgency && <UrgencyDot level={overdue ? "red" : urgency} />}
           </div>
 
-          <div className={`text-xs mt-1 font-medium ${theme === "lilac" ? "text-[#c4b5fd]/75" : "text-gray-500"}`}>
+          <div className={`text-xs mt-1 font-medium ${theme === "lilac" ? "text-[#d8a4f8]" : "text-gray-500"}`}>
             {task.status === "completed"
               ? `Completed · due was ${niceDate(task.dueDate)}`
               : overdue
@@ -578,7 +578,7 @@ function TaskCard({
           onClick={() => onEdit(task)}
           className={`p-1.5 rounded-xl transition-colors ${
             theme === "lilac"
-              ? "hover:bg-white/10 text-[#c4b5fd]/70 hover:text-[#f3e8ff]"
+              ? "hover:bg-white/10 text-[#d8a4f8] hover:text-[#fbf5ff]"
               : "hover:bg-black/5 text-gray-400 hover:text-gray-700"
           }`}
           title="Edit task"
@@ -589,7 +589,7 @@ function TaskCard({
           onClick={() => onDelete(task.id)}
           className={`p-1.5 rounded-xl transition-colors ${
             theme === "lilac"
-              ? "hover:bg-rose-950/40 text-[#c4b5fd]/70 hover:text-rose-300"
+              ? "hover:bg-rose-950/40 text-[#d8a4f8] hover:text-rose-300"
               : "hover:bg-rose-50 text-gray-400 hover:text-rose-600"
           }`}
           title="Delete task"
@@ -660,32 +660,32 @@ function TaskForm({
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4" onClick={onClose}>
       <div
-        className={`rounded-3xl p-5 w-full max-w-md max-h-[85vh] overflow-y-auto shadow-xl ${theme === "lilac" ? "bg-[#201037] text-[#f3e8ff]" : "bg-white"}`}
+        className={`rounded-3xl p-5 w-full max-w-md max-h-[85vh] overflow-y-auto shadow-xl ${theme === "lilac" ? "bg-[#310547] text-[#fbf5ff] border border-[#9614d0]/40 shadow-2xl shadow-[#660094]/40" : "bg-white"}`}
         onClick={(e) => e.stopPropagation()}
         style={{ fontFamily: "Quicksand, sans-serif" }}
       >
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: theme === "lilac" ? "#f3e8ff" : "#5B4B6D" }}>
+          <h3 className="text-lg font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: theme === "lilac" ? "#fbf5ff" : "#5B4B6D" }}>
             {initial?.id ? "Edit task" : "Add a task"}
           </h3>
-          <button onClick={onClose} className={theme === "lilac" ? "text-[#f3e8ff] hover:text-[#c4b5fd] cursor-pointer" : "cursor-pointer"}><X size={20} /></button>
+          <button onClick={onClose} className={theme === "lilac" ? "text-[#fbf5ff] hover:text-[#d16aff] cursor-pointer" : "cursor-pointer"}><X size={20} /></button>
         </div>
         {subjects.length === 0 ? (
           <p className="text-sm opacity-70 mb-3">Add a subject first from the Tasks tab 🌸</p>
         ) : (
           <div className="space-y-3">
             <div>
-              <label className={`text-xs font-semibold ${theme === "lilac" ? "text-[#c4b5fd]/80" : "opacity-70"}`}>Subject</label>
+              <label className={`text-xs font-semibold ${theme === "lilac" ? "text-[#d16aff]" : "opacity-70"}`}>Subject</label>
               <select value={subjectId} onChange={(e) => setSubjectId(e.target.value)} className="w-full mt-1 p-2 rounded-xl border bg-white">
                 {subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
             <div>
-              <label className={`text-xs font-semibold ${theme === "lilac" ? "text-[#c4b5fd]/80" : "opacity-70"}`}>Title</label>
+              <label className={`text-xs font-semibold ${theme === "lilac" ? "text-[#d16aff]" : "opacity-70"}`}>Title</label>
               <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Activity 5" className="w-full mt-1 p-2 rounded-xl border" />
             </div>
             <div>
-              <label className={`text-xs font-semibold ${theme === "lilac" ? "text-[#c4b5fd]/80" : "opacity-70"}`}>Type</label>
+              <label className={`text-xs font-semibold ${theme === "lilac" ? "text-[#d16aff]" : "opacity-70"}`}>Type</label>
               <input
                 list="type-suggestions"
                 value={type}
@@ -708,10 +708,10 @@ function TaskForm({
                         className={`inline-flex items-center rounded-lg border text-[11px] overflow-hidden transition-all ${
                           isSelected
                             ? theme === "lilac"
-                              ? "bg-[#6b2fa0] border-[#8e44ad] text-white shadow-xs"
+                              ? "bg-[#9614d0] border-[#bb44f0] text-white shadow-xs"
                               : "bg-purple-100 border-purple-300 text-purple-900 shadow-xs"
                             : theme === "lilac"
-                            ? "bg-white/10 border-[#3d1d66] text-[#f3e8ff] hover:border-[#6b2fa0]"
+                            ? "bg-[#240436] border-[#660094] text-[#fbf5ff] hover:border-[#bb44f0]"
                             : "bg-gray-50/90 border-gray-200 text-gray-700 hover:border-purple-200"
                         }`}
                       >
@@ -719,7 +719,7 @@ function TaskForm({
                           type="button"
                           onClick={() => setType(s)}
                           className={`px-2.5 py-1 text-left font-semibold transition-colors cursor-pointer ${
-                            isSelected ? "text-white" : theme === "lilac" ? "hover:bg-white/10 text-[#f3e8ff]" : "hover:bg-purple-50 text-gray-700"
+                            isSelected ? "text-white" : theme === "lilac" ? "hover:bg-white/10 text-[#fbf5ff]" : "hover:bg-purple-50 text-gray-700"
                           }`}
                         >
                           {s}
@@ -732,7 +732,7 @@ function TaskForm({
                           }}
                           className={`px-1.5 py-1 transition-colors cursor-pointer ${
                             theme === "lilac"
-                              ? "text-[#c4b5fd]/70 hover:text-rose-300 hover:bg-rose-950/40 border-l border-[#3d1d66]"
+                              ? "text-[#d8a4f8] hover:text-rose-300 hover:bg-rose-950/40 border-l border-[#660094]"
                               : "text-gray-400 hover:text-rose-600 hover:bg-rose-50 border-l border-gray-200/80"
                           }`}
                           title={`Hide "${s}" from suggestions`}
@@ -746,12 +746,12 @@ function TaskForm({
               )}
             </div>
             <div>
-              <label className={`text-xs font-semibold ${theme === "lilac" ? "text-[#c4b5fd]/80" : "opacity-70"}`}>Due date</label>
+              <label className={`text-xs font-semibold ${theme === "lilac" ? "text-[#d16aff]" : "opacity-70"}`}>Due date</label>
               <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="w-full mt-1 p-2 rounded-xl border" />
             </div>
             {(type.toLowerCase() === "exam" || type.toLowerCase() === "ct" || type.toLowerCase() === "quiz") && (
-              <div className={`p-3 rounded-xl ${theme === "lilac" ? "bg-[#25133c]/80 border border-[#3d1d66]" : "bg-purple-50/60"}`}>
-                <label className={`text-xs font-semibold flex items-center gap-1 ${theme === "lilac" ? "text-[#c4b5fd]" : "opacity-70"}`}><ListChecks size={14} /> Exam topics</label>
+              <div className={`p-3 rounded-xl ${theme === "lilac" ? "bg-[#240436] border border-[#660094]" : "bg-purple-50/60"}`}>
+                <label className={`text-xs font-semibold flex items-center gap-1 ${theme === "lilac" ? "text-[#d16aff]" : "opacity-70"}`}><ListChecks size={14} /> Exam topics</label>
                 <div className="space-y-1 mt-2">
                   {topics.map((t) => (
                     <div key={t.id} className="flex items-center gap-2 text-sm">
@@ -763,21 +763,21 @@ function TaskForm({
                 </div>
                 <div className="flex gap-1.5 mt-2">
                   <input value={newTopic} onChange={(e) => setNewTopic(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addTopic()} placeholder="Add topic..." className="flex-1 p-1.5 rounded-lg border text-sm" />
-                  <button onClick={addTopic} className={`px-2.5 rounded-lg cursor-pointer ${theme === "lilac" ? "bg-[#6b2fa0] text-white" : "bg-purple-200"}`}><Plus size={14} /></button>
+                  <button onClick={addTopic} className={`px-2.5 rounded-lg cursor-pointer ${theme === "lilac" ? "bg-[#9614d0] hover:bg-[#bb44f0] text-white" : "bg-purple-200"}`}><Plus size={14} /></button>
                 </div>
               </div>
             )}
             <details className="text-sm">
-              <summary className={`text-xs font-semibold cursor-pointer ${theme === "lilac" ? "text-[#c4b5fd]/80" : "opacity-70"}`}>Custom look (optional)</summary>
+              <summary className={`text-xs font-semibold cursor-pointer ${theme === "lilac" ? "text-[#d16aff]" : "opacity-70"}`}>Custom look (optional)</summary>
               <div className="flex gap-1 flex-wrap mt-2">
                 {COLOR_PRESETS.map((c) => (
-                  <button key={c.hex} onClick={() => setCustomColor(c.hex)} className="w-6 h-6 rounded-full border-2 cursor-pointer" style={{ background: c.hex, borderColor: customColor === c.hex ? (theme === "lilac" ? "#f3e8ff" : "#5B4B6D") : "transparent" }} />
+                  <button key={c.hex} onClick={() => setCustomColor(c.hex)} className="w-6 h-6 rounded-full border-2 cursor-pointer" style={{ background: c.hex, borderColor: customColor === c.hex ? (theme === "lilac" ? "#fbf5ff" : "#5B4B6D") : "transparent" }} />
                 ))}
-                <button onClick={() => setCustomColor("")} className={`text-xs underline ml-1 cursor-pointer ${theme === "lilac" ? "text-[#c4b5fd]" : "opacity-60"}`}>clear</button>
+                <button onClick={() => setCustomColor("")} className={`text-xs underline ml-1 cursor-pointer ${theme === "lilac" ? "text-[#d16aff]" : "opacity-60"}`}>clear</button>
               </div>
               <input value={customIcon} onChange={(e) => setCustomIcon(e.target.value.slice(0, 2))} placeholder="🌸 emoji" className="w-20 mt-2 p-1.5 rounded-lg border text-sm" />
             </details>
-            <button onClick={save} className="w-full mt-2 p-2.5 rounded-xl font-semibold text-white cursor-pointer" style={{ background: theme === "lilac" ? "#6b2fa0" : "#C9B6E4", fontFamily: "Fredoka, sans-serif" }}>
+            <button onClick={save} className="w-full mt-2 p-2.5 rounded-xl font-semibold text-white cursor-pointer" style={{ background: theme === "lilac" ? "#9614d0" : "#C9B6E4", fontFamily: "Fredoka, sans-serif" }}>
               {initial?.id ? "Save changes" : "Add task"}
             </button>
           </div>
@@ -824,41 +824,41 @@ function RoutineForm({ initial, onSave, onClose, theme }: {
 
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className={`rounded-3xl p-5 w-full max-w-md shadow-xl ${theme === "lilac" ? "bg-[#201037] text-[#f3e8ff]" : "bg-white"}`} onClick={(e) => e.stopPropagation()} style={{ fontFamily: "Quicksand, sans-serif" }}>
+      <div className={`rounded-3xl p-5 w-full max-w-md shadow-xl ${theme === "lilac" ? "bg-[#310547] text-[#fbf5ff] border border-[#9614d0]/40 shadow-2xl shadow-[#660094]/40" : "bg-white"}`} onClick={(e) => e.stopPropagation()} style={{ fontFamily: "Quicksand, sans-serif" }}>
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: theme === "lilac" ? "#f3e8ff" : "#5B4B6D" }}>{initial?.id ? "Edit class" : "Add class"}</h3>
-          <button onClick={onClose} className={theme === "lilac" ? "text-[#f3e8ff] hover:text-[#c4b5fd]" : ""}><X size={20} /></button>
+          <h3 className="text-lg font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: theme === "lilac" ? "#fbf5ff" : "#5B4B6D" }}>{initial?.id ? "Edit class" : "Add class"}</h3>
+          <button onClick={onClose} className={theme === "lilac" ? "text-[#fbf5ff] hover:text-[#d16aff]" : ""}><X size={20} /></button>
         </div>
         <div className="space-y-3">
           <div>
-            <label className={`text-xs font-semibold ${theme === "lilac" ? "text-[#c4b5fd]/80" : "opacity-70"}`}>Day</label>
+            <label className={`text-xs font-semibold ${theme === "lilac" ? "text-[#d16aff]" : "opacity-70"}`}>Day</label>
             <select value={form.day_of_week} onChange={(e) => setForm({ ...form, day_of_week: Number(e.target.value) })} className="w-full mt-1 p-2 rounded-xl border bg-white">
               {DAY_NAMES.map((name, i) => <option key={i} value={i}>{name}</option>)}
             </select>
           </div>
           <div>
-            <label className={`text-xs font-semibold ${theme === "lilac" ? "text-[#c4b5fd]/80" : "opacity-70"}`}>Subject</label>
+            <label className={`text-xs font-semibold ${theme === "lilac" ? "text-[#d16aff]" : "opacity-70"}`}>Subject</label>
             <input value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} placeholder="e.g. Math 101" className="w-full mt-1 p-2 rounded-xl border" />
           </div>
           <div className="flex gap-2">
             <div className="flex-1">
-              <label className={`text-xs font-semibold ${theme === "lilac" ? "text-[#c4b5fd]/80" : "opacity-70"}`}>Start time</label>
+              <label className={`text-xs font-semibold ${theme === "lilac" ? "text-[#d16aff]" : "opacity-70"}`}>Start time</label>
               <input type="time" value={form.start_time} onChange={(e) => setForm({ ...form, start_time: e.target.value })} className="w-full mt-1 p-2 rounded-xl border" />
             </div>
             <div className="flex-1">
-              <label className={`text-xs font-semibold ${theme === "lilac" ? "text-[#c4b5fd]/80" : "opacity-70"}`}>End time</label>
+              <label className={`text-xs font-semibold ${theme === "lilac" ? "text-[#d16aff]" : "opacity-70"}`}>End time</label>
               <input type="time" value={form.end_time} onChange={(e) => setForm({ ...form, end_time: e.target.value })} className="w-full mt-1 p-2 rounded-xl border" />
             </div>
           </div>
           <div>
-            <label className={`text-xs font-semibold ${theme === "lilac" ? "text-[#c4b5fd]/80" : "opacity-70"}`}>Location</label>
+            <label className={`text-xs font-semibold ${theme === "lilac" ? "text-[#d16aff]" : "opacity-70"}`}>Location</label>
             <input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="e.g. Room 201" className="w-full mt-1 p-2 rounded-xl border" />
           </div>
           <div>
-            <label className={`text-xs font-semibold ${theme === "lilac" ? "text-[#c4b5fd]/80" : "opacity-70"}`}>Notes</label>
+            <label className={`text-xs font-semibold ${theme === "lilac" ? "text-[#d16aff]" : "opacity-70"}`}>Notes</label>
             <input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="optional" className="w-full mt-1 p-2 rounded-xl border" />
           </div>
-          <button onClick={save} className="w-full mt-2 p-2.5 rounded-xl font-semibold text-white cursor-pointer" style={{ background: theme === "lilac" ? "#6b2fa0" : "#A8D5BA", fontFamily: "Fredoka, sans-serif" }}>
+          <button onClick={save} className="w-full mt-2 p-2.5 rounded-xl font-semibold text-white cursor-pointer" style={{ background: theme === "lilac" ? "#9614d0" : "#A8D5BA", fontFamily: "Fredoka, sans-serif" }}>
             {initial?.id ? "Save changes" : "Add class"}
           </button>
         </div>
@@ -899,15 +899,15 @@ function RoutineView({
     <div>
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <div>
-          <h2 className="text-xl font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: theme === "lilac" ? "#f3e8ff" : "#5B4B6D" }}>
+          <h2 className="text-xl font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: theme === "lilac" ? "#fbf5ff" : "#5B4B6D" }}>
             Your weekly routine 🗓️
           </h2>
-          <p className={`text-xs ${theme === "lilac" ? "text-[#c4b5fd]/80" : "opacity-60"}`}>Your recurring 7 day weekly schedule</p>
+          <p className={`text-xs ${theme === "lilac" ? "text-[#d8a4f8]" : "opacity-60"}`}>Your recurring 7 day weekly schedule</p>
         </div>
         <button
           onClick={() => { setEditingEntry(null); setFormOpen(true); }}
           className="px-4 py-2.5 rounded-2xl text-white font-semibold flex items-center gap-1.5 shadow-sm hover:opacity-95 transition-all text-sm cursor-pointer"
-          style={{ background: theme === "lilac" ? "#6b2fa0" : "#A8D5BA", fontFamily: "Fredoka, sans-serif", color: theme === "lilac" ? "#f3e8ff" : "white" }}
+          style={{ background: theme === "lilac" ? "#9614d0" : "#A8D5BA", fontFamily: "Fredoka, sans-serif", color: "white" }}
         >
           <Plus size={16} /> Add a class
         </button>
@@ -926,8 +926,8 @@ function RoutineView({
                 key={dow}
                 className={`relative overflow-hidden flex flex-col rounded-3xl p-3 border transition-all ${
                   isWeekend
-                    ? theme === "lilac" ? "bg-[#25133c]/90 border-[#6b2fa0]/50" : "bg-purple-50/75 border-purple-200/80"
-                    : theme === "lilac" ? "bg-[#1f0f35]/85 border-[#3d1d66]/50" : "bg-white/90 border-black/5"
+                    ? theme === "lilac" ? "bg-[#380550]/90 border-[#9614d0]/50 shadow-md shadow-[#660094]/20" : "bg-purple-50/75 border-purple-200/80"
+                    : theme === "lilac" ? "bg-[#2c043e]/85 border-[#660094]/50" : "bg-white/90 border-black/5"
                 } shadow-xs min-h-[440px]`}
               >
                 {/* Decorative Day Column Background */}
@@ -943,12 +943,12 @@ function RoutineView({
 
                 <div className="relative z-10 flex flex-col h-full">
                   {/* Column Header */}
-                  <div className={`flex items-center justify-between border-b pb-2 mb-2.5 ${theme === "lilac" ? "border-white/10" : "border-black/5"}`}>
+                  <div className={`flex items-center justify-between border-b pb-2 mb-2.5 ${theme === "lilac" ? "border-[#9614d0]/30" : "border-black/5"}`}>
                     <div>
-                      <span className="font-bold text-sm" style={{ fontFamily: "Fredoka, sans-serif", color: theme === "lilac" ? "#f3e8ff" : "#5B4B6D" }}>
+                      <span className="font-bold text-sm" style={{ fontFamily: "Fredoka, sans-serif", color: theme === "lilac" ? "#fbf5ff" : "#5B4B6D" }}>
                         {shortName}
                       </span>
-                      <span className={`text-[10px] block font-medium ${theme === "lilac" ? "text-[#c4b5fd]/80" : "opacity-60"}`}>
+                      <span className={`text-[10px] block font-medium ${theme === "lilac" ? "text-[#d8a4f8]" : "opacity-60"}`}>
                         {entries.length === 0 ? "Free" : `${entries.length} ${entries.length === 1 ? "class" : "classes"}`}
                       </span>
                     </div>
@@ -968,7 +968,7 @@ function RoutineView({
                     }}
                     className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
                       theme === "lilac"
-                        ? "bg-white/10 hover:bg-[#6b2fa0] text-[#f3e8ff]"
+                        ? "bg-[#660094] hover:bg-[#9614d0] text-[#fbf5ff]"
                         : "bg-black/5 hover:bg-[#A8D5BA] hover:text-white text-gray-500"
                     }`}
                     title={`Add class for ${dayName}`}
@@ -981,22 +981,22 @@ function RoutineView({
                 <div className="space-y-2 flex-1">
                   {entries.length === 0 ? (
                     <div className={`h-full flex flex-col items-center justify-center text-center p-3 border-2 border-dashed rounded-2xl ${
-                      theme === "lilac" ? "border-white/10 text-[#c4b5fd]/60" : "border-black/5 opacity-35"
+                      theme === "lilac" ? "border-[#730073]/50 text-[#b266b2]" : "border-black/5 opacity-35"
                     }`}>
                       <span className="text-xl mb-1">☕</span>
-                      <span className={`text-xs font-medium ${theme === "lilac" ? "text-[#c4b5fd]/80" : ""}`}>No classes</span>
+                      <span className={`text-xs font-medium ${theme === "lilac" ? "text-[#d8a4f8]" : ""}`}>No classes</span>
                     </div>
                   ) : (
                     entries.map((entry) => (
                       <div
                         key={entry.id}
                         className={`p-2.5 rounded-2xl border shadow-2xs hover:shadow-xs transition-all text-left group ${
-                          theme === "lilac" ? "bg-[#2c1549] border-[#4a2278] text-[#f3e8ff]" : "bg-white border-[#EADEF0]"
+                          theme === "lilac" ? "bg-[#3d0558] border-[#730073] text-[#fbf5ff] shadow-sm shadow-[#660094]/30" : "bg-white border-[#EADEF0]"
                         }`}
                       >
                         {/* Time Pill */}
                         <div className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full mb-1 ${
-                          theme === "lilac" ? "text-[#c4b5fd] bg-[#3d1d66]" : "text-[#7C3AED] bg-purple-50"
+                          theme === "lilac" ? "text-[#d16aff] bg-[#660094]" : "text-[#7C3AED] bg-purple-50"
                         }`}>
                           <Clock size={10} />
                           <span>
@@ -1006,30 +1006,30 @@ function RoutineView({
                         </div>
 
                         {/* Subject */}
-                        <h4 className={`font-bold text-xs leading-tight mb-1 truncate ${theme === "lilac" ? "text-[#f3e8ff]" : "text-[#5B4B6D]"}`} title={entry.subject}>
+                        <h4 className={`font-bold text-xs leading-tight mb-1 truncate ${theme === "lilac" ? "text-[#fbf5ff]" : "text-[#5B4B6D]"}`} title={entry.subject}>
                           {entry.subject}
                         </h4>
 
                         {/* Location / Notes */}
                         {entry.location && (
-                          <div className={`text-[11px] truncate mb-0.5 ${theme === "lilac" ? "text-[#c4b5fd]/80" : "text-gray-500"}`}>
+                          <div className={`text-[11px] truncate mb-0.5 ${theme === "lilac" ? "text-[#d8a4f8]" : "text-gray-500"}`}>
                             📍 {entry.location}
                           </div>
                         )}
                         {entry.notes && (
-                          <div className={`text-[10px] italic line-clamp-2 leading-tight ${theme === "lilac" ? "text-[#c4b5fd]/60" : "text-gray-400"}`}>
+                          <div className={`text-[10px] italic line-clamp-2 leading-tight ${theme === "lilac" ? "text-[#b266b2]" : "text-gray-400"}`}>
                             {entry.notes}
                           </div>
                         )}
 
                         {/* Actions */}
                         <div className={`mt-2 pt-1.5 border-t flex items-center justify-end gap-1 opacity-80 group-hover:opacity-100 ${
-                          theme === "lilac" ? "border-white/10" : "border-gray-100"
+                          theme === "lilac" ? "border-[#730073]/40" : "border-gray-100"
                         }`}>
                           <button
                             onClick={() => { setEditingEntry(entry); setFormOpen(true); }}
                             className={`p-1 rounded-lg ${
-                              theme === "lilac" ? "hover:bg-white/10 text-[#c4b5fd]/70 hover:text-[#f3e8ff]" : "hover:bg-black/5 text-gray-500 hover:text-[#5B4B6D]"
+                              theme === "lilac" ? "hover:bg-white/10 text-[#d8a4f8] hover:text-[#fbf5ff]" : "hover:bg-black/5 text-gray-500 hover:text-[#5B4B6D]"
                             }`}
                             title="Edit"
                           >
@@ -1038,7 +1038,7 @@ function RoutineView({
                           <button
                             onClick={() => onDelete(entry.id)}
                             className={`p-1 rounded-lg ${
-                              theme === "lilac" ? "hover:bg-rose-950/40 text-[#c4b5fd]/70 hover:text-rose-300" : "hover:bg-red-50 text-gray-400 hover:text-red-600"
+                              theme === "lilac" ? "hover:bg-rose-950/40 text-[#d8a4f8] hover:text-rose-300" : "hover:bg-red-50 text-gray-400 hover:text-red-600"
                             }`}
                             title="Delete"
                           >
@@ -1410,19 +1410,19 @@ function CalendarView({
 
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-4">
-        <button onClick={() => setCursor(new Date(year, month - 1, 1))} className={`p-2 rounded-xl cursor-pointer ${theme === "lilac" ? "hover:bg-white/10 text-[#f3e8ff]" : "hover:bg-black/5 text-gray-700"}`}><ChevronLeft size={18} /></button>
-        <h3 className="font-bold text-lg" style={{ fontFamily: "Fredoka, sans-serif", color: theme === "lilac" ? "#f3e8ff" : "#5B4B6D" }}>
+        <button onClick={() => setCursor(new Date(year, month - 1, 1))} className={`p-2 rounded-xl cursor-pointer ${theme === "lilac" ? "hover:bg-white/10 text-[#fbf5ff]" : "hover:bg-black/5 text-gray-700"}`}><ChevronLeft size={18} /></button>
+        <h3 className="font-bold text-lg" style={{ fontFamily: "Fredoka, sans-serif", color: theme === "lilac" ? "#fbf5ff" : "#5B4B6D" }}>
           {cursor.toLocaleDateString(undefined, { month: "long", year: "numeric" })}
         </h3>
-        <button onClick={() => setCursor(new Date(year, month + 1, 1))} className={`p-2 rounded-xl cursor-pointer ${theme === "lilac" ? "hover:bg-white/10 text-[#f3e8ff]" : "hover:bg-black/5 text-gray-700"}`}><ChevronRight size={18} /></button>
+        <button onClick={() => setCursor(new Date(year, month + 1, 1))} className={`p-2 rounded-xl cursor-pointer ${theme === "lilac" ? "hover:bg-white/10 text-[#fbf5ff]" : "hover:bg-black/5 text-gray-700"}`}><ChevronRight size={18} /></button>
       </div>
 
-      <div className={`grid grid-cols-7 gap-2 text-center text-xs font-bold mb-2 ${theme === "lilac" ? "text-[#c4b5fd]" : "text-gray-500"}`}>
+      <div className={`grid grid-cols-7 gap-2 text-center text-xs font-bold mb-2 ${theme === "lilac" ? "text-[#d8a4f8]" : "text-gray-500"}`}>
         {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d, i) => <div key={i}>{d}</div>)}
       </div>
       <div className="grid grid-cols-7 gap-2">
         {cells.map((d, i) => {
-          if (!d) return <div key={i} className={`min-h-[90px] rounded-2xl ${theme === "lilac" ? "bg-white/[0.03]" : "bg-black/[0.02]"}`} />;
+          if (!d) return <div key={i} className={`min-h-[90px] rounded-2xl ${theme === "lilac" ? "bg-white/[0.04]" : "bg-black/[0.02]"}`} />;
           const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
           const dayTasks = tasksByDate[dateStr] || [];
           const isToday = dateStr === todayStr();
@@ -1436,22 +1436,22 @@ function CalendarView({
               className={`min-h-[90px] rounded-2xl p-2 text-left relative overflow-hidden border transition-colors cursor-pointer ${
                 isToday
                   ? theme === "lilac"
-                    ? "border-2 shadow-sm bg-[#2a1447] text-[#f3e8ff]"
+                    ? "border-2 shadow-md bg-[#4a066b] text-[#fbf5ff] shadow-[#660094]/40"
                     : "border-2 shadow-sm bg-white/95"
                   : theme === "lilac"
-                  ? "border-[#3d1d66]/60 hover:border-[#6b2fa0] bg-[#201037]/80 hover:bg-[#281344] text-[#f3e8ff]"
+                  ? "border-[#660094]/60 hover:border-[#bb44f0] bg-[#310547]/85 hover:bg-[#3d0558] text-[#fbf5ff]"
                   : "border-white/70 hover:border-purple-200 bg-white/50 hover:bg-white/85"
               } backdrop-blur-2xs flex flex-col justify-between`}
-              style={{ borderColor: isToday ? (theme === "lilac" ? "#6b2fa0" : "#C9B6E4") : undefined }}
+              style={{ borderColor: isToday ? (theme === "lilac" ? "#bb44f0" : "#C9B6E4") : undefined }}
             >
               <div className="flex items-center justify-between w-full">
                 <span className={`text-sm font-bold ${
                   isToday
                     ? theme === "lilac"
-                      ? "text-[#f3e8ff] bg-[#6b2fa0] px-1.5 py-0.5 rounded-lg"
+                      ? "text-white bg-[#9614d0] px-1.5 py-0.5 rounded-lg"
                       : "text-purple-700 bg-purple-100 px-1.5 py-0.5 rounded-lg"
                     : theme === "lilac"
-                    ? "text-[#f3e8ff]"
+                    ? "text-[#fbf5ff]"
                     : "text-gray-700"
                 }`}>
                   {d}
@@ -1477,7 +1477,7 @@ function CalendarView({
                     <div
                       key={t.id}
                       className={`text-[10.5px] font-semibold px-1.5 py-0.5 rounded-md truncate flex items-center gap-1 ${
-                        theme === "lilac" ? "text-[#f3e8ff]" : "text-gray-800"
+                        theme === "lilac" ? "text-[#fbf5ff]" : "text-gray-800"
                       }`}
                       style={{
                         backgroundColor: color + "22",
@@ -1490,7 +1490,7 @@ function CalendarView({
                   );
                 })}
                 {dayTasks.length > 2 && (
-                  <span className={`text-[9.5px] font-bold pl-1 block ${theme === "lilac" ? "text-[#c4b5fd]/80" : "text-gray-400"}`}>
+                  <span className={`text-[9.5px] font-bold pl-1 block ${theme === "lilac" ? "text-[#d16aff]" : "text-gray-400"}`}>
                     +{dayTasks.length - 2} more
                   </span>
                 )}
@@ -1503,17 +1503,17 @@ function CalendarView({
       {selected && (
         <Sticker className="mt-4 p-4" rotate={-0.4}>
           <div className="flex justify-between items-start mb-2">
-            <h4 className="font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: theme === "lilac" ? "#f3e8ff" : "#5B4B6D" }}>
-              {niceDate(selected)} <span className={`text-sm font-normal ${theme === "lilac" ? "text-[#c4b5fd]/70" : "opacity-60"}`}>({DAY_NAMES[selectedDow!]})</span>
+            <h4 className="font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: theme === "lilac" ? "#fbf5ff" : "#5B4B6D" }}>
+              {niceDate(selected)} <span className={`text-sm font-normal ${theme === "lilac" ? "text-[#d8a4f8]" : "opacity-60"}`}>({DAY_NAMES[selectedDow!]})</span>
             </h4>
-            <button onClick={() => setSelected(null)} className={theme === "lilac" ? "text-[#f3e8ff] hover:text-[#c4b5fd] cursor-pointer" : "cursor-pointer"}><X size={16} /></button>
+            <button onClick={() => setSelected(null)} className={theme === "lilac" ? "text-[#fbf5ff] hover:text-[#d16aff] cursor-pointer" : "cursor-pointer"}><X size={16} /></button>
           </div>
 
           {/* Tasks due this day with in-place toggle and delete */}
           <div className="mb-3">
-            <h5 className={`text-xs font-bold uppercase tracking-wide mb-1.5 ${theme === "lilac" ? "text-[#c4b5fd]/80" : "opacity-60"}`}>📝 Tasks due</h5>
+            <h5 className={`text-xs font-bold uppercase tracking-wide mb-1.5 ${theme === "lilac" ? "text-[#d16aff]" : "opacity-60"}`}>📝 Tasks due</h5>
             {selectedTasks.length === 0
-              ? <p className={`text-sm ${theme === "lilac" ? "text-[#c4b5fd]/70" : "opacity-50"}`}>Nothing due this day 🌿</p>
+              ? <p className={`text-sm ${theme === "lilac" ? "text-[#d8a4f8]" : "opacity-50"}`}>Nothing due this day 🌿</p>
               : selectedTasks.map((t) => (
                   <div key={t.id} className={`text-sm flex items-center justify-between gap-2 mb-1.5 p-1.5 rounded-xl transition-colors ${theme === "lilac" ? "hover:bg-white/10" : "hover:bg-black/5"}`}>
                     <div className="flex items-center gap-2 min-w-0">
@@ -1527,16 +1527,16 @@ function CalendarView({
                         {t.status === "completed" && <Check size={10} />}
                       </button>
                       <span className="shrink-0">{TYPE_ICON[t.type] || "📝"}</span>
-                      <span className={`truncate font-medium ${t.status === "completed" ? "line-through opacity-50 text-gray-500" : theme === "lilac" ? "text-[#f3e8ff]" : "text-gray-800"}`}>
+                      <span className={`truncate font-medium ${t.status === "completed" ? "line-through opacity-50 text-gray-500" : theme === "lilac" ? "text-[#fbf5ff]" : "text-gray-800"}`}>
                         {t.title}
                       </span>
-                      <span className={`text-xs shrink-0 ${theme === "lilac" ? "text-[#c4b5fd]/70" : "opacity-50"}`}>— {subjById[t.subjectId]?.name}</span>
+                      <span className={`text-xs shrink-0 ${theme === "lilac" ? "text-[#d8a4f8]" : "opacity-50"}`}>— {subjById[t.subjectId]?.name}</span>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
-                      <button onClick={() => onEdit(t)} className={`p-1 rounded-md ${theme === "lilac" ? "hover:bg-white/10 text-[#c4b5fd]/70 hover:text-[#f3e8ff]" : "hover:bg-black/10 text-gray-400 hover:text-gray-700"}`} title="Edit task">
+                      <button onClick={() => onEdit(t)} className={`p-1 rounded-md ${theme === "lilac" ? "hover:bg-white/10 text-[#d8a4f8] hover:text-[#fbf5ff]" : "hover:bg-black/10 text-gray-400 hover:text-gray-700"}`} title="Edit task">
                         <Pencil size={12} />
                       </button>
-                      <button onClick={() => onDelete(t.id)} className={`p-1 rounded-md ${theme === "lilac" ? "hover:bg-rose-950/40 text-[#c4b5fd]/70 hover:text-rose-300" : "hover:bg-rose-50 text-gray-400 hover:text-rose-600"}`} title="Delete task">
+                      <button onClick={() => onDelete(t.id)} className={`p-1 rounded-md ${theme === "lilac" ? "hover:bg-rose-950/40 text-[#d8a4f8] hover:text-rose-300" : "hover:bg-rose-50 text-gray-400 hover:text-rose-600"}`} title="Delete task">
                         <Trash2 size={12} />
                       </button>
                     </div>
@@ -1546,19 +1546,19 @@ function CalendarView({
 
           {/* Routine for this day-of-week */}
           <div className="mb-3">
-            <h5 className={`text-xs font-bold uppercase tracking-wide mb-1.5 ${theme === "lilac" ? "text-[#c4b5fd]/80" : "opacity-60"}`}>🗓️ Classes ({DAY_NAMES[selectedDow!]})</h5>
+            <h5 className={`text-xs font-bold uppercase tracking-wide mb-1.5 ${theme === "lilac" ? "text-[#d16aff]" : "opacity-60"}`}>🗓️ Classes ({DAY_NAMES[selectedDow!]})</h5>
             {selectedRoutine.length === 0
-              ? <p className={`text-sm ${theme === "lilac" ? "text-[#c4b5fd]/70" : "opacity-50"}`}>No classes scheduled 📚</p>
+              ? <p className={`text-sm ${theme === "lilac" ? "text-[#d8a4f8]" : "opacity-50"}`}>No classes scheduled 📚</p>
               : selectedRoutine.map((r) => (
-                  <div key={r.id} className={`text-sm flex items-center gap-1.5 mb-1 ${theme === "lilac" ? "text-[#f3e8ff]" : ""}`}>
+                  <div key={r.id} className={`text-sm flex items-center gap-1.5 mb-1 ${theme === "lilac" ? "text-[#fbf5ff]" : ""}`}>
                     <span className="font-semibold">{r.start_time.slice(0, 5)}{r.end_time ? `–${r.end_time.slice(0, 5)}` : ""}</span>
                     <span>{r.subject}</span>
-                    {r.location && <span className={theme === "lilac" ? "text-[#c4b5fd]/70" : "opacity-50"}>@ {r.location}</span>}
+                    {r.location && <span className={theme === "lilac" ? "text-[#d8a4f8]" : "opacity-50"}>@ {r.location}</span>}
                   </div>
                 ))}
           </div>
 
-          <button onClick={() => onQuickAdd(selected)} className={`text-sm px-3 py-1.5 rounded-xl flex items-center gap-1 cursor-pointer ${theme === "lilac" ? "bg-[#6b2fa0] text-[#f3e8ff] hover:bg-[#7b36b8]" : "bg-pink-100"}`}>
+          <button onClick={() => onQuickAdd(selected)} className={`text-sm px-3 py-1.5 rounded-xl flex items-center gap-1 cursor-pointer ${theme === "lilac" ? "bg-[#9614d0] text-white hover:bg-[#bb44f0]" : "bg-pink-100"}`}>
             <Plus size={14} /> Add task on this day
           </button>
         </Sticker>
@@ -1915,20 +1915,20 @@ export default function StudyDen({ session }: { session: Session }) {
           <motion.div
             animate={{ scale: [1, 1.25, 1], opacity: [0.35, 0.65, 0.35] }}
             transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }}
-            className={`absolute inset-0 rounded-full blur-md ${theme === "lilac" ? "bg-purple-900/60" : "bg-purple-300/40"}`}
+            className={`absolute inset-0 rounded-full blur-md ${theme === "lilac" ? "bg-[#660094]/60" : "bg-purple-300/40"}`}
           />
           <div className="relative text-5xl select-none">
             {CREATURES[new Date().getDate() % CREATURES.length] || "🪽"}
           </div>
         </motion.div>
         <div className="flex items-center gap-2">
-          <p style={{ color: theme === "lilac" ? "#f3e8ff" : "#5B4B6D", fontSize: "1.2rem", fontWeight: 600, letterSpacing: "0.02em", fontFamily: "Fredoka, sans-serif" }}>
+          <p style={{ color: theme === "lilac" ? "#fbf5ff" : "#5B4B6D", fontSize: "1.2rem", fontWeight: 600, letterSpacing: "0.02em", fontFamily: "Fredoka, sans-serif" }}>
             Landing to earth
           </p>
           <motion.span
             animate={{ opacity: [0, 1, 0] }}
             transition={{ repeat: Infinity, duration: 1.4, ease: "easeInOut" }}
-            className={`text-lg font-bold ${theme === "lilac" ? "text-purple-400" : "text-purple-600"}`}
+            className={`text-lg font-bold ${theme === "lilac" ? "text-[#d16aff]" : "text-purple-600"}`}
           >
             ✨
           </motion.span>
@@ -1941,7 +1941,7 @@ export default function StudyDen({ session }: { session: Session }) {
   return (
     <div
       data-theme={theme}
-      className={`min-h-screen p-3 md:p-6 relative overflow-x-hidden ${theme === "lilac" ? "text-[#f3e8ff]" : ""}`}
+      className={`min-h-screen p-3 md:p-6 relative overflow-x-hidden ${theme === "lilac" ? "text-[#fbf5ff]" : ""}`}
       style={{ background: THEMES[theme].css, fontFamily: "Quicksand, sans-serif" }}
     >
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@400;500;600;700&display=swap'); @media print { .no-print { display: none !important; } .print-only { display: block !important; } } .print-only { display: none; }`}</style>
@@ -1963,13 +1963,13 @@ export default function StudyDen({ session }: { session: Session }) {
           <div className="space-y-4">
             {/* App Brand Header */}
             <div className={`p-4 rounded-3xl backdrop-blur-md border shadow-sm flex items-center justify-between md:block ${
-              theme === "lilac" ? "bg-[#201037]/80 border-[#3d1d66]/60 shadow-purple-950/20" : "bg-white/70 border-white/60"
+              theme === "lilac" ? "bg-[#310547]/85 border-[#9614d0]/40 shadow-lg shadow-[#660094]/30" : "bg-white/70 border-white/60"
             }`}>
               <div>
-                <h1 className="text-2xl font-black flex items-center gap-2 tracking-tight" style={{ fontFamily: "Fredoka, sans-serif", color: theme === "lilac" ? "#f3e8ff" : "#5B4B6D" }}>
+                <h1 className="text-2xl font-black flex items-center gap-2 tracking-tight" style={{ fontFamily: "Fredoka, sans-serif", color: theme === "lilac" ? "#fbf5ff" : "#5B4B6D" }}>
                   Halo <span className="text-xl">{CREATURES[new Date().getDate() % CREATURES.length]}</span>
                 </h1>
-                <p className={`text-[11px] font-semibold truncate max-w-[180px] mt-0.5 ${theme === "lilac" ? "text-[#c4b5fd]/80" : "text-gray-500"}`}>{session.user.email}</p>
+                <p className={`text-[11px] font-semibold truncate max-w-[180px] mt-0.5 ${theme === "lilac" ? "text-[#d8a4f8]" : "text-gray-500"}`}>{session.user.email}</p>
               </div>
               <div className="md:hidden flex items-center gap-1.5">
                 <select value={theme} onChange={(e) => setTheme(e.target.value as keyof typeof THEMES)} className="text-[11px] p-1.5 rounded-xl border bg-white/80">
@@ -1981,7 +1981,7 @@ export default function StudyDen({ session }: { session: Session }) {
 
             {/* 6 Modes Navigation List */}
             <nav className={`p-2 rounded-3xl backdrop-blur-md border shadow-sm flex md:flex-col gap-1.5 overflow-x-auto ${
-              theme === "lilac" ? "bg-[#201037]/70 border-[#3d1d66]/60" : "bg-white/60 border-white/60"
+              theme === "lilac" ? "bg-[#2c043e]/80 border-[#660094]/50 shadow-md shadow-[#660094]/20" : "bg-white/60 border-white/60"
             }`}>
               {[
                 { id: "academics" as const, label: "Academics", customIcon: BlueRibbonIcon },
@@ -2002,14 +2002,14 @@ export default function StudyDen({ session }: { session: Session }) {
                     {isActive && (
                       <motion.div
                         layoutId="sidebarActivePill"
-                        className={`absolute inset-0 rounded-2xl shadow-md ${theme === "lilac" ? "bg-[#6b2fa0] shadow-purple-950/50" : "bg-white"}`}
+                        className={`absolute inset-0 rounded-2xl shadow-md ${theme === "lilac" ? "bg-[#9614d0] shadow-md shadow-[#660094]/50" : "bg-white"}`}
                         transition={{ type: "spring", stiffness: 400, damping: 30 }}
                       />
                     )}
                     <span className={`relative z-10 flex items-center gap-3 w-full transition-colors ${
                       isActive
                         ? theme === "lilac" ? "text-white font-extrabold" : "text-purple-900"
-                        : theme === "lilac" ? "text-[#f3e8ff]/80 group-hover:text-white" : "text-gray-700 opacity-80 group-hover:opacity-100"
+                        : theme === "lilac" ? "text-[#fbf5ff]/80 group-hover:text-white" : "text-gray-700 opacity-80 group-hover:opacity-100"
                     }`}>
                       {"customIcon" in m && m.customIcon ? (
                         <div className="w-8 h-8 flex items-center justify-center shrink-0">
@@ -2018,7 +2018,7 @@ export default function StudyDen({ session }: { session: Session }) {
                       ) : "emoji" in m && m.emoji ? (
                         <span className="w-8 h-8 flex items-center justify-center text-2xl shrink-0 leading-none">{m.emoji}</span>
                       ) : "icon" in m && m.icon ? (
-                        <m.icon size={24} className={`${theme === "lilac" ? "text-[#c4b5fd]" : "text-gray-600"} shrink-0 p-0.5`} />
+                        <m.icon size={24} className={`${theme === "lilac" ? "text-[#d16aff]" : "text-gray-600"} shrink-0 p-0.5`} />
                       ) : null}
                       <span>{m.label}</span>
                     </span>
@@ -2032,16 +2032,16 @@ export default function StudyDen({ session }: { session: Session }) {
           <div className="hidden md:flex flex-col gap-2.5 mt-6">
             {/* Quick Simple / Custom Visual Mode Toggle */}
             <div className={`p-2.5 px-3 rounded-2xl backdrop-blur-sm border flex items-center justify-between text-xs font-bold shadow-2xs ${
-              theme === "lilac" ? "bg-[#201037]/70 border-[#3d1d66]/60 text-[#f3e8ff]" : "bg-white/50 border-white/50"
+              theme === "lilac" ? "bg-[#2c043e]/80 border-[#660094]/50 text-[#fbf5ff]" : "bg-white/50 border-white/50"
             }`}>
-              <span className={theme === "lilac" ? "text-[#c4b5fd]" : "text-gray-600"}>Style:</span>
+              <span className={theme === "lilac" ? "text-[#d16aff]" : "text-gray-600"}>Style:</span>
               <div className={`flex items-center gap-1 p-0.5 rounded-xl ${theme === "lilac" ? "bg-black/30" : "bg-black/5"}`}>
                 <button
                   onClick={() => updateVisualSettings({ mode: "simple" })}
                   className={`px-2.5 py-1 rounded-lg transition-all ${
                     visualSettings.mode === "simple"
-                      ? theme === "lilac" ? "bg-[#6b2fa0] text-white shadow-xs" : "bg-white text-gray-900 shadow-xs"
-                      : theme === "lilac" ? "text-[#c4b5fd]/70 hover:text-white" : "text-gray-500 hover:text-gray-800"
+                      ? theme === "lilac" ? "bg-[#9614d0] text-white shadow-xs" : "bg-white text-gray-900 shadow-xs"
+                      : theme === "lilac" ? "text-[#d8a4f8] hover:text-white" : "text-gray-500 hover:text-gray-800"
                   }`}
                 >
                   Simple
@@ -2051,7 +2051,7 @@ export default function StudyDen({ session }: { session: Session }) {
                   className={`px-2.5 py-1 rounded-lg transition-all ${
                     visualSettings.mode === "custom"
                       ? "bg-purple-600 text-white shadow-xs"
-                      : theme === "lilac" ? "text-[#c4b5fd]/70 hover:text-white" : "text-gray-500 hover:text-gray-800"
+                      : theme === "lilac" ? "text-[#d8a4f8] hover:text-white" : "text-gray-500 hover:text-gray-800"
                   }`}
                 >
                   Custom
@@ -2060,10 +2060,10 @@ export default function StudyDen({ session }: { session: Session }) {
             </div>
 
             <div className={`p-3 rounded-2xl backdrop-blur-sm border flex items-center justify-between ${
-              theme === "lilac" ? "bg-[#201037]/70 border-[#3d1d66]/60 text-[#f3e8ff]" : "bg-white/50 border-white/50"
+              theme === "lilac" ? "bg-[#2c043e]/80 border-[#660094]/50 text-[#fbf5ff]" : "bg-white/50 border-white/50"
             }`}>
               <div className="flex items-center gap-2">
-                <span className={`text-xs font-bold ${theme === "lilac" ? "text-[#c4b5fd]" : "text-gray-500"}`}>Theme:</span>
+                <span className={`text-xs font-bold ${theme === "lilac" ? "text-[#d16aff]" : "text-gray-500"}`}>Theme:</span>
                 <select
                   value={theme}
                   onChange={(e) => setTheme(e.target.value as keyof typeof THEMES)}
@@ -2077,7 +2077,7 @@ export default function StudyDen({ session }: { session: Session }) {
               <button
                 onClick={() => window.print()}
                 className={`p-1.5 rounded-xl shadow-sm cursor-pointer ${
-                  theme === "lilac" ? "bg-white/10 hover:bg-white/20 text-[#f3e8ff]" : "bg-white/80 hover:bg-white text-gray-700"
+                  theme === "lilac" ? "bg-white/10 hover:bg-white/20 text-[#fbf5ff]" : "bg-white/80 hover:bg-white text-gray-700"
                 }`}
                 title="Print view"
               >
@@ -2102,7 +2102,7 @@ export default function StudyDen({ session }: { session: Session }) {
                 {/* Academics Sub-Tabs Switcher */}
                 <div className="flex items-center justify-between mb-5 no-print flex-wrap gap-2">
                   <div className={`flex gap-1.5 p-1.5 rounded-2xl backdrop-blur-md border shadow-sm overflow-x-auto ${
-                    theme === "lilac" ? "bg-[#201037]/70 border-[#3d1d66]/60" : "bg-white/60 border-white/60"
+                    theme === "lilac" ? "bg-[#2c043e]/80 border-[#660094]/50" : "bg-white/60 border-white/60"
                   }`}>
                     {[
                       { id: "dashboard" as const, label: "Dashboard", icon: LayoutDashboard },
@@ -2121,14 +2121,14 @@ export default function StudyDen({ session }: { session: Session }) {
                           {isSubActive && (
                             <motion.div
                               layoutId="academicsSubtabPill"
-                              className={`absolute inset-0 rounded-xl shadow-sm ${theme === "lilac" ? "bg-[#6b2fa0]" : "bg-purple-600"}`}
+                              className={`absolute inset-0 rounded-xl shadow-sm ${theme === "lilac" ? "bg-[#9614d0]" : "bg-purple-600"}`}
                               transition={{ type: "spring", stiffness: 420, damping: 32 }}
                             />
                           )}
                           <span className={`relative z-10 flex items-center gap-1.5 transition-colors ${
                             isSubActive
                               ? "text-white"
-                              : theme === "lilac" ? "text-[#f3e8ff]/80 hover:text-white" : "text-gray-700 hover:text-gray-900"
+                              : theme === "lilac" ? "text-[#fbf5ff]/80 hover:text-white" : "text-gray-700 hover:text-gray-900"
                           }`}>
                             <st.icon size={14} /> <span>{st.label}</span>
                           </span>
@@ -2142,7 +2142,7 @@ export default function StudyDen({ session }: { session: Session }) {
                     <button
                       onClick={() => { setEditingTask(null); setFormOpen(true); }}
                       className={`px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm flex items-center gap-1.5 cursor-pointer ${
-                        theme === "lilac" ? "bg-[#6b2fa0] text-[#f3e8ff] hover:bg-[#7b36b8]" : "bg-pink-500 text-white hover:bg-pink-600"
+                        theme === "lilac" ? "bg-[#9614d0] text-white hover:bg-[#bb44f0]" : "bg-pink-500 text-white hover:bg-pink-600"
                       }`}
                     >
                       <Plus size={14} /> Add Task
@@ -2195,8 +2195,8 @@ export default function StudyDen({ session }: { session: Session }) {
                     )}
                     <div className="relative z-10">
                       <div className="flex justify-between items-center mb-2">
-                        <h3 className="font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: theme === "lilac" ? "#f3e8ff" : "#5B4B6D" }}>🌸 Coming up soon</h3>
-                        <button onClick={() => { setEditingTask(null); setFormOpen(true); }} className="flex items-center gap-1 text-sm px-3 py-1.5 rounded-xl text-white cursor-pointer" style={{ background: theme === "lilac" ? "#6b2fa0" : "#E497B3" }}>
+                        <h3 className="font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: theme === "lilac" ? "#fbf5ff" : "#5B4B6D" }}>🌸 Coming up soon</h3>
+                        <button onClick={() => { setEditingTask(null); setFormOpen(true); }} className="flex items-center gap-1 text-sm px-3 py-1.5 rounded-xl text-white cursor-pointer" style={{ background: theme === "lilac" ? "#9614d0" : "#E497B3" }}>
                           <Plus size={14} /> Add task
                         </button>
                       </div>
@@ -2219,7 +2219,7 @@ export default function StudyDen({ session }: { session: Session }) {
                     )}
                     <div className="relative z-10">
                       <div className="flex justify-between items-center mb-2">
-                        <h3 className="font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: theme === "lilac" ? "#f3e8ff" : "#5B4B6D" }}>All tasks</h3>
+                        <h3 className="font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: theme === "lilac" ? "#fbf5ff" : "#5B4B6D" }}>All tasks</h3>
                         <button onClick={() => setGroupBy(groupBy === "subject" ? "type" : "subject")} className="text-xs px-2.5 py-1 rounded-lg bg-black/5">
                           Group by: {groupBy === "subject" ? "Subject" : "Type"}
                         </button>
@@ -2282,14 +2282,14 @@ export default function StudyDen({ session }: { session: Session }) {
               {academicTab === "tasks" && (
                 <div className="no-print">
                   <Sticker className="p-4 mb-4" rotate={0.3}>
-                    <h3 className="font-bold mb-2 flex items-center gap-1.5" style={{ fontFamily: "Fredoka, sans-serif", color: theme === "lilac" ? "#f3e8ff" : "#5B4B6D" }}><Palette size={16} /> Subjects</h3>
-                    <p className={`text-xs mb-2 ${theme === "lilac" ? "text-[#c4b5fd]/80" : "opacity-60"}`}>Set your subjects name and suitable color</p>
+                    <h3 className="font-bold mb-2 flex items-center gap-1.5" style={{ fontFamily: "Fredoka, sans-serif", color: theme === "lilac" ? "#fbf5ff" : "#5B4B6D" }}><Palette size={16} /> Subjects</h3>
+                    <p className={`text-xs mb-2 ${theme === "lilac" ? "text-[#d8a4f8]" : "opacity-60"}`}>Set your subjects name and suitable color</p>
                     <div className="flex flex-wrap gap-2 mb-3">
                       {subjects.map((s) => (
                         <div key={s.id} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl" style={{ background: s.color + (theme === "lilac" ? "40" : "33") }}>
                           <span className="w-2.5 h-2.5 rounded-full" style={{ background: s.color }} />
-                          <span className={`text-xs font-semibold ${theme === "lilac" ? "text-[#f3e8ff]" : ""}`}>{s.name}</span>
-                          <button onClick={() => deleteSubject(s.id)} className={`cursor-pointer ${theme === "lilac" ? "text-[#f3e8ff]/60 hover:text-white" : "opacity-40 hover:opacity-100"}`}><X size={12} /></button>
+                          <span className={`text-xs font-semibold ${theme === "lilac" ? "text-[#fbf5ff]" : ""}`}>{s.name}</span>
+                          <button onClick={() => deleteSubject(s.id)} className={`cursor-pointer ${theme === "lilac" ? "text-[#fbf5ff]/60 hover:text-white" : "opacity-40 hover:opacity-100"}`}><X size={12} /></button>
                         </div>
                       ))}
                     </div>
@@ -2297,19 +2297,19 @@ export default function StudyDen({ session }: { session: Session }) {
                       <input value={subjectDraft.name} onChange={(e) => setSubjectDraft({ ...subjectDraft, name: e.target.value })} placeholder="New subject name" className="p-2 rounded-xl border text-sm flex-1 min-w-[160px]" />
                       <div className="flex gap-1">
                         {COLOR_PRESETS.map((c) => (
-                          <button key={c.hex} onClick={() => setSubjectDraft({ ...subjectDraft, color: c.hex })} className="w-5 h-5 rounded-full border-2 cursor-pointer" style={{ background: c.hex, borderColor: subjectDraft.color === c.hex ? (theme === "lilac" ? "#f3e8ff" : "#5B4B6D") : "transparent" }} />
+                          <button key={c.hex} onClick={() => setSubjectDraft({ ...subjectDraft, color: c.hex })} className="w-5 h-5 rounded-full border-2 cursor-pointer" style={{ background: c.hex, borderColor: subjectDraft.color === c.hex ? (theme === "lilac" ? "#fbf5ff" : "#5B4B6D") : "transparent" }} />
                         ))}
                       </div>
-                      <button onClick={addSubject} className="px-3 py-1.5 rounded-lg text-white text-sm font-semibold cursor-pointer" style={{ background: theme === "lilac" ? "#6b2fa0" : "#C9B6E4" }}>Add</button>
+                      <button onClick={addSubject} className="px-3 py-1.5 rounded-lg text-white text-sm font-semibold cursor-pointer" style={{ background: theme === "lilac" ? "#9614d0" : "#C9B6E4" }}>Add</button>
                     </div>
                   </Sticker>
 
-                  <button onClick={() => { setEditingTask(null); setFormOpen(true); }} className="w-full mb-4 p-3 rounded-2xl text-white font-semibold flex items-center justify-center gap-1.5 cursor-pointer" style={{ background: theme === "lilac" ? "#6b2fa0" : "#E497B3", fontFamily: "Fredoka, sans-serif" }}>
+                  <button onClick={() => { setEditingTask(null); setFormOpen(true); }} className="w-full mb-4 p-3 rounded-2xl text-white font-semibold flex items-center justify-center gap-1.5 cursor-pointer" style={{ background: theme === "lilac" ? "#9614d0" : "#E497B3", fontFamily: "Fredoka, sans-serif" }}>
                     <Plus size={16} /> Add a task
                   </button>
 
                   <Sticker className="p-4" rotate={-0.3}>
-                    <h3 className="font-bold mb-2" style={{ fontFamily: "Fredoka, sans-serif", color: theme === "lilac" ? "#f3e8ff" : "#5B4B6D" }}>🐱 All tasks</h3>
+                    <h3 className="font-bold mb-2" style={{ fontFamily: "Fredoka, sans-serif", color: theme === "lilac" ? "#fbf5ff" : "#5B4B6D" }}>🐱 All tasks</h3>
                     {tasks.length === 0
                       ? <EmptyState emoji="📚" text="No tasks yet — add your first one above" />
                       : [...tasks].sort((a, b) => daysBetween(a.dueDate, todayStr()) - daysBetween(b.dueDate, todayStr())).map((t) => (
