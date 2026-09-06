@@ -177,8 +177,8 @@ const DIARY_THEME_PALETTES: Record<string, {
     pageBgEnd: "#F6F0FA",
     pageBorder: "#E9DCF2",
     lineColor: "#EDE0F6",
-    ribbonBg: "#9614d0",
-    accentBtn: "#9614d0",
+    ribbonBg: "#b148d2",
+    accentBtn: "#b148d2",
     inkColor: "#351957",
     headerColor: "#4A3B59",
     subColor: "#7E5B9B",
@@ -1030,7 +1030,7 @@ function MemoryWallCalendar({
               onClick={() => onOpenEntry(primaryEntry, dateStr)}
               className={`relative aspect-square rounded-2xl flex flex-col justify-between p-2 text-left border transition-colors overflow-hidden group shadow-2xs cursor-pointer ${
                 isToday
-                  ? (isLilac ? "ring-2 ring-[#9614d0] border-[#9614d0]" : "ring-2 ring-[#C9B6E4]")
+                  ? (isLilac ? "ring-2 ring-[#b148d2] border-[#b148d2]" : "ring-2 ring-[#C9B6E4]")
                   : "border-black/5"
               } ${
                 hasPhotos
@@ -1050,14 +1050,14 @@ function MemoryWallCalendar({
               <div className="relative z-10 flex items-center justify-between w-full">
                 <span
                   className={`text-xs font-bold ${
-                    hasPhotos ? "text-white drop-shadow-md" : isToday ? (isLilac ? "text-[#9614d0]" : "text-[#C9B6E4]") : "text-[#5B4B6D]"
+                    hasPhotos ? "text-white drop-shadow-md" : isToday ? (isLilac ? "text-[#b148d2]" : "text-[#C9B6E4]") : "text-[#5B4B6D]"
                   }`}
                 >
                   {d}
                 </span>
                 <div className="flex items-center gap-1">
                   {dayEntries.length > 1 && !hasPhotos && (
-                    <span className={`text-[9px] ${isLilac ? "bg-purple-100 text-[#9614d0]" : "bg-[#C9B6E4]/40 text-[#5B4B6D]"} font-bold px-1 rounded-md`}>
+                    <span className={`text-[9px] ${isLilac ? "bg-purple-100 text-[#b148d2]" : "bg-[#C9B6E4]/40 text-[#5B4B6D]"} font-bold px-1 rounded-md`}>
                       {dayEntries.length}
                     </span>
                   )}
@@ -1611,7 +1611,7 @@ export default function JournalView({
                 }}
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   activeSubTab === "diary"
-                    ? (isLilac ? "bg-[#9614d0] text-white shadow-sm" : "bg-white text-[#5B4B6D] shadow-sm")
+                    ? (isLilac ? "bg-[#b148d2] text-white shadow-sm" : "bg-white text-[#5B4B6D] shadow-sm")
                     : "text-gray-500 hover:text-gray-800"
                 }`}
               >
@@ -1621,7 +1621,7 @@ export default function JournalView({
                 onClick={() => setActiveSubTab("wall")}
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   activeSubTab === "wall"
-                    ? (isLilac ? "bg-[#9614d0] text-white shadow-sm" : "bg-white text-[#5B4B6D] shadow-sm")
+                    ? (isLilac ? "bg-[#b148d2] text-white shadow-sm" : "bg-white text-[#5B4B6D] shadow-sm")
                     : "text-gray-500 hover:text-gray-800"
                 }`}
               >
@@ -1631,7 +1631,7 @@ export default function JournalView({
                 onClick={() => setActiveSubTab("log")}
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   activeSubTab === "log"
-                    ? (isLilac ? "bg-[#9614d0] text-white shadow-sm" : "bg-white text-[#5B4B6D] shadow-sm")
+                    ? (isLilac ? "bg-[#b148d2] text-white shadow-sm" : "bg-white text-[#5B4B6D] shadow-sm")
                     : "text-gray-500 hover:text-gray-800"
                 }`}
               >
@@ -1642,9 +1642,9 @@ export default function JournalView({
             <button
               onClick={() => openWriteMode(null)}
               className={`px-4 py-2 rounded-2xl text-xs font-bold text-white shadow-sm flex items-center gap-1.5 hover:opacity-95 transition-all cursor-pointer ${
-                isLilac ? "bg-[#9614d0] hover:bg-[#bb44f0] text-white" : ""
+                isLilac ? "bg-[#b148d2] hover:bg-[#c764e8] text-white" : ""
               }`}
-              style={{ background: isLilac ? "#9614d0" : "#C9B6E4", fontFamily: "Fredoka, sans-serif" }}
+              style={{ background: isLilac ? "#b148d2" : "#C9B6E4", fontFamily: "Fredoka, sans-serif" }}
             >
               <Plus size={15} /> Write in Diary ✍️
             </button>

@@ -1,9 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Fredoka:wght@400;500;600;700&family=Patrick+Hand&family=Quicksand:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
-/* ─── Lilac Dream (#9614d0 accent with clean white cards) ─── */
+/* ─── Lilac Dream (#b148d2 accent with clean white cards) ─── */
 [data-theme="lilac"] ::selection {
-  background-color: #9614d0;
+  background-color: #b148d2;
   color: #ffffff;
 }
 
@@ -16,10 +16,10 @@
   background: rgba(43, 0, 62, 0.4);
 }
 [data-theme="lilac"] ::-webkit-scrollbar-thumb {
-  background: #9614d0;
+  background: #b148d2;
   border-radius: 4px;
 }
 [data-theme="lilac"] ::-webkit-scrollbar-thumb:hover {
-  background: #bb44f0;
+  background: #c764e8;
 }
 

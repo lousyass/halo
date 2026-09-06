@@ -320,12 +320,12 @@ const THEME_TIMER_STYLES: Record<string, {
   },
   lilac: {
     bg: "bg-purple-50/90 hover:bg-purple-100/80",
-    border: "border-[#9614d0]/40",
+    border: "border-[#b148d2]/40",
     text: "text-purple-950",
-    subText: "text-[#9614d0] font-semibold",
-    icon: "text-[#9614d0]",
-    colon: "text-[#9614d0]/60",
-    badgeBg: "bg-[#9614d0] text-white",
+    subText: "text-[#b148d2] font-semibold",
+    icon: "text-[#b148d2]",
+    colon: "text-[#b148d2]/60",
+    badgeBg: "bg-[#b148d2] text-white",
   },
   babyblue: {
     bg: "bg-sky-50/90 hover:bg-sky-100/80",
@@ -543,7 +543,7 @@ function TaskCard({
             {/* Work Type Badge */}
             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg uppercase tracking-wider ${
               theme === "lilac"
-                ? "bg-purple-50 text-[#9614d0] border border-purple-200"
+                ? "bg-purple-50 text-[#b148d2] border border-purple-200"
                 : "bg-gray-100/90 text-gray-700 border border-gray-200"
             }`}>
               {task.type || "Assignment"}
@@ -696,7 +696,7 @@ function TaskForm({
                         className={`inline-flex items-center rounded-lg border text-[11px] overflow-hidden transition-all ${
                           isSelected
                             ? theme === "lilac"
-                              ? "bg-[#9614d0] border-[#9614d0] text-white shadow-xs"
+                              ? "bg-[#b148d2] border-[#b148d2] text-white shadow-xs"
                               : "bg-purple-100 border-purple-300 text-purple-900 shadow-xs"
                             : "bg-gray-50/90 border-gray-200 text-gray-700 hover:border-purple-200"
                         }`}
@@ -745,7 +745,7 @@ function TaskForm({
                 </div>
                 <div className="flex gap-1.5 mt-2">
                   <input value={newTopic} onChange={(e) => setNewTopic(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addTopic()} placeholder="Add topic..." className="flex-1 p-1.5 rounded-lg border text-sm" />
-                  <button onClick={addTopic} className={`px-2.5 rounded-lg cursor-pointer ${theme === "lilac" ? "bg-[#9614d0] text-white hover:bg-[#bb44f0]" : "bg-purple-200"}`}><Plus size={14} /></button>
+                  <button onClick={addTopic} className={`px-2.5 rounded-lg cursor-pointer ${theme === "lilac" ? "bg-[#b148d2] text-white hover:bg-[#c764e8]" : "bg-purple-200"}`}><Plus size={14} /></button>
                 </div>
               </div>
             )}
@@ -759,7 +759,7 @@ function TaskForm({
               </div>
               <input value={customIcon} onChange={(e) => setCustomIcon(e.target.value.slice(0, 2))} placeholder="🌸 emoji" className="w-20 mt-2 p-1.5 rounded-lg border text-sm" />
             </details>
-            <button onClick={save} className="w-full mt-2 p-2.5 rounded-xl font-semibold text-white cursor-pointer" style={{ background: theme === "lilac" ? "#9614d0" : "#C9B6E4", fontFamily: "Fredoka, sans-serif" }}>
+            <button onClick={save} className="w-full mt-2 p-2.5 rounded-xl font-semibold text-white cursor-pointer" style={{ background: theme === "lilac" ? "#b148d2" : "#C9B6E4", fontFamily: "Fredoka, sans-serif" }}>
               {initial?.id ? "Save changes" : "Add task"}
             </button>
           </div>
@@ -840,7 +840,7 @@ function RoutineForm({ initial, onSave, onClose, theme }: {
             <label className="text-xs font-semibold opacity-70">Notes</label>
             <input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="optional" className="w-full mt-1 p-2 rounded-xl border" />
           </div>
-          <button onClick={save} className="w-full mt-2 p-2.5 rounded-xl font-semibold text-white cursor-pointer" style={{ background: theme === "lilac" ? "#9614d0" : "#A8D5BA", fontFamily: "Fredoka, sans-serif" }}>
+          <button onClick={save} className="w-full mt-2 p-2.5 rounded-xl font-semibold text-white cursor-pointer" style={{ background: theme === "lilac" ? "#b148d2" : "#A8D5BA", fontFamily: "Fredoka, sans-serif" }}>
             {initial?.id ? "Save changes" : "Add class"}
           </button>
         </div>
@@ -889,7 +889,7 @@ function RoutineView({
         <button
           onClick={() => { setEditingEntry(null); setFormOpen(true); }}
           className="px-4 py-2.5 rounded-2xl text-white font-semibold flex items-center gap-1.5 shadow-sm hover:opacity-95 transition-all text-sm cursor-pointer"
-          style={{ background: theme === "lilac" ? "#9614d0" : "#A8D5BA", fontFamily: "Fredoka, sans-serif", color: "white" }}
+          style={{ background: theme === "lilac" ? "#b148d2" : "#A8D5BA", fontFamily: "Fredoka, sans-serif", color: "white" }}
         >
           <Plus size={16} /> Add a class
         </button>
@@ -950,7 +950,7 @@ function RoutineView({
                     }}
                     className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
                       theme === "lilac"
-                        ? "bg-purple-100 hover:bg-[#9614d0] hover:text-white text-[#9614d0]"
+                        ? "bg-purple-100 hover:bg-[#b148d2] hover:text-white text-[#b148d2]"
                         : "bg-black/5 hover:bg-[#A8D5BA] hover:text-white text-gray-500"
                     }`}
                     title={`Add class for ${dayName}`}
@@ -974,7 +974,7 @@ function RoutineView({
                       >
                         {/* Time Pill */}
                         <div className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full mb-1 ${
-                          theme === "lilac" ? "text-[#9614d0] bg-purple-50" : "text-[#7C3AED] bg-purple-50"
+                          theme === "lilac" ? "text-[#b148d2] bg-purple-50" : "text-[#7C3AED] bg-purple-50"
                         }`}>
                           <Clock size={10} />
                           <span>
@@ -1410,13 +1410,13 @@ function CalendarView({
                   ? "border-2 shadow-sm bg-white/95"
                   : "border-white/70 hover:border-purple-200 bg-white/50 hover:bg-white/85"
               } backdrop-blur-2xs flex flex-col justify-between`}
-              style={{ borderColor: isToday ? (theme === "lilac" ? "#9614d0" : "#C9B6E4") : undefined }}
+              style={{ borderColor: isToday ? (theme === "lilac" ? "#b148d2" : "#C9B6E4") : undefined }}
             >
               <div className="flex items-center justify-between w-full">
                 <span className={`text-sm font-bold ${
                   isToday
                     ? theme === "lilac"
-                      ? "text-white bg-[#9614d0] px-1.5 py-0.5 rounded-lg"
+                      ? "text-white bg-[#b148d2] px-1.5 py-0.5 rounded-lg"
                       : "text-purple-700 bg-purple-100 px-1.5 py-0.5 rounded-lg"
                     : "text-gray-700"
                 }`}>
@@ -1522,7 +1522,7 @@ function CalendarView({
                 ))}
           </div>
 
-          <button onClick={() => onQuickAdd(selected)} className={`text-sm px-3 py-1.5 rounded-xl flex items-center gap-1 cursor-pointer ${theme === "lilac" ? "bg-purple-100 text-[#9614d0] hover:bg-purple-200" : "bg-pink-100"}`}>
+          <button onClick={() => onQuickAdd(selected)} className={`text-sm px-3 py-1.5 rounded-xl flex items-center gap-1 cursor-pointer ${theme === "lilac" ? "bg-purple-100 text-[#b148d2] hover:bg-purple-200" : "bg-pink-100"}`}>
             <Plus size={14} /> Add task on this day
           </button>
         </Sticker>
@@ -1962,7 +1962,7 @@ export default function StudyDen({ session }: { session: Session }) {
                     {isActive && (
                       <motion.div
                         layoutId="sidebarActivePill"
-                        className={`absolute inset-0 rounded-2xl shadow-md ${theme === "lilac" ? "bg-[#9614d0] shadow-[#9614d0]/30" : "bg-white"}`}
+                        className={`absolute inset-0 rounded-2xl shadow-md ${theme === "lilac" ? "bg-[#b148d2] shadow-[#b148d2]/30" : "bg-white"}`}
                         transition={{ type: "spring", stiffness: 400, damping: 30 }}
                       />
                     )}
@@ -1998,7 +1998,7 @@ export default function StudyDen({ session }: { session: Session }) {
                   onClick={() => updateVisualSettings({ mode: "simple" })}
                   className={`px-2.5 py-1 rounded-lg transition-all ${
                     visualSettings.mode === "simple"
-                      ? theme === "lilac" ? "bg-[#9614d0] text-white shadow-xs" : "bg-white text-gray-900 shadow-xs"
+                      ? theme === "lilac" ? "bg-[#b148d2] text-white shadow-xs" : "bg-white text-gray-900 shadow-xs"
                       : "text-gray-500 hover:text-gray-800"
                   }`}
                 >
@@ -2008,7 +2008,7 @@ export default function StudyDen({ session }: { session: Session }) {
                   onClick={() => updateVisualSettings({ mode: "custom" })}
                   className={`px-2.5 py-1 rounded-lg transition-all ${
                     visualSettings.mode === "custom"
-                      ? theme === "lilac" ? "bg-[#9614d0] text-white shadow-xs" : "bg-purple-600 text-white shadow-xs"
+                      ? theme === "lilac" ? "bg-[#b148d2] text-white shadow-xs" : "bg-purple-600 text-white shadow-xs"
                       : "text-gray-500 hover:text-gray-800"
                   }`}
                 >
@@ -2073,7 +2073,7 @@ export default function StudyDen({ session }: { session: Session }) {
                           {isSubActive && (
                             <motion.div
                               layoutId="academicsSubtabPill"
-                              className={`absolute inset-0 rounded-xl shadow-sm ${theme === "lilac" ? "bg-[#9614d0]" : "bg-purple-600"}`}
+                              className={`absolute inset-0 rounded-xl shadow-sm ${theme === "lilac" ? "bg-[#b148d2]" : "bg-purple-600"}`}
                               transition={{ type: "spring", stiffness: 420, damping: 32 }}
                             />
                           )}
@@ -2094,7 +2094,7 @@ export default function StudyDen({ session }: { session: Session }) {
                     <button
                       onClick={() => { setEditingTask(null); setFormOpen(true); }}
                       className={`px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm flex items-center gap-1.5 cursor-pointer ${
-                        theme === "lilac" ? "bg-[#9614d0] text-white hover:bg-[#bb44f0]" : "bg-pink-500 text-white hover:bg-pink-600"
+                        theme === "lilac" ? "bg-[#b148d2] text-white hover:bg-[#c764e8]" : "bg-pink-500 text-white hover:bg-pink-600"
                       }`}
                     >
                       <Plus size={14} /> Add Task
@@ -2148,7 +2148,7 @@ export default function StudyDen({ session }: { session: Session }) {
                     <div className="relative z-10">
                       <div className="flex justify-between items-center mb-2">
                         <h3 className="font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>🌸 Coming up soon</h3>
-                        <button onClick={() => { setEditingTask(null); setFormOpen(true); }} className="flex items-center gap-1 text-sm px-3 py-1.5 rounded-xl text-white cursor-pointer" style={{ background: theme === "lilac" ? "#9614d0" : "#E497B3" }}>
+                        <button onClick={() => { setEditingTask(null); setFormOpen(true); }} className="flex items-center gap-1 text-sm px-3 py-1.5 rounded-xl text-white cursor-pointer" style={{ background: theme === "lilac" ? "#b148d2" : "#E497B3" }}>
                           <Plus size={14} /> Add task
                         </button>
                       </div>
@@ -2252,11 +2252,11 @@ export default function StudyDen({ session }: { session: Session }) {
                           <button key={c.hex} onClick={() => setSubjectDraft({ ...subjectDraft, color: c.hex })} className="w-5 h-5 rounded-full border-2 cursor-pointer" style={{ background: c.hex, borderColor: subjectDraft.color === c.hex ? "#5B4B6D" : "transparent" }} />
                         ))}
                       </div>
-                      <button onClick={addSubject} className="px-3 py-1.5 rounded-lg text-white text-sm font-semibold cursor-pointer" style={{ background: theme === "lilac" ? "#9614d0" : "#C9B6E4" }}>Add</button>
+                      <button onClick={addSubject} className="px-3 py-1.5 rounded-lg text-white text-sm font-semibold cursor-pointer" style={{ background: theme === "lilac" ? "#b148d2" : "#C9B6E4" }}>Add</button>
                     </div>
                   </Sticker>
 
-                  <button onClick={() => { setEditingTask(null); setFormOpen(true); }} className="w-full mb-4 p-3 rounded-2xl text-white font-semibold flex items-center justify-center gap-1.5 cursor-pointer" style={{ background: theme === "lilac" ? "#9614d0" : "#E497B3", fontFamily: "Fredoka, sans-serif" }}>
+                  <button onClick={() => { setEditingTask(null); setFormOpen(true); }} className="w-full mb-4 p-3 rounded-2xl text-white font-semibold flex items-center justify-center gap-1.5 cursor-pointer" style={{ background: theme === "lilac" ? "#b148d2" : "#E497B3", fontFamily: "Fredoka, sans-serif" }}>
                     <Plus size={16} /> Add a task
                   </button>
 

@@ -806,7 +806,7 @@ export const FrenchView: React.FC<{ userId: string; theme?: string }> = ({ userI
             </h2>
             <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
               theme === "lilac"
-                ? "bg-white/90 text-[#9614d0] border-[#9614d0]/30 shadow-2xs"
+                ? "bg-white/90 text-[#b148d2] border-[#b148d2]/30 shadow-2xs"
                 : "bg-white/80 text-pink-600 border-pink-200"
             }`}>
               Halo Learning
@@ -862,7 +862,7 @@ export const FrenchView: React.FC<{ userId: string; theme?: string }> = ({ userI
             className={`flex items-center gap-2 px-3.5 py-2 rounded-2xl text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
               activeSubTab === t.id
                 ? theme === "lilac"
-                  ? "bg-[#9614d0] text-white shadow-sm border border-[#bb44f0]"
+                  ? "bg-[#b148d2] text-white shadow-sm border border-[#c764e8]"
                   : "bg-white text-purple-900 shadow-sm border border-purple-100"
                 : theme === "lilac"
                 ? "text-white/80 hover:text-white hover:bg-white/10"
