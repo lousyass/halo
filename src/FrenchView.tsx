@@ -150,7 +150,7 @@ interface FrenchDataCache {
 }
 let frenchCache: FrenchDataCache | null = null;
 
-export const FrenchView: React.FC<{ userId: string }> = ({ userId }) => {
+export const FrenchView: React.FC<{ userId: string; theme?: string }> = ({ userId, theme = "bloom" }) => {
   const [activeSubTab, setActiveSubTab] = useState<
     "daily" | "deck" | "quiz" | "dictionary" | "units" | "notes" | "resources"
   >("daily");
@@ -793,26 +793,38 @@ export const FrenchView: React.FC<{ userId: string }> = ({ userId }) => {
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="rounded-3xl p-6 bg-gradient-to-r from-pink-100/90 via-purple-100/80 to-blue-100/90 border border-white/60 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className={`rounded-3xl p-6 border shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4 ${
+        theme === "lilac"
+          ? "bg-[#25133c]/90 border-[#3d1d66]/80 text-[#f3e8ff]"
+          : "bg-gradient-to-r from-pink-100/90 via-purple-100/80 to-blue-100/90 border-white/60"
+      }`}>
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-2xl">🥐</span>
-            <h2 className="text-2xl font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: "#4A3B59" }}>
+            <h2 className="text-2xl font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: theme === "lilac" ? "#f3e8ff" : "#4A3B59" }}>
               Le Coin Français
             </h2>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-white/80 text-pink-600 border border-pink-200">
+            <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+              theme === "lilac"
+                ? "bg-[#351957] text-[#c4b5fd] border-[#6b2fa0]/50"
+                : "bg-white/80 text-pink-600 border-pink-200"
+            }`}>
               Halo Learning
             </span>
           </div>
-          <p className="text-sm opacity-75 text-gray-700">
+          <p className={`text-sm ${theme === "lilac" ? "text-[#c4b5fd]/80" : "opacity-75 text-gray-700"}`}>
             Your personal French learning haven . Daily vocabulary, spaced repetition deck, interactive quizzes & 250+ curated resources
           </p>
         </div>
 
         {/* Quick Review Due Badge */}
         <div className="flex items-center gap-3">
-          <div className="bg-white/80 backdrop-blur-sm px-4 py-2.5 rounded-2xl border border-white/60 shadow-sm text-center">
-            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Due for Review</div>
+          <div className={`px-4 py-2.5 rounded-2xl border shadow-sm text-center ${
+            theme === "lilac"
+              ? "bg-[#1f0f35]/90 border-[#3d1d66]"
+              : "bg-white/80 backdrop-blur-sm border-white/60"
+          }`}>
+            <div className={`text-xs font-semibold uppercase tracking-wider ${theme === "lilac" ? "text-[#c4b5fd]/70" : "text-gray-500"}`}>Due for Review</div>
             <div className="text-xl font-bold flex items-center justify-center gap-1.5" style={{ color: dueCards.length > 0 ? "#E11D48" : "#059669" }}>
               <Flame size={18} className={dueCards.length > 0 ? "text-rose-500 animate-pulse" : "text-emerald-500"} />
               {dueCards.length} {dueCards.length === 1 ? "card" : "cards"}
@@ -835,7 +847,7 @@ export const FrenchView: React.FC<{ userId: string }> = ({ userId }) => {
       </div>
 
       {/* Sub-Navigation Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-1 border-b border-gray-200/60 no-scrollbar">
+      <div className={`flex gap-2 overflow-x-auto pb-1 border-b no-scrollbar ${theme === "lilac" ? "border-purple-900/40" : "border-gray-200/60"}`}>
         {[
           { id: "daily", label: "Daily Words", icon: Sparkles, badge: dailyBatch.length },
           { id: "deck", label: "Vocabulary Deck", icon: Layers, badge: cards.length },
@@ -853,14 +865,22 @@ export const FrenchView: React.FC<{ userId: string }> = ({ userId }) => {
             }}
             className={`flex items-center gap-2 px-3.5 py-2 rounded-2xl text-sm font-bold transition-all whitespace-nowrap ${
               activeSubTab === t.id
-                ? "bg-white text-purple-900 shadow-sm border border-purple-100"
+                ? theme === "lilac"
+                  ? "bg-[#6b2fa0] text-white shadow-sm border border-[#8e44ad]"
+                  : "bg-white text-purple-900 shadow-sm border border-purple-100"
+                : theme === "lilac"
+                ? "text-[#f3e8ff]/70 hover:text-white hover:bg-white/5"
                 : "text-gray-600 hover:text-gray-900 hover:bg-white/40"
             }`}
           >
             <t.icon size={16} />
             <span>{t.label}</span>
             {t.badge !== undefined && (
-              <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${activeSubTab === t.id ? "bg-purple-100 text-purple-700" : "bg-gray-200/70 text-gray-700"}`}>
+              <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${
+                activeSubTab === t.id
+                  ? theme === "lilac" ? "bg-[#351957] text-[#c4b5fd]" : "bg-purple-100 text-purple-700"
+                  : theme === "lilac" ? "bg-white/10 text-[#f3e8ff]" : "bg-gray-200/70 text-gray-700"
+              }`}>
                 {t.badge}
               </span>
             )}
