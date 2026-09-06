@@ -795,36 +795,32 @@ export const FrenchView: React.FC<{ userId: string; theme?: string }> = ({ userI
       {/* Header Banner */}
       <div className={`rounded-3xl p-6 border shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4 ${
         theme === "lilac"
-          ? "bg-[#310547]/90 border-[#9614d0]/50 text-[#fbf5ff] shadow-lg shadow-[#660094]/30"
+          ? "bg-gradient-to-r from-purple-100/95 via-purple-50/90 to-pink-50/95 border-purple-200/70"
           : "bg-gradient-to-r from-pink-100/90 via-purple-100/80 to-blue-100/90 border-white/60"
       }`}>
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-2xl">🥐</span>
-            <h2 className="text-2xl font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: theme === "lilac" ? "#fbf5ff" : "#4A3B59" }}>
+            <h2 className="text-2xl font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: "#4A3B59" }}>
               Le Coin Français
             </h2>
             <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
               theme === "lilac"
-                ? "bg-[#660094] text-[#d16aff] border-[#9614d0]/60"
+                ? "bg-white/90 text-[#9614d0] border-[#9614d0]/30 shadow-2xs"
                 : "bg-white/80 text-pink-600 border-pink-200"
             }`}>
               Halo Learning
             </span>
           </div>
-          <p className={`text-sm ${theme === "lilac" ? "text-[#d8a4f8]" : "opacity-75 text-gray-700"}`}>
-            Your personal French learning haven . Daily vocabulary, spaced repetition deck, interactive quizzes & 250+ curated resources
+          <p className="text-sm opacity-75 text-gray-700">
+            Your personal French learning haven · Daily vocabulary, spaced repetition deck, interactive quizzes & 250+ curated resources
           </p>
         </div>
 
         {/* Quick Review Due Badge */}
         <div className="flex items-center gap-3">
-          <div className={`px-4 py-2.5 rounded-2xl border shadow-sm text-center ${
-            theme === "lilac"
-              ? "bg-[#2c043e]/90 border-[#660094]"
-              : "bg-white/80 backdrop-blur-sm border-white/60"
-          }`}>
-            <div className={`text-xs font-semibold uppercase tracking-wider ${theme === "lilac" ? "text-[#d8a4f8]" : "text-gray-500"}`}>Due for Review</div>
+          <div className="px-4 py-2.5 rounded-2xl border shadow-sm text-center bg-white/80 backdrop-blur-sm border-white/60">
+            <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Due for Review</div>
             <div className="text-xl font-bold flex items-center justify-center gap-1.5" style={{ color: dueCards.length > 0 ? "#E11D48" : "#059669" }}>
               <Flame size={18} className={dueCards.length > 0 ? "text-rose-500 animate-pulse" : "text-emerald-500"} />
               {dueCards.length} {dueCards.length === 1 ? "card" : "cards"}
@@ -838,7 +834,7 @@ export const FrenchView: React.FC<{ userId: string; theme?: string }> = ({ userI
                 setReviewIndex(0);
                 setReviewRevealed(false);
               }}
-              className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-rose-400 to-pink-500 text-white font-bold text-sm shadow hover:opacity-95 transition-all flex items-center gap-1.5"
+              className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-rose-400 to-pink-500 text-white font-bold text-sm shadow hover:opacity-95 transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <RotateCcw size={15} /> Review Now
             </button>
@@ -847,7 +843,7 @@ export const FrenchView: React.FC<{ userId: string; theme?: string }> = ({ userI
       </div>
 
       {/* Sub-Navigation Tabs */}
-      <div className={`flex gap-2 overflow-x-auto pb-1 border-b no-scrollbar ${theme === "lilac" ? "border-[#660094]/40" : "border-gray-200/60"}`}>
+      <div className={`flex gap-2 overflow-x-auto pb-1 border-b no-scrollbar ${theme === "lilac" ? "border-white/20" : "border-gray-200/60"}`}>
         {[
           { id: "daily", label: "Daily Words", icon: Sparkles, badge: dailyBatch.length },
           { id: "deck", label: "Vocabulary Deck", icon: Layers, badge: cards.length },
@@ -863,13 +859,13 @@ export const FrenchView: React.FC<{ userId: string; theme?: string }> = ({ userI
               setActiveSubTab(t.id as any);
               setReviewModeActive(false);
             }}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-2xl text-sm font-bold transition-all whitespace-nowrap ${
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-2xl text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
               activeSubTab === t.id
                 ? theme === "lilac"
                   ? "bg-[#9614d0] text-white shadow-sm border border-[#bb44f0]"
                   : "bg-white text-purple-900 shadow-sm border border-purple-100"
                 : theme === "lilac"
-                ? "text-[#fbf5ff]/80 hover:text-white hover:bg-white/5"
+                ? "text-white/80 hover:text-white hover:bg-white/10"
                 : "text-gray-600 hover:text-gray-900 hover:bg-white/40"
             }`}
           >
@@ -878,8 +874,8 @@ export const FrenchView: React.FC<{ userId: string; theme?: string }> = ({ userI
             {t.badge !== undefined && (
               <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${
                 activeSubTab === t.id
-                  ? theme === "lilac" ? "bg-[#660094] text-[#d16aff]" : "bg-purple-100 text-purple-700"
-                  : theme === "lilac" ? "bg-white/10 text-[#fbf5ff]" : "bg-gray-200/70 text-gray-700"
+                  ? theme === "lilac" ? "bg-white/20 text-white" : "bg-purple-100 text-purple-700"
+                  : theme === "lilac" ? "bg-white/10 text-white" : "bg-gray-200/70 text-gray-700"
               }`}>
                 {t.badge}
               </span>

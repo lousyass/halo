@@ -171,17 +171,17 @@ const DIARY_THEME_PALETTES: Record<string, {
     subColor: "#9E6E48",
   },
   lilac: {
-    coverBg: "#220330",
+    coverBg: "#42005e",
     coverBorder: "#660094",
-    pageBgStart: "#2a063c",
-    pageBgEnd: "#1f032c",
-    pageBorder: "#520875",
-    lineColor: "#42065e",
+    pageBgStart: "#FDFBFF",
+    pageBgEnd: "#F6F0FA",
+    pageBorder: "#E9DCF2",
+    lineColor: "#EDE0F6",
     ribbonBg: "#9614d0",
     accentBtn: "#9614d0",
-    inkColor: "#fbf5ff",
-    headerColor: "#fbf5ff",
-    subColor: "#d8a4f8",
+    inkColor: "#351957",
+    headerColor: "#4A3B59",
+    subColor: "#7E5B9B",
   },
   babyblue: {
     coverBg: "#E1EDF8",
@@ -973,39 +973,35 @@ function MemoryWallCalendar({
   }, [entries, photosByEntry]);
 
   return (
-    <div className={`relative overflow-hidden rounded-3xl p-5 border shadow-lg ${
-      isLilac
-        ? "bg-[#310547]/85 border-[#9614d0]/40 text-[#fbf5ff] shadow-lg shadow-[#660094]/30"
-        : "bg-white/75 border-white/60"
-    }`}>
+    <div className="relative overflow-hidden rounded-3xl p-5 border shadow-lg bg-white/75 border-white/60">
       {/* Decorative Calendar Background */}
       {calBg && (
         <div
           className="absolute inset-0 pointer-events-none z-0 bg-cover bg-center rounded-3xl transition-opacity duration-300"
           style={{
             backgroundImage: `url("${calBg}")`,
-            opacity: isLilac ? 0.35 : 0.42,
+            opacity: 0.42,
           }}
         />
       )}
 
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-4">
-          <button onClick={() => setCursor(new Date(year, month - 1, 1))} className={`p-2 rounded-xl ${isLilac ? "hover:bg-[#660094]/50 text-[#fbf5ff]" : "hover:bg-black/5"}`}>
+          <button onClick={() => setCursor(new Date(year, month - 1, 1))} className="p-2 rounded-xl hover:bg-black/5 text-gray-700 cursor-pointer">
             <ChevronLeft size={20} />
           </button>
           <div className="text-center">
-            <h3 className="font-bold text-lg" style={{ fontFamily: "Fredoka, sans-serif", color: isLilac ? "#fbf5ff" : "#5B4B6D" }}>
+            <h3 className="font-bold text-lg" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>
               {cursor.toLocaleDateString(undefined, { month: "long", year: "numeric" })}
             </h3>
-            <p className={`text-xs ${isLilac ? "text-[#d8a4f8]" : "opacity-60"}`}>Capture your days with Polaroids & memories</p>
+            <p className="text-xs opacity-60">Capture your days with Polaroids & memories</p>
           </div>
-          <button onClick={() => setCursor(new Date(year, month + 1, 1))} className={`p-2 rounded-xl ${isLilac ? "hover:bg-[#660094]/50 text-[#fbf5ff]" : "hover:bg-black/5"}`}>
+          <button onClick={() => setCursor(new Date(year, month + 1, 1))} className="p-2 rounded-xl hover:bg-black/5 text-gray-700 cursor-pointer">
             <ChevronRight size={20} />
           </button>
         </div>
 
-      <div className={`grid grid-cols-7 gap-2 text-center text-xs font-bold ${isLilac ? "text-[#d8a4f8]" : "text-[#8A7B9D]"} uppercase tracking-wider mb-2`}>
+      <div className="grid grid-cols-7 gap-2 text-center text-xs font-bold text-[#8A7B9D] uppercase tracking-wider mb-2">
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
           <div key={d}>{d}</div>
         ))}
@@ -1034,14 +1030,14 @@ function MemoryWallCalendar({
               onClick={() => onOpenEntry(primaryEntry, dateStr)}
               className={`relative aspect-square rounded-2xl flex flex-col justify-between p-2 text-left border transition-colors overflow-hidden group shadow-2xs cursor-pointer ${
                 isToday
-                  ? (isLilac ? "ring-2 ring-[#bb44f0] border-[#9614d0]" : "ring-2 ring-[#C9B6E4]")
-                  : (isLilac ? "border-[#660094]/40" : "border-black/5")
+                  ? (isLilac ? "ring-2 ring-[#9614d0] border-[#9614d0]" : "ring-2 ring-[#C9B6E4]")
+                  : "border-black/5"
               } ${
                 hasPhotos
                   ? "shadow-md"
                   : hasEntries
-                  ? (isLilac ? "bg-[#3d0558] hover:bg-[#4a066b] text-[#fbf5ff]" : "bg-[#FAF7F2]/90 hover:bg-[#F3EFE8]")
-                  : (isLilac ? "bg-[#240436]/70 hover:bg-[#310547] text-[#fbf5ff] backdrop-blur-2xs" : "bg-white/50 hover:bg-white/85 backdrop-blur-2xs")
+                  ? "bg-[#FAF7F2]/90 hover:bg-[#F3EFE8]"
+                  : "bg-white/50 hover:bg-white/85 backdrop-blur-2xs"
               }`}
             >
               {hasPhotos && (
@@ -1054,14 +1050,14 @@ function MemoryWallCalendar({
               <div className="relative z-10 flex items-center justify-between w-full">
                 <span
                   className={`text-xs font-bold ${
-                    hasPhotos ? "text-white drop-shadow-md" : isToday ? (isLilac ? "text-[#d16aff]" : "text-[#C9B6E4]") : (isLilac ? "text-[#fbf5ff]" : "text-[#5B4B6D]")
+                    hasPhotos ? "text-white drop-shadow-md" : isToday ? (isLilac ? "text-[#9614d0]" : "text-[#C9B6E4]") : "text-[#5B4B6D]"
                   }`}
                 >
                   {d}
                 </span>
                 <div className="flex items-center gap-1">
                   {dayEntries.length > 1 && !hasPhotos && (
-                    <span className={`text-[9px] ${isLilac ? "bg-[#660094] text-[#d16aff]" : "bg-[#C9B6E4]/40 text-[#5B4B6D]"} font-bold px-1 rounded-md`}>
+                    <span className={`text-[9px] ${isLilac ? "bg-purple-100 text-[#9614d0]" : "bg-[#C9B6E4]/40 text-[#5B4B6D]"} font-bold px-1 rounded-md`}>
                       {dayEntries.length}
                     </span>
                   )}
@@ -1608,37 +1604,35 @@ export default function JournalView({
         const isLilac = theme === "lilac";
         return (
           <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
-            <div className={`flex gap-1.5 p-1 rounded-2xl border shadow-xs ${
-              isLilac ? "bg-[#2c043e]/80 border-[#660094]/50" : "bg-white/60 border-black/5"
-            }`}>
+            <div className="flex gap-1.5 p-1 rounded-2xl border bg-white/60 border-black/5 shadow-xs">
               <button
                 onClick={() => {
                   setActiveSubTab("diary");
                 }}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   activeSubTab === "diary"
                     ? (isLilac ? "bg-[#9614d0] text-white shadow-sm" : "bg-white text-[#5B4B6D] shadow-sm")
-                    : (isLilac ? "text-[#d8a4f8] hover:text-[#fbf5ff]" : "text-gray-500 hover:text-gray-800")
+                    : "text-gray-500 hover:text-gray-800"
                 }`}
               >
                 <BookOpen size={14} /> Diary
               </button>
               <button
                 onClick={() => setActiveSubTab("wall")}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   activeSubTab === "wall"
                     ? (isLilac ? "bg-[#9614d0] text-white shadow-sm" : "bg-white text-[#5B4B6D] shadow-sm")
-                    : (isLilac ? "text-[#d8a4f8] hover:text-[#fbf5ff]" : "text-gray-500 hover:text-gray-800")
+                    : "text-gray-500 hover:text-gray-800"
                 }`}
               >
                 <CalendarIcon size={14} /> Memory Wall
               </button>
               <button
                 onClick={() => setActiveSubTab("log")}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   activeSubTab === "log"
                     ? (isLilac ? "bg-[#9614d0] text-white shadow-sm" : "bg-white text-[#5B4B6D] shadow-sm")
-                    : (isLilac ? "text-[#d8a4f8] hover:text-[#fbf5ff]" : "text-gray-500 hover:text-gray-800")
+                    : "text-gray-500 hover:text-gray-800"
                 }`}
               >
                 <Shuffle size={14} /> Memories & Log
@@ -1647,7 +1641,7 @@ export default function JournalView({
 
             <button
               onClick={() => openWriteMode(null)}
-              className={`px-4 py-2 rounded-2xl text-xs font-bold text-white shadow-sm flex items-center gap-1.5 hover:opacity-95 transition-all ${
+              className={`px-4 py-2 rounded-2xl text-xs font-bold text-white shadow-sm flex items-center gap-1.5 hover:opacity-95 transition-all cursor-pointer ${
                 isLilac ? "bg-[#9614d0] hover:bg-[#bb44f0] text-white" : ""
               }`}
               style={{ background: isLilac ? "#9614d0" : "#C9B6E4", fontFamily: "Fredoka, sans-serif" }}
