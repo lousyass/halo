@@ -125,7 +125,7 @@ const THEMES = {
   bloom:      { label: "Blush Bloom",        css: "linear-gradient(135deg, #FDF2F6 0%, #F7E4EE 50%, #EFE2F7 100%)" },
   meadow:     { label: "Mint Meadow",        css: "linear-gradient(135deg, #F3FAF5 0%, #E3F3E8 50%, #DDEFE9 100%)" },
   dusk:       { label: "Golden Dusk",        css: "linear-gradient(135deg, #FFF6E9 0%, #FBE7D4 50%, #F3D9E6 100%)" },
-  lilac:      { label: "Lilac Dream",        css: "linear-gradient(135deg, #42005e 0%, #2b003e 50%, #180026 100%)" },
+  lilac:      { label: "Lilac Dream",        css: "linear-gradient(135deg, #F6F1FC 0%, #EDE1F7 50%, #E3D6F0 100%)" },
   babyblue:   { label: "Baby Blue",          css: "linear-gradient(135deg, #F0F7FD 0%, #E1EFFB 50%, #D4E6F8 100%)" },
   monochrome: { label: "Monochrome Minimal", css: "linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 50%, #E5E7EB 100%)" },
 };
@@ -320,12 +320,12 @@ const THEME_TIMER_STYLES: Record<string, {
   },
   lilac: {
     bg: "bg-purple-50/90 hover:bg-purple-100/80",
-    border: "border-[#b148d2]/40",
+    border: "border-purple-300",
     text: "text-purple-950",
-    subText: "text-[#b148d2] font-semibold",
-    icon: "text-[#b148d2]",
-    colon: "text-[#b148d2]/60",
-    badgeBg: "bg-[#b148d2] text-white",
+    subText: "text-purple-600 font-semibold",
+    icon: "text-purple-600",
+    colon: "text-purple-400",
+    badgeBg: "bg-purple-600 text-white",
   },
   babyblue: {
     bg: "bg-sky-50/90 hover:bg-sky-100/80",
@@ -490,7 +490,7 @@ function TaskCard({
 
   return (
     <div
-      className="rounded-2xl p-3.5 mb-2.5 border transition-all hover:shadow-md backdrop-blur-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3 bg-white/85"
+      className="rounded-2xl p-3.5 mb-2.5 border transition-all hover:shadow-md bg-white/85 backdrop-blur-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3"
       style={{ borderColor: color + "44" }}
     >
       {/* Left: Checkbox + Title + Subject + Work Type + Sub-info */}
@@ -531,28 +531,20 @@ function TaskCard({
             {/* Subject Badge */}
             <span
               className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full"
-              style={{
-                background: color + "28",
-                color: "#4A3B59",
-                border: `1px solid ${color}55`,
-              }}
+              style={{ background: color + "28", color: "#4A3B59", border: `1px solid ${color}55` }}
             >
               {subject?.name || "No subject"}
             </span>
 
             {/* Work Type Badge */}
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg uppercase tracking-wider ${
-              theme === "lilac"
-                ? "bg-purple-50 text-[#b148d2] border border-purple-200"
-                : "bg-gray-100/90 text-gray-700 border border-gray-200"
-            }`}>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-gray-100/90 text-gray-700 border border-gray-200 uppercase tracking-wider">
               {task.type || "Assignment"}
             </span>
 
             {urgency && <UrgencyDot level={overdue ? "red" : urgency} />}
           </div>
 
-          <div className="text-xs mt-1 font-medium text-gray-500">
+          <div className="text-xs mt-1 text-gray-500 font-medium">
             {task.status === "completed"
               ? `Completed · due was ${niceDate(task.dueDate)}`
               : overdue
@@ -572,14 +564,14 @@ function TaskCard({
       <div className="flex items-center gap-1 shrink-0 self-end md:self-center">
         <button
           onClick={() => onEdit(task)}
-          className="p-1.5 rounded-xl transition-colors hover:bg-black/5 text-gray-400 hover:text-gray-700"
+          className="p-1.5 rounded-xl hover:bg-black/5 text-gray-400 hover:text-gray-700 transition-colors"
           title="Edit task"
         >
           <Pencil size={15} />
         </button>
         <button
           onClick={() => onDelete(task.id)}
-          className="p-1.5 rounded-xl transition-colors hover:bg-rose-50 text-gray-400 hover:text-rose-600"
+          className="p-1.5 rounded-xl hover:bg-rose-50 text-gray-400 hover:text-rose-600 transition-colors"
           title="Delete task"
         >
           <Trash2 size={15} />
@@ -598,7 +590,6 @@ function TaskForm({
   onSave,
   onClose,
   onHideTypeSuggestion,
-  theme,
 }: {
   initial: Partial<FrontendTask> | null;
   subjects: Subject[];
@@ -606,7 +597,6 @@ function TaskForm({
   onSave: (t: FrontendTask) => void;
   onClose: () => void;
   onHideTypeSuggestion: (t: string) => void;
-  theme?: string;
 }) {
   const [subjectId, setSubjectId] = useState(initial?.subjectId || subjects[0]?.id || "");
   const [title, setTitle] = useState(initial?.title || "");
@@ -648,7 +638,7 @@ function TaskForm({
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4" onClick={onClose}>
       <div
-        className="rounded-3xl p-5 w-full max-w-md max-h-[85vh] overflow-y-auto shadow-xl bg-white"
+        className="bg-white rounded-3xl p-5 w-full max-w-md max-h-[85vh] overflow-y-auto shadow-xl"
         onClick={(e) => e.stopPropagation()}
         style={{ fontFamily: "Quicksand, sans-serif" }}
       >
@@ -656,7 +646,7 @@ function TaskForm({
           <h3 className="text-lg font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>
             {initial?.id ? "Edit task" : "Add a task"}
           </h3>
-          <button onClick={onClose} className="cursor-pointer text-gray-400 hover:text-gray-700"><X size={20} /></button>
+          <button onClick={onClose}><X size={20} /></button>
         </div>
         {subjects.length === 0 ? (
           <p className="text-sm opacity-70 mb-3">Add a subject first from the Tasks tab 🌸</p>
@@ -695,17 +685,15 @@ function TaskForm({
                         key={s}
                         className={`inline-flex items-center rounded-lg border text-[11px] overflow-hidden transition-all ${
                           isSelected
-                            ? theme === "lilac"
-                              ? "bg-[#b148d2] border-[#b148d2] text-white shadow-xs"
-                              : "bg-purple-100 border-purple-300 text-purple-900 shadow-xs"
+                            ? "bg-purple-100 border-purple-300 text-purple-900 shadow-xs"
                             : "bg-gray-50/90 border-gray-200 text-gray-700 hover:border-purple-200"
                         }`}
                       >
                         <button
                           type="button"
                           onClick={() => setType(s)}
-                          className={`px-2.5 py-1 text-left font-semibold transition-colors cursor-pointer ${
-                            isSelected ? "text-white" : "hover:bg-purple-50 text-gray-700"
+                          className={`px-2.5 py-1 text-left font-semibold transition-colors ${
+                            isSelected ? "text-purple-900" : "hover:bg-purple-50 text-gray-700"
                           }`}
                         >
                           {s}
@@ -716,7 +704,7 @@ function TaskForm({
                             e.stopPropagation();
                             onHideTypeSuggestion(s);
                           }}
-                          className="px-1.5 py-1 transition-colors cursor-pointer text-gray-400 hover:text-rose-600 hover:bg-rose-50 border-l border-gray-200/80"
+                          className="px-1.5 py-1 text-gray-400 hover:text-rose-600 hover:bg-rose-50 border-l border-gray-200/80 transition-colors"
                           title={`Hide "${s}" from suggestions`}
                         >
                           <X size={10} strokeWidth={2.5} />
@@ -733,33 +721,33 @@ function TaskForm({
             </div>
             {(type.toLowerCase() === "exam" || type.toLowerCase() === "ct" || type.toLowerCase() === "quiz") && (
               <div className="p-3 rounded-xl bg-purple-50/60">
-                <label className="text-xs font-semibold flex items-center gap-1 opacity-70"><ListChecks size={14} /> Exam topics</label>
+                <label className="text-xs font-semibold opacity-70 flex items-center gap-1"><ListChecks size={14} /> Exam topics</label>
                 <div className="space-y-1 mt-2">
                   {topics.map((t) => (
                     <div key={t.id} className="flex items-center gap-2 text-sm">
                       <input type="checkbox" checked={t.done} onChange={() => setTopics(topics.map((x) => x.id === t.id ? { ...x, done: !x.done } : x))} />
                       <span className={t.done ? "line-through opacity-50" : ""}>{t.name}</span>
-                      <button onClick={() => setTopics(topics.filter((x) => x.id !== t.id))} className="ml-auto opacity-50 hover:opacity-100 cursor-pointer"><X size={13} /></button>
+                      <button onClick={() => setTopics(topics.filter((x) => x.id !== t.id))} className="ml-auto opacity-50 hover:opacity-100"><X size={13} /></button>
                     </div>
                   ))}
                 </div>
                 <div className="flex gap-1.5 mt-2">
                   <input value={newTopic} onChange={(e) => setNewTopic(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addTopic()} placeholder="Add topic..." className="flex-1 p-1.5 rounded-lg border text-sm" />
-                  <button onClick={addTopic} className={`px-2.5 rounded-lg cursor-pointer ${theme === "lilac" ? "bg-[#b148d2] text-white hover:bg-[#c764e8]" : "bg-purple-200"}`}><Plus size={14} /></button>
+                  <button onClick={addTopic} className="px-2.5 rounded-lg bg-purple-200"><Plus size={14} /></button>
                 </div>
               </div>
             )}
             <details className="text-sm">
-              <summary className="text-xs font-semibold cursor-pointer opacity-70">Custom look (optional)</summary>
+              <summary className="text-xs font-semibold opacity-70 cursor-pointer">Custom look (optional)</summary>
               <div className="flex gap-1 flex-wrap mt-2">
                 {COLOR_PRESETS.map((c) => (
-                  <button key={c.hex} onClick={() => setCustomColor(c.hex)} className="w-6 h-6 rounded-full border-2 cursor-pointer" style={{ background: c.hex, borderColor: customColor === c.hex ? "#5B4B6D" : "transparent" }} />
+                  <button key={c.hex} onClick={() => setCustomColor(c.hex)} className="w-6 h-6 rounded-full border-2" style={{ background: c.hex, borderColor: customColor === c.hex ? "#5B4B6D" : "transparent" }} />
                 ))}
-                <button onClick={() => setCustomColor("")} className="text-xs underline ml-1 cursor-pointer opacity-60">clear</button>
+                <button onClick={() => setCustomColor("")} className="text-xs opacity-60 underline ml-1">clear</button>
               </div>
               <input value={customIcon} onChange={(e) => setCustomIcon(e.target.value.slice(0, 2))} placeholder="🌸 emoji" className="w-20 mt-2 p-1.5 rounded-lg border text-sm" />
             </details>
-            <button onClick={save} className="w-full mt-2 p-2.5 rounded-xl font-semibold text-white cursor-pointer" style={{ background: theme === "lilac" ? "#b148d2" : "#C9B6E4", fontFamily: "Fredoka, sans-serif" }}>
+            <button onClick={save} className="w-full mt-2 p-2.5 rounded-xl font-semibold text-white" style={{ background: "#C9B6E4", fontFamily: "Fredoka, sans-serif" }}>
               {initial?.id ? "Save changes" : "Add task"}
             </button>
           </div>
@@ -780,8 +768,8 @@ const EMPTY_ROUTINE: Omit<RoutineEntry, "id" | "user_id"> = {
   notes: "",
 };
 
-function RoutineForm({ initial, onSave, onClose, theme }: {
-  initial?: Partial<RoutineEntry>; onSave: (r: Omit<RoutineEntry, "id" | "user_id">) => void; onClose: () => void; theme?: string;
+function RoutineForm({ initial, onSave, onClose }: {
+  initial?: Partial<RoutineEntry>; onSave: (r: Omit<RoutineEntry, "id" | "user_id">) => void; onClose: () => void;
 }) {
   const [form, setForm] = useState({
     day_of_week: initial?.day_of_week ?? 1,
@@ -840,7 +828,7 @@ function RoutineForm({ initial, onSave, onClose, theme }: {
             <label className="text-xs font-semibold opacity-70">Notes</label>
             <input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="optional" className="w-full mt-1 p-2 rounded-xl border" />
           </div>
-          <button onClick={save} className="w-full mt-2 p-2.5 rounded-xl font-semibold text-white cursor-pointer" style={{ background: theme === "lilac" ? "#b148d2" : "#A8D5BA", fontFamily: "Fredoka, sans-serif" }}>
+          <button onClick={save} className="w-full mt-2 p-2.5 rounded-xl font-semibold text-white" style={{ background: "#A8D5BA", fontFamily: "Fredoka, sans-serif" }}>
             {initial?.id ? "Save changes" : "Add class"}
           </button>
         </div>
@@ -857,14 +845,12 @@ function RoutineView({
   onEdit,
   onDelete,
   routineBg = null,
-  theme,
 }: {
   routineEntries: RoutineEntry[];
   onAdd: (r: Omit<RoutineEntry, "id" | "user_id">) => void;
   onEdit: (id: string, r: Omit<RoutineEntry, "id" | "user_id">) => void;
   onDelete: (id: string) => void;
   routineBg?: string | null;
-  theme?: string;
 }) {
   const [formOpen, setFormOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<RoutineEntry | null>(null);
@@ -888,8 +874,8 @@ function RoutineView({
         </div>
         <button
           onClick={() => { setEditingEntry(null); setFormOpen(true); }}
-          className="px-4 py-2.5 rounded-2xl text-white font-semibold flex items-center gap-1.5 shadow-sm hover:opacity-95 transition-all text-sm cursor-pointer"
-          style={{ background: theme === "lilac" ? "#b148d2" : "#A8D5BA", fontFamily: "Fredoka, sans-serif", color: "white" }}
+          className="px-4 py-2.5 rounded-2xl text-white font-semibold flex items-center gap-1.5 shadow-sm hover:opacity-95 transition-all text-sm"
+          style={{ background: "#A8D5BA", fontFamily: "Fredoka, sans-serif" }}
         >
           <Plus size={16} /> Add a class
         </button>
@@ -907,9 +893,7 @@ function RoutineView({
               <div
                 key={dow}
                 className={`relative overflow-hidden flex flex-col rounded-3xl p-3 border transition-all ${
-                  isWeekend
-                    ? "bg-purple-50/75 border-purple-200/80"
-                    : "bg-white/90 border-black/5"
+                  isWeekend ? "bg-purple-50/75 border-purple-200/80" : "bg-white/90 border-black/5"
                 } shadow-xs min-h-[440px]`}
               >
                 {/* Decorative Day Column Background */}
@@ -927,10 +911,10 @@ function RoutineView({
                   {/* Column Header */}
                   <div className="flex items-center justify-between border-b border-black/5 pb-2 mb-2.5">
                     <div>
-                      <span className="font-bold text-sm" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>
+                      <span className="font-bold text-sm text-[#5B4B6D]" style={{ fontFamily: "Fredoka, sans-serif" }}>
                         {shortName}
                       </span>
-                      <span className="text-[10px] block font-medium opacity-60">
+                      <span className="text-[10px] opacity-60 block font-medium">
                         {entries.length === 0 ? "Free" : `${entries.length} ${entries.length === 1 ? "class" : "classes"}`}
                       </span>
                     </div>
@@ -948,11 +932,7 @@ function RoutineView({
                       });
                       setFormOpen(true);
                     }}
-                    className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
-                      theme === "lilac"
-                        ? "bg-purple-100 hover:bg-[#b148d2] hover:text-white text-[#b148d2]"
-                        : "bg-black/5 hover:bg-[#A8D5BA] hover:text-white text-gray-500"
-                    }`}
+                    className="w-6 h-6 rounded-full bg-black/5 hover:bg-[#A8D5BA] hover:text-white flex items-center justify-center text-gray-500 transition-colors"
                     title={`Add class for ${dayName}`}
                   >
                     <Plus size={13} />
@@ -962,7 +942,7 @@ function RoutineView({
                 {/* Class Slots */}
                 <div className="space-y-2 flex-1">
                   {entries.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-center p-3 border-2 border-dashed border-black/5 rounded-2xl opacity-35">
+                    <div className="h-full flex flex-col items-center justify-center text-center p-3 opacity-35 border-2 border-dashed border-black/5 rounded-2xl">
                       <span className="text-xl mb-1">☕</span>
                       <span className="text-xs font-medium">No classes</span>
                     </div>
@@ -970,12 +950,10 @@ function RoutineView({
                     entries.map((entry) => (
                       <div
                         key={entry.id}
-                        className="p-2.5 rounded-2xl border shadow-2xs hover:shadow-xs transition-all text-left group bg-white border-[#EADEF0]"
+                        className="p-2.5 rounded-2xl bg-white border border-[#EADEF0] shadow-2xs hover:shadow-xs transition-all text-left group"
                       >
                         {/* Time Pill */}
-                        <div className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full mb-1 ${
-                          theme === "lilac" ? "text-[#b148d2] bg-purple-50" : "text-[#7C3AED] bg-purple-50"
-                        }`}>
+                        <div className="inline-flex items-center gap-1 text-[10px] font-bold text-[#7C3AED] bg-purple-50 px-2 py-0.5 rounded-full mb-1">
                           <Clock size={10} />
                           <span>
                             {entry.start_time.slice(0, 5)}
@@ -984,24 +962,24 @@ function RoutineView({
                         </div>
 
                         {/* Subject */}
-                        <h4 className="font-bold text-xs leading-tight mb-1 truncate text-[#5B4B6D]" title={entry.subject}>
+                        <h4 className="font-bold text-xs text-[#5B4B6D] leading-tight mb-1 truncate" title={entry.subject}>
                           {entry.subject}
                         </h4>
 
                         {/* Location / Notes */}
                         {entry.location && (
-                          <div className="text-[11px] truncate mb-0.5 text-gray-500">
+                          <div className="text-[11px] text-gray-500 truncate mb-0.5">
                             📍 {entry.location}
                           </div>
                         )}
                         {entry.notes && (
-                          <div className="text-[10px] italic line-clamp-2 leading-tight text-gray-400">
+                          <div className="text-[10px] text-gray-400 italic line-clamp-2 leading-tight">
                             {entry.notes}
                           </div>
                         )}
 
                         {/* Actions */}
-                        <div className="mt-2 pt-1.5 border-t flex items-center justify-end gap-1 opacity-80 group-hover:opacity-100 border-gray-100">
+                        <div className="mt-2 pt-1.5 border-t border-gray-100 flex items-center justify-end gap-1 opacity-80 group-hover:opacity-100">
                           <button
                             onClick={() => { setEditingEntry(entry); setFormOpen(true); }}
                             className="p-1 rounded-lg hover:bg-black/5 text-gray-500 hover:text-[#5B4B6D]"
@@ -1031,7 +1009,6 @@ function RoutineView({
       {formOpen && (
         <RoutineForm
           initial={editingEntry || undefined}
-          theme={theme}
           onSave={(r) => {
             if (editingEntry?.id) { onEdit(editingEntry.id, r); }
             else { onAdd(r); }
@@ -1322,7 +1299,6 @@ function CalendarView({
   onDelete,
   onEdit,
   isCustomVisual = false,
-  theme,
 }: {
   tasks: FrontendTask[];
   subjects: Subject[];
@@ -1332,7 +1308,6 @@ function CalendarView({
   onDelete: (id: string) => void;
   onEdit: (t: FrontendTask) => void;
   isCustomVisual?: boolean;
-  theme?: string;
 }) {
   const [cursor, setCursor] = useState(new Date());
   const [selected, setSelected] = useState<string | null>(null);
@@ -1375,21 +1350,21 @@ function CalendarView({
           className="absolute inset-0 pointer-events-none z-0 bg-cover bg-center rounded-3xl transition-opacity duration-300"
           style={{
             backgroundImage: `url("${calBg}")`,
-            opacity: theme === "lilac" ? 0.30 : 0.42,
+            opacity: 0.42,
           }}
         />
       )}
 
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-4">
-        <button onClick={() => setCursor(new Date(year, month - 1, 1))} className="p-2 rounded-xl cursor-pointer hover:bg-black/5 text-gray-700"><ChevronLeft size={18} /></button>
+        <button onClick={() => setCursor(new Date(year, month - 1, 1))} className="p-2 rounded-xl hover:bg-black/5"><ChevronLeft size={18} /></button>
         <h3 className="font-bold text-lg" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>
           {cursor.toLocaleDateString(undefined, { month: "long", year: "numeric" })}
         </h3>
-        <button onClick={() => setCursor(new Date(year, month + 1, 1))} className="p-2 rounded-xl cursor-pointer hover:bg-black/5 text-gray-700"><ChevronRight size={18} /></button>
+        <button onClick={() => setCursor(new Date(year, month + 1, 1))} className="p-2 rounded-xl hover:bg-black/5"><ChevronRight size={18} /></button>
       </div>
 
-      <div className="grid grid-cols-7 gap-2 text-center text-xs font-bold mb-2 text-gray-500">
+      <div className="grid grid-cols-7 gap-2 text-center text-xs font-bold text-gray-500 mb-2">
         {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d, i) => <div key={i}>{d}</div>)}
       </div>
       <div className="grid grid-cols-7 gap-2">
@@ -1406,20 +1381,12 @@ function CalendarView({
               transition={{ duration: 0.15 }}
               onClick={() => setSelected(dateStr)}
               className={`min-h-[90px] rounded-2xl p-2 text-left relative overflow-hidden border transition-colors cursor-pointer ${
-                isToday
-                  ? "border-2 shadow-sm bg-white/95"
-                  : "border-white/70 hover:border-purple-200 bg-white/50 hover:bg-white/85"
+                isToday ? "border-2 shadow-sm bg-white/95" : "border-white/70 hover:border-purple-200 bg-white/50 hover:bg-white/85"
               } backdrop-blur-2xs flex flex-col justify-between`}
-              style={{ borderColor: isToday ? (theme === "lilac" ? "#b148d2" : "#C9B6E4") : undefined }}
+              style={{ borderColor: isToday ? "#C9B6E4" : undefined }}
             >
               <div className="flex items-center justify-between w-full">
-                <span className={`text-sm font-bold ${
-                  isToday
-                    ? theme === "lilac"
-                      ? "text-white bg-[#b148d2] px-1.5 py-0.5 rounded-lg"
-                      : "text-purple-700 bg-purple-100 px-1.5 py-0.5 rounded-lg"
-                    : "text-gray-700"
-                }`}>
+                <span className={`text-sm font-bold ${isToday ? "text-purple-700 bg-purple-100 px-1.5 py-0.5 rounded-lg" : "text-gray-700"}`}>
                   {d}
                 </span>
                 {dayTasks.length > 0 && (
@@ -1442,7 +1409,7 @@ function CalendarView({
                   return (
                     <div
                       key={t.id}
-                      className="text-[10.5px] font-semibold px-1.5 py-0.5 rounded-md truncate flex items-center gap-1 text-gray-800"
+                      className="text-[10.5px] font-semibold px-1.5 py-0.5 rounded-md truncate text-gray-800 flex items-center gap-1"
                       style={{
                         backgroundColor: color + "22",
                         borderLeft: `2.5px solid ${color}`,
@@ -1454,7 +1421,7 @@ function CalendarView({
                   );
                 })}
                 {dayTasks.length > 2 && (
-                  <span className="text-[9.5px] font-bold pl-1 block text-gray-400">
+                  <span className="text-[9.5px] font-bold text-gray-400 pl-1 block">
                     +{dayTasks.length - 2} more
                   </span>
                 )}
@@ -1470,16 +1437,16 @@ function CalendarView({
             <h4 className="font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>
               {niceDate(selected)} <span className="text-sm font-normal opacity-60">({DAY_NAMES[selectedDow!]})</span>
             </h4>
-            <button onClick={() => setSelected(null)} className="cursor-pointer text-gray-400 hover:text-gray-700"><X size={16} /></button>
+            <button onClick={() => setSelected(null)}><X size={16} /></button>
           </div>
 
           {/* Tasks due this day with in-place toggle and delete */}
           <div className="mb-3">
-            <h5 className="text-xs font-bold uppercase tracking-wide mb-1.5 opacity-60">📝 Tasks due</h5>
+            <h5 className="text-xs font-bold opacity-60 uppercase tracking-wide mb-1.5">📝 Tasks due</h5>
             {selectedTasks.length === 0
               ? <p className="text-sm opacity-50">Nothing due this day 🌿</p>
               : selectedTasks.map((t) => (
-                  <div key={t.id} className="text-sm flex items-center justify-between gap-2 mb-1.5 p-1.5 rounded-xl transition-colors hover:bg-black/5">
+                  <div key={t.id} className="text-sm flex items-center justify-between gap-2 mb-1.5 p-1.5 rounded-xl hover:bg-black/5 transition-colors">
                     <div className="flex items-center gap-2 min-w-0">
                       <button
                         onClick={() => onToggle(t.id)}
@@ -1494,7 +1461,7 @@ function CalendarView({
                       <span className={`truncate font-medium ${t.status === "completed" ? "line-through opacity-50 text-gray-500" : "text-gray-800"}`}>
                         {t.title}
                       </span>
-                      <span className="text-xs shrink-0 opacity-50">— {subjById[t.subjectId]?.name}</span>
+                      <span className="opacity-50 text-xs shrink-0">— {subjById[t.subjectId]?.name}</span>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
                       <button onClick={() => onEdit(t)} className="p-1 rounded-md hover:bg-black/10 text-gray-400 hover:text-gray-700" title="Edit task">
@@ -1510,7 +1477,7 @@ function CalendarView({
 
           {/* Routine for this day-of-week */}
           <div className="mb-3">
-            <h5 className="text-xs font-bold uppercase tracking-wide mb-1.5 opacity-60">🗓️ Classes ({DAY_NAMES[selectedDow!]})</h5>
+            <h5 className="text-xs font-bold opacity-60 uppercase tracking-wide mb-1.5">🗓️ Classes ({DAY_NAMES[selectedDow!]})</h5>
             {selectedRoutine.length === 0
               ? <p className="text-sm opacity-50">No classes scheduled 📚</p>
               : selectedRoutine.map((r) => (
@@ -1522,7 +1489,7 @@ function CalendarView({
                 ))}
           </div>
 
-          <button onClick={() => onQuickAdd(selected)} className={`text-sm px-3 py-1.5 rounded-xl flex items-center gap-1 cursor-pointer ${theme === "lilac" ? "bg-purple-100 text-[#b148d2] hover:bg-purple-200" : "bg-pink-100"}`}>
+          <button onClick={() => onQuickAdd(selected)} className="text-sm px-3 py-1.5 rounded-xl bg-pink-100 flex items-center gap-1">
             <Plus size={14} /> Add task on this day
           </button>
         </Sticker>
@@ -1866,11 +1833,7 @@ export default function StudyDen({ session }: { session: Session }) {
 
   if (!loaded) {
     return (
-      <div
-        data-theme={theme}
-        className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden"
-        style={{ background: THEMES[theme].css, fontFamily: "Quicksand, sans-serif" }}
-      >
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden" style={{ background: THEMES[theme].css, fontFamily: "Quicksand, sans-serif" }}>
         <motion.div
           animate={{ y: [-8, 8, -8], rotate: [-2, 2, -2] }}
           transition={{ repeat: Infinity, duration: 2.6, ease: "easeInOut" }}
@@ -1879,20 +1842,20 @@ export default function StudyDen({ session }: { session: Session }) {
           <motion.div
             animate={{ scale: [1, 1.25, 1], opacity: [0.35, 0.65, 0.35] }}
             transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }}
-            className={`absolute inset-0 rounded-full blur-md ${theme === "lilac" ? "bg-[#660094]/60" : "bg-purple-300/40"}`}
+            className="absolute inset-0 rounded-full bg-purple-300/40 blur-md"
           />
           <div className="relative text-5xl select-none">
             {CREATURES[new Date().getDate() % CREATURES.length] || "🪽"}
           </div>
         </motion.div>
         <div className="flex items-center gap-2">
-          <p style={{ color: theme === "lilac" ? "#fbf5ff" : "#5B4B6D", fontSize: "1.2rem", fontWeight: 600, letterSpacing: "0.02em", fontFamily: "Fredoka, sans-serif" }}>
+          <p style={{ color: "#5B4B6D", fontSize: "1.2rem", fontWeight: 600, letterSpacing: "0.02em", fontFamily: "Fredoka, sans-serif" }}>
             Landing to earth
           </p>
           <motion.span
             animate={{ opacity: [0, 1, 0] }}
             transition={{ repeat: Infinity, duration: 1.4, ease: "easeInOut" }}
-            className={`text-lg font-bold ${theme === "lilac" ? "text-[#d16aff]" : "text-purple-600"}`}
+            className="text-lg font-bold text-purple-600"
           >
             ✨
           </motion.span>
@@ -1903,11 +1866,7 @@ export default function StudyDen({ session }: { session: Session }) {
 
   /* ─── render ─── */
   return (
-    <div
-      data-theme={theme}
-      className="min-h-screen p-3 md:p-6 relative overflow-x-hidden"
-      style={{ background: THEMES[theme].css, fontFamily: "Quicksand, sans-serif" }}
-    >
+    <div className="min-h-screen p-3 md:p-6 relative overflow-x-hidden" style={{ background: THEMES[theme].css, fontFamily: "Quicksand, sans-serif" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@400;500;600;700&display=swap'); @media print { .no-print { display: none !important; } .print-only { display: block !important; } } .print-only { display: none; }`}</style>
 
       {/* Decorative Full-Page Theme Wallpaper */}
@@ -1916,7 +1875,7 @@ export default function StudyDen({ session }: { session: Session }) {
           className="fixed inset-0 pointer-events-none z-0 bg-cover bg-center transition-opacity duration-700"
           style={{
             backgroundImage: `url("${bgWallpaper}")`,
-            opacity: theme === "lilac" ? 0.35 : 0.50,
+            opacity: 0.50,
           }}
         />
       )}
@@ -1926,12 +1885,12 @@ export default function StudyDen({ session }: { session: Session }) {
         <aside className="w-full md:w-64 shrink-0 no-print flex flex-col justify-between md:sticky md:top-6">
           <div className="space-y-4">
             {/* App Brand Header */}
-            <div className="p-4 rounded-3xl backdrop-blur-md border border-white/60 bg-white/70 shadow-sm flex items-center justify-between md:block">
+            <div className="p-4 rounded-3xl bg-white/70 backdrop-blur-md border border-white/60 shadow-sm flex items-center justify-between md:block">
               <div>
                 <h1 className="text-2xl font-black flex items-center gap-2 tracking-tight" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>
                   Halo <span className="text-xl">{CREATURES[new Date().getDate() % CREATURES.length]}</span>
                 </h1>
-                <p className="text-[11px] font-semibold truncate max-w-[180px] mt-0.5 text-gray-500">{session.user.email}</p>
+                <p className="text-[11px] font-semibold text-gray-500 truncate max-w-[180px] mt-0.5">{session.user.email}</p>
               </div>
               <div className="md:hidden flex items-center gap-1.5">
                 <select value={theme} onChange={(e) => setTheme(e.target.value as keyof typeof THEMES)} className="text-[11px] p-1.5 rounded-xl border bg-white/80">
@@ -1942,7 +1901,7 @@ export default function StudyDen({ session }: { session: Session }) {
             </div>
 
             {/* 6 Modes Navigation List */}
-            <nav className="p-2 rounded-3xl backdrop-blur-md border border-white/60 bg-white/60 shadow-sm flex md:flex-col gap-1.5 overflow-x-auto">
+            <nav className="p-2 rounded-3xl bg-white/60 backdrop-blur-md border border-white/60 shadow-sm flex md:flex-col gap-1.5 overflow-x-auto">
               {[
                 { id: "academics" as const, label: "Academics", customIcon: BlueRibbonIcon },
                 { id: "journal" as const, label: "Journal", emoji: "🍒" },
@@ -1962,14 +1921,12 @@ export default function StudyDen({ session }: { session: Session }) {
                     {isActive && (
                       <motion.div
                         layoutId="sidebarActivePill"
-                        className={`absolute inset-0 rounded-2xl shadow-md ${theme === "lilac" ? "bg-[#b148d2] shadow-[#b148d2]/30" : "bg-white"}`}
+                        className="absolute inset-0 bg-white rounded-2xl shadow-md"
                         transition={{ type: "spring", stiffness: 400, damping: 30 }}
                       />
                     )}
                     <span className={`relative z-10 flex items-center gap-3 w-full transition-colors ${
-                      isActive
-                        ? theme === "lilac" ? "text-white font-extrabold" : "text-purple-900"
-                        : "text-gray-700 opacity-80 group-hover:opacity-100"
+                      isActive ? "text-purple-900" : "text-gray-700 opacity-80 group-hover:opacity-100"
                     }`}>
                       {"customIcon" in m && m.customIcon ? (
                         <div className="w-8 h-8 flex items-center justify-center shrink-0">
@@ -1991,15 +1948,13 @@ export default function StudyDen({ session }: { session: Session }) {
           {/* Sidebar Footer (Desktop Theme, Visual Mode & Print) */}
           <div className="hidden md:flex flex-col gap-2.5 mt-6">
             {/* Quick Simple / Custom Visual Mode Toggle */}
-            <div className="p-2.5 px-3 rounded-2xl backdrop-blur-sm border bg-white/50 border-white/50 flex items-center justify-between text-xs font-bold shadow-2xs">
+            <div className="p-2.5 px-3 rounded-2xl bg-white/50 backdrop-blur-sm border border-white/50 flex items-center justify-between text-xs font-bold shadow-2xs">
               <span className="text-gray-600">Style:</span>
-              <div className="flex items-center gap-1 p-0.5 rounded-xl bg-black/5">
+              <div className="flex items-center gap-1 bg-black/5 p-0.5 rounded-xl">
                 <button
                   onClick={() => updateVisualSettings({ mode: "simple" })}
                   className={`px-2.5 py-1 rounded-lg transition-all ${
-                    visualSettings.mode === "simple"
-                      ? theme === "lilac" ? "bg-[#b148d2] text-white shadow-xs" : "bg-white text-gray-900 shadow-xs"
-                      : "text-gray-500 hover:text-gray-800"
+                    visualSettings.mode === "simple" ? "bg-white text-gray-900 shadow-xs" : "text-gray-500 hover:text-gray-800"
                   }`}
                 >
                   Simple
@@ -2007,9 +1962,7 @@ export default function StudyDen({ session }: { session: Session }) {
                 <button
                   onClick={() => updateVisualSettings({ mode: "custom" })}
                   className={`px-2.5 py-1 rounded-lg transition-all ${
-                    visualSettings.mode === "custom"
-                      ? theme === "lilac" ? "bg-[#b148d2] text-white shadow-xs" : "bg-purple-600 text-white shadow-xs"
-                      : "text-gray-500 hover:text-gray-800"
+                    visualSettings.mode === "custom" ? "bg-purple-600 text-white shadow-xs" : "text-gray-500 hover:text-gray-800"
                   }`}
                 >
                   Custom
@@ -2017,7 +1970,7 @@ export default function StudyDen({ session }: { session: Session }) {
               </div>
             </div>
 
-            <div className="p-3 rounded-2xl backdrop-blur-sm border bg-white/50 border-white/50 flex items-center justify-between">
+            <div className="p-3 rounded-2xl bg-white/50 backdrop-blur-sm border border-white/50 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold text-gray-500">Theme:</span>
                 <select
@@ -2032,7 +1985,7 @@ export default function StudyDen({ session }: { session: Session }) {
               </div>
               <button
                 onClick={() => window.print()}
-                className="p-1.5 rounded-xl shadow-sm cursor-pointer bg-white/80 hover:bg-white text-gray-700"
+                className="p-1.5 rounded-xl bg-white/80 hover:bg-white text-gray-700 shadow-sm"
                 title="Print view"
               >
                 <Printer size={15} />
@@ -2055,7 +2008,7 @@ export default function StudyDen({ session }: { session: Session }) {
               >
                 {/* Academics Sub-Tabs Switcher */}
                 <div className="flex items-center justify-between mb-5 no-print flex-wrap gap-2">
-                  <div className="flex gap-1.5 p-1.5 rounded-2xl backdrop-blur-md border border-white/60 bg-white/60 shadow-sm overflow-x-auto">
+                  <div className="flex gap-1.5 p-1.5 rounded-2xl bg-white/60 backdrop-blur-md border border-white/60 shadow-sm overflow-x-auto">
                     {[
                       { id: "dashboard" as const, label: "Dashboard", icon: LayoutDashboard },
                       { id: "calendar" as const, label: "Calendar", icon: CalendarDays },
@@ -2073,14 +2026,12 @@ export default function StudyDen({ session }: { session: Session }) {
                           {isSubActive && (
                             <motion.div
                               layoutId="academicsSubtabPill"
-                              className={`absolute inset-0 rounded-xl shadow-sm ${theme === "lilac" ? "bg-[#b148d2]" : "bg-purple-600"}`}
+                              className="absolute inset-0 bg-purple-600 rounded-xl shadow-sm"
                               transition={{ type: "spring", stiffness: 420, damping: 32 }}
                             />
                           )}
                           <span className={`relative z-10 flex items-center gap-1.5 transition-colors ${
-                            isSubActive
-                              ? "text-white"
-                              : "text-gray-700 hover:text-gray-900"
+                            isSubActive ? "text-white" : "text-gray-700 hover:text-gray-900"
                           }`}>
                             <st.icon size={14} /> <span>{st.label}</span>
                           </span>
@@ -2093,9 +2044,7 @@ export default function StudyDen({ session }: { session: Session }) {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => { setEditingTask(null); setFormOpen(true); }}
-                      className={`px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm flex items-center gap-1.5 cursor-pointer ${
-                        theme === "lilac" ? "bg-[#b148d2] text-white hover:bg-[#c764e8]" : "bg-pink-500 text-white hover:bg-pink-600"
-                      }`}
+                      className="px-3.5 py-2 rounded-xl text-xs font-bold bg-pink-500 text-white hover:bg-pink-600 shadow-sm flex items-center gap-1.5"
                     >
                       <Plus size={14} /> Add Task
                     </button>
@@ -2148,7 +2097,7 @@ export default function StudyDen({ session }: { session: Session }) {
                     <div className="relative z-10">
                       <div className="flex justify-between items-center mb-2">
                         <h3 className="font-bold" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>🌸 Coming up soon</h3>
-                        <button onClick={() => { setEditingTask(null); setFormOpen(true); }} className="flex items-center gap-1 text-sm px-3 py-1.5 rounded-xl text-white cursor-pointer" style={{ background: theme === "lilac" ? "#b148d2" : "#E497B3" }}>
+                        <button onClick={() => { setEditingTask(null); setFormOpen(true); }} className="flex items-center gap-1 text-sm px-3 py-1.5 rounded-xl text-white" style={{ background: "#E497B3" }}>
                           <Plus size={14} /> Add task
                         </button>
                       </div>
@@ -2224,7 +2173,6 @@ export default function StudyDen({ session }: { session: Session }) {
                       onDelete={deleteTask}
                       onEdit={(t) => { setEditingTask(t); setFormOpen(true); }}
                       isCustomVisual={isCustomMode && visualSettings.calendar}
-                      theme={theme}
                     />
                   </Sticker>
                 </div>
@@ -2235,13 +2183,13 @@ export default function StudyDen({ session }: { session: Session }) {
                 <div className="no-print">
                   <Sticker className="p-4 mb-4" rotate={0.3}>
                     <h3 className="font-bold mb-2 flex items-center gap-1.5" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}><Palette size={16} /> Subjects</h3>
-                    <p className="text-xs mb-2 opacity-60">Set your subjects name and suitable color</p>
+                    <p className="text-xs opacity-60 mb-2">Set your subjects name and suitable color</p>
                     <div className="flex flex-wrap gap-2 mb-3">
                       {subjects.map((s) => (
                         <div key={s.id} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl" style={{ background: s.color + "33" }}>
                           <span className="w-2.5 h-2.5 rounded-full" style={{ background: s.color }} />
                           <span className="text-xs font-semibold">{s.name}</span>
-                          <button onClick={() => deleteSubject(s.id)} className="opacity-40 hover:opacity-100 cursor-pointer"><X size={12} /></button>
+                          <button onClick={() => deleteSubject(s.id)} className="opacity-40 hover:opacity-100"><X size={12} /></button>
                         </div>
                       ))}
                     </div>
@@ -2249,14 +2197,14 @@ export default function StudyDen({ session }: { session: Session }) {
                       <input value={subjectDraft.name} onChange={(e) => setSubjectDraft({ ...subjectDraft, name: e.target.value })} placeholder="New subject name" className="p-2 rounded-xl border text-sm flex-1 min-w-[160px]" />
                       <div className="flex gap-1">
                         {COLOR_PRESETS.map((c) => (
-                          <button key={c.hex} onClick={() => setSubjectDraft({ ...subjectDraft, color: c.hex })} className="w-5 h-5 rounded-full border-2 cursor-pointer" style={{ background: c.hex, borderColor: subjectDraft.color === c.hex ? "#5B4B6D" : "transparent" }} />
+                          <button key={c.hex} onClick={() => setSubjectDraft({ ...subjectDraft, color: c.hex })} className="w-5 h-5 rounded-full border-2" style={{ background: c.hex, borderColor: subjectDraft.color === c.hex ? "#5B4B6D" : "transparent" }} />
                         ))}
                       </div>
-                      <button onClick={addSubject} className="px-3 py-1.5 rounded-lg text-white text-sm font-semibold cursor-pointer" style={{ background: theme === "lilac" ? "#b148d2" : "#C9B6E4" }}>Add</button>
+                      <button onClick={addSubject} className="px-3 py-1.5 rounded-lg text-white text-sm font-semibold" style={{ background: "#C9B6E4" }}>Add</button>
                     </div>
                   </Sticker>
 
-                  <button onClick={() => { setEditingTask(null); setFormOpen(true); }} className="w-full mb-4 p-3 rounded-2xl text-white font-semibold flex items-center justify-center gap-1.5 cursor-pointer" style={{ background: theme === "lilac" ? "#b148d2" : "#E497B3", fontFamily: "Fredoka, sans-serif" }}>
+                  <button onClick={() => { setEditingTask(null); setFormOpen(true); }} className="w-full mb-4 p-3 rounded-2xl text-white font-semibold flex items-center justify-center gap-1.5" style={{ background: "#E497B3", fontFamily: "Fredoka, sans-serif" }}>
                     <Plus size={16} /> Add a task
                   </button>
 
@@ -2280,7 +2228,6 @@ export default function StudyDen({ session }: { session: Session }) {
                     onEdit={editRoutineEntry}
                     onDelete={deleteRoutineEntry}
                     routineBg={routineBg}
-                    theme={theme}
                   />
                 </div>
               )}
@@ -2340,7 +2287,7 @@ export default function StudyDen({ session }: { session: Session }) {
                   </div>
                 }
               >
-                <FrenchView userId={userId} theme={theme} />
+                <FrenchView userId={userId} />
               </Suspense>
             </motion.div>
           )}
@@ -2436,7 +2383,6 @@ export default function StudyDen({ session }: { session: Session }) {
           initial={editingTask}
           subjects={subjects}
           typeSuggestions={typeSuggestions}
-          theme={theme}
           onSave={saveTask}
           onClose={() => { setFormOpen(false); setEditingTask(null); }}
           onHideTypeSuggestion={hideTypeSuggestion}
