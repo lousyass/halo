@@ -1,5 +1,10 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { corsHeaders } from "../_shared/cors.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
 
 /**
  * upload-original-to-drive
@@ -49,16 +54,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    const webhookUrl =
-      Deno.env.get("APPS_SCRIPT_DRIVE_WEBHOOK_URL") ||
-      Deno.env.get("APPS_SCRIPT_WEBHOOK_URL");
+    const webhookUrl = Deno.env.get("APPS_SCRIPT_WEBHOOK_URL");
     const sharedSecret = Deno.env.get("APPS_SCRIPT_SHARED_SECRET");
 
     if (!webhookUrl || !sharedSecret) {
       return new Response(
         JSON.stringify({
-          error:
-            "Missing APPS_SCRIPT_WEBHOOK_URL (or APPS_SCRIPT_DRIVE_WEBHOOK_URL) or APPS_SCRIPT_SHARED_SECRET in secrets",
+          error: "Missing APPS_SCRIPT_WEBHOOK_URL or APPS_SCRIPT_SHARED_SECRET in secrets",
         }),
         {
           status: 500,
