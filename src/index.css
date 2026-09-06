@@ -1,49 +1,49 @@
 @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Fredoka:wght@400;500;600;700&family=Patrick+Hand&family=Quicksand:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
-/* ─── Lilac Dream Dark Gothic Palette (Strictly Scoped to [data-theme="lilac"]) ─── */
+/* ─── Lilac Dream Evil Purple Palette (Strictly Scoped to [data-theme="lilac"]) ─── */
 [data-theme="lilac"] {
-  --bg-page: #1a0f2e;
-  --bg-surface: rgba(36, 20, 61, 0.85);
-  --bg-surface-solid: #24143d;
-  --bg-card: rgba(42, 23, 69, 0.9);
-  --bg-input: #1f1035;
-  --border-subtle: rgba(107, 47, 160, 0.35);
-  --border-strong: rgba(196, 181, 253, 0.4);
-  --primary-accent: #6b2fa0;
-  --highlight-accent: #c4b5fd;
-  --text-main: #f3e8ff;
-  --text-muted: rgba(196, 181, 253, 0.72);
-  --text-dim: rgba(196, 181, 253, 0.45);
+  --bg-page: #1a0026;
+  --bg-surface: rgba(54, 8, 78, 0.85);
+  --bg-surface-solid: #310547;
+  --bg-card: rgba(62, 10, 90, 0.9);
+  --bg-input: #240436;
+  --border-subtle: rgba(178, 102, 178, 0.35);
+  --border-strong: rgba(187, 68, 240, 0.5);
+  --primary-accent: #9614d0;
+  --highlight-accent: #d16aff;
+  --text-main: #fbf5ff;
+  --text-muted: #d8a4f8;
+  --text-dim: #b266b2;
   color-scheme: dark;
 }
 
 [data-theme="lilac"] ::selection {
-  background-color: #6b2fa0;
-  color: #f3e8ff;
+  background-color: #9614d0;
+  color: #ffffff;
 }
 
 [data-theme="lilac"] ::placeholder {
-  color: rgba(196, 181, 253, 0.45) !important;
+  color: rgba(209, 106, 255, 0.45) !important;
 }
 
-/* Custom scrollbars in Lilac Dream dark mode */
+/* Custom scrollbars in Lilac Dream evil purple mode */
 [data-theme="lilac"] ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 [data-theme="lilac"] ::-webkit-scrollbar-track {
-  background: #170c2a;
+  background: #150020;
 }
 [data-theme="lilac"] ::-webkit-scrollbar-thumb {
-  background: #47206b;
+  background: #660094;
   border-radius: 4px;
 }
 [data-theme="lilac"] ::-webkit-scrollbar-thumb:hover {
-  background: #6b2fa0;
+  background: #9614d0;
 }
 
-/* Scoped dark surfaces and card panels */
+/* Scoped evil purple surfaces and card panels */
 [data-theme="lilac"] .bg-white\/80,
 [data-theme="lilac"] .bg-white\/85,
 [data-theme="lilac"] .bg-white\/90,
@@ -52,29 +52,31 @@
 [data-theme="lilac"] .bg-white\/60,
 [data-theme="lilac"] .bg-white\/50,
 [data-theme="lilac"] .bg-white\/95 {
-  background-color: rgba(36, 20, 61, 0.85) !important;
-  border-color: rgba(107, 47, 160, 0.35) !important;
+  background-color: rgba(54, 8, 78, 0.88) !important;
+  border-color: rgba(187, 68, 240, 0.35) !important;
+  box-shadow: 0 4px 20px -2px rgba(102, 0, 148, 0.3) !important;
 }
 
 [data-theme="lilac"] .bg-white {
-  background-color: #24143d !important;
-  border-color: rgba(107, 47, 160, 0.35) !important;
+  background-color: #310547 !important;
+  border-color: rgba(187, 68, 240, 0.35) !important;
+  box-shadow: 0 4px 20px -2px rgba(102, 0, 148, 0.3) !important;
 }
 
-/* Dark theme text contrast adjustments */
+/* Evil purple theme text contrast adjustments */
 [data-theme="lilac"] .text-gray-900,
 [data-theme="lilac"] .text-gray-800,
 [data-theme="lilac"] .text-gray-700 {
-  color: #f3e8ff !important;
+  color: #fbf5ff !important;
 }
 
 [data-theme="lilac"] .text-gray-600,
 [data-theme="lilac"] .text-gray-500 {
-  color: rgba(196, 181, 253, 0.72) !important;
+  color: #d8a4f8 !important;
 }
 
 [data-theme="lilac"] .text-gray-400 {
-  color: rgba(196, 181, 253, 0.5) !important;
+  color: #b266b2 !important;
 }
 
 [data-theme="lilac"] [style*="color: #5B4B6D"],
@@ -83,15 +85,15 @@
 [data-theme="lilac"] [style*="color: rgb(74, 59, 89)"],
 [data-theme="lilac"] .text-\[\#5B4B6D\],
 [data-theme="lilac"] .text-\[\#4A3B59\] {
-  color: #f3e8ff !important;
+  color: #fbf5ff !important;
 }
 
 [data-theme="lilac"] .text-\[\#8A7B9D\],
 [data-theme="lilac"] .text-\[\#9B8BAD\] {
-  color: #c4b5fd !important;
+  color: #d16aff !important;
 }
 
-/* Subtle dividers and borders in dark mode */
+/* Subtle dividers and borders in evil purple mode */
 [data-theme="lilac"] .border-gray-200,
 [data-theme="lilac"] .border-gray-300,
 [data-theme="lilac"] .border-purple-100,
@@ -101,7 +103,7 @@
 [data-theme="lilac"] .border-white\/70,
 [data-theme="lilac"] .border-white\/80,
 [data-theme="lilac"] .border-black\/5 {
-  border-color: rgba(107, 47, 160, 0.35) !important;
+  border-color: rgba(187, 68, 240, 0.32) !important;
 }
 
 /* Nested secondary backgrounds */
@@ -109,20 +111,20 @@
 [data-theme="lilac"] .bg-gray-100,
 [data-theme="lilac"] .bg-gray-100\/90,
 [data-theme="lilac"] .bg-purple-50 {
-  background-color: rgba(45, 24, 76, 0.75) !important;
-  color: #f3e8ff !important;
+  background-color: rgba(102, 0, 148, 0.45) !important;
+  color: #fbf5ff !important;
 }
 
 /* Inputs, selects, and textareas */
 [data-theme="lilac"] input:not([type="checkbox"]):not([type="radio"]),
 [data-theme="lilac"] select,
 [data-theme="lilac"] textarea {
-  background-color: #1f1035 !important;
-  color: #f3e8ff !important;
-  border-color: rgba(107, 47, 160, 0.45) !important;
+  background-color: #240436 !important;
+  color: #fbf5ff !important;
+  border-color: rgba(187, 68, 240, 0.45) !important;
 }
 
 [data-theme="lilac"] select option {
-  background-color: #1a0f2e;
-  color: #f3e8ff;
+  background-color: #1a0026;
+  color: #fbf5ff;
 }
