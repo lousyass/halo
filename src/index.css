@@ -1,130 +1,25 @@
 @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Fredoka:wght@400;500;600;700&family=Patrick+Hand&family=Quicksand:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
-/* ─── Lilac Dream Evil Purple Palette (Strictly Scoped to [data-theme="lilac"]) ─── */
-[data-theme="lilac"] {
-  --bg-page: #1a0026;
-  --bg-surface: rgba(54, 8, 78, 0.85);
-  --bg-surface-solid: #310547;
-  --bg-card: rgba(62, 10, 90, 0.9);
-  --bg-input: #240436;
-  --border-subtle: rgba(178, 102, 178, 0.35);
-  --border-strong: rgba(187, 68, 240, 0.5);
-  --primary-accent: #9614d0;
-  --highlight-accent: #d16aff;
-  --text-main: #fbf5ff;
-  --text-muted: #d8a4f8;
-  --text-dim: #b266b2;
-  color-scheme: dark;
-}
-
+/* ─── Lilac Dream (#9614d0 accent with clean white cards) ─── */
 [data-theme="lilac"] ::selection {
   background-color: #9614d0;
   color: #ffffff;
 }
 
-[data-theme="lilac"] ::placeholder {
-  color: rgba(209, 106, 255, 0.45) !important;
-}
-
-/* Custom scrollbars in Lilac Dream evil purple mode */
+/* Custom scrollbars in Lilac Dream */
 [data-theme="lilac"] ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 [data-theme="lilac"] ::-webkit-scrollbar-track {
-  background: #150020;
+  background: rgba(43, 0, 62, 0.4);
 }
 [data-theme="lilac"] ::-webkit-scrollbar-thumb {
-  background: #660094;
+  background: #9614d0;
   border-radius: 4px;
 }
 [data-theme="lilac"] ::-webkit-scrollbar-thumb:hover {
-  background: #9614d0;
+  background: #bb44f0;
 }
 
-/* Scoped evil purple surfaces and card panels */
-[data-theme="lilac"] .bg-white\/80,
-[data-theme="lilac"] .bg-white\/85,
-[data-theme="lilac"] .bg-white\/90,
-[data-theme="lilac"] .bg-white\/70,
-[data-theme="lilac"] .bg-white\/75,
-[data-theme="lilac"] .bg-white\/60,
-[data-theme="lilac"] .bg-white\/50,
-[data-theme="lilac"] .bg-white\/95 {
-  background-color: rgba(54, 8, 78, 0.88) !important;
-  border-color: rgba(187, 68, 240, 0.35) !important;
-  box-shadow: 0 4px 20px -2px rgba(102, 0, 148, 0.3) !important;
-}
-
-[data-theme="lilac"] .bg-white {
-  background-color: #310547 !important;
-  border-color: rgba(187, 68, 240, 0.35) !important;
-  box-shadow: 0 4px 20px -2px rgba(102, 0, 148, 0.3) !important;
-}
-
-/* Evil purple theme text contrast adjustments */
-[data-theme="lilac"] .text-gray-900,
-[data-theme="lilac"] .text-gray-800,
-[data-theme="lilac"] .text-gray-700 {
-  color: #fbf5ff !important;
-}
-
-[data-theme="lilac"] .text-gray-600,
-[data-theme="lilac"] .text-gray-500 {
-  color: #d8a4f8 !important;
-}
-
-[data-theme="lilac"] .text-gray-400 {
-  color: #b266b2 !important;
-}
-
-[data-theme="lilac"] [style*="color: #5B4B6D"],
-[data-theme="lilac"] [style*="color: rgb(91, 75, 109)"],
-[data-theme="lilac"] [style*="color: #4A3B59"],
-[data-theme="lilac"] [style*="color: rgb(74, 59, 89)"],
-[data-theme="lilac"] .text-\[\#5B4B6D\],
-[data-theme="lilac"] .text-\[\#4A3B59\] {
-  color: #fbf5ff !important;
-}
-
-[data-theme="lilac"] .text-\[\#8A7B9D\],
-[data-theme="lilac"] .text-\[\#9B8BAD\] {
-  color: #d16aff !important;
-}
-
-/* Subtle dividers and borders in evil purple mode */
-[data-theme="lilac"] .border-gray-200,
-[data-theme="lilac"] .border-gray-300,
-[data-theme="lilac"] .border-purple-100,
-[data-theme="lilac"] .border-purple-200,
-[data-theme="lilac"] .border-white\/60,
-[data-theme="lilac"] .border-white\/50,
-[data-theme="lilac"] .border-white\/70,
-[data-theme="lilac"] .border-white\/80,
-[data-theme="lilac"] .border-black\/5 {
-  border-color: rgba(187, 68, 240, 0.32) !important;
-}
-
-/* Nested secondary backgrounds */
-[data-theme="lilac"] .bg-gray-50,
-[data-theme="lilac"] .bg-gray-100,
-[data-theme="lilac"] .bg-gray-100\/90,
-[data-theme="lilac"] .bg-purple-50 {
-  background-color: rgba(102, 0, 148, 0.45) !important;
-  color: #fbf5ff !important;
-}
-
-/* Inputs, selects, and textareas */
-[data-theme="lilac"] input:not([type="checkbox"]):not([type="radio"]),
-[data-theme="lilac"] select,
-[data-theme="lilac"] textarea {
-  background-color: #240436 !important;
-  color: #fbf5ff !important;
-  border-color: rgba(187, 68, 240, 0.45) !important;
-}
-
-[data-theme="lilac"] select option {
-  background-color: #1a0026;
-  color: #fbf5ff;
-}
