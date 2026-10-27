@@ -5,6 +5,7 @@ import {
   CalendarDays,
   ListTodo,
   Target,
+  DollarSign,
   BarChart3,
   Loader2,
 } from 'lucide-react';
@@ -12,10 +13,11 @@ import { LifestyleToday } from './components/lifestyle/LifestyleToday';
 import { LifestyleCalendar } from './components/lifestyle/LifestyleCalendar';
 import { LifestyleHabits } from './components/lifestyle/LifestyleHabits';
 import { LifestyleGoals } from './components/lifestyle/LifestyleGoals';
+import { LifestyleMoney } from './components/lifestyle/LifestyleMoney';
 import { LifestyleStats } from './components/lifestyle/LifestyleStats';
 import { useLifestyle } from './lib/useLifestyle';
 
-export type LifestyleSubTab = 'today' | 'calendar' | 'habits' | 'goals' | 'stats';
+export type LifestyleSubTab = 'today' | 'calendar' | 'habits' | 'goals' | 'money' | 'stats';
 
 interface LifestyleViewProps {
   userId: string;
@@ -37,6 +39,7 @@ export const LifestyleView: React.FC<LifestyleViewProps> = ({
     { id: 'calendar' as const, label: 'Calendar', icon: CalendarDays },
     { id: 'habits' as const, label: 'Habits', icon: ListTodo },
     { id: 'goals' as const, label: 'Goals', icon: Target },
+    { id: 'money' as const, label: 'Money', icon: DollarSign },
     { id: 'stats' as const, label: 'Stats', icon: BarChart3 },
   ];
 
@@ -113,6 +116,10 @@ export const LifestyleView: React.FC<LifestyleViewProps> = ({
 
           {activeTab === 'goals' && (
             <LifestyleGoals userId={userId} />
+          )}
+
+          {activeTab === 'money' && (
+            <LifestyleMoney userId={userId} />
           )}
 
           {activeTab === 'stats' && (
