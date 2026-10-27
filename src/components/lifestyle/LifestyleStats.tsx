@@ -8,6 +8,8 @@ import {
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
   Cell,
+  PieChart,
+  Pie,
 } from 'recharts';
 import {
   Flame,
@@ -18,6 +20,13 @@ import {
   BarChart2,
   Calendar,
   Layers,
+  ChevronLeft,
+  ChevronRight,
+  DollarSign,
+  PieChart as PieIcon,
+  Tag,
+  ArrowUpRight,
+  ArrowDownRight,
 } from 'lucide-react';
 import {
   calculateProductivityRating,
@@ -31,6 +40,20 @@ import {
 } from '../../lib/habitScoring';
 import { addDays, compareDates, formatDisplayDate, getWeekday } from '../../lib/dateUtils';
 import { useLifestyle } from '../../lib/useLifestyle';
+import {
+  formatCurrency,
+  getBudgetInForce,
+  proRateWeeklyBudget,
+  getPeriodTotals,
+  calculatePctChange,
+  getSpendingByCategory,
+  getDailySpending,
+  getTopExpenses,
+  getLastNMonthsSpending,
+  getDaysInDateMonth,
+  getDaysInMonth,
+} from '../../lib/moneyScoring';
+import { useMemo } from 'react';
 
 interface LifestyleStatsProps {
   userId: string;
