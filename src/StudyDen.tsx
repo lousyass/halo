@@ -1040,11 +1040,44 @@ function SettingsView({
   const [reminderMode, setReminderMode] = useState(profile?.reminder_mode || "urgent");
   const [digestTime, setDigestTime] = useState((profile?.daily_digest_time || "08:00:00").slice(0, 5));
   const [saving, setSaving] = useState(false);
+  const [currency, setCurrency] = useState((profile?.preferences as any)?.currency || "");
+  const [weekStartsOn, setWeekStartsOn] = useState<number>((profile?.preferences as any)?.week_starts_on === 1 ? 1 : 0);
+  const [savingLifestyle, setSavingLifestyle] = useState(false);
+  const [lifestyleSaved, setLifestyleSaved] = useState(false);
+
+  const saveLifestyle = async () => {
+    if (!profile) return;
+    setSavingLifestyle(true);
+    try {
+      const nextPref = {
+        ...(profile.preferences || {}),
+        currency: currency.trim().toUpperCase() || null,
+        week_starts_on: weekStartsOn,
+      };
+      const { error } = await supabase
+        .from("profiles")
+        .update({ preferences: nextPref })
+        .eq("id", profile.id);
+
+      if (!error) {
+        setLifestyleSaved(true);
+        setTimeout(() => setLifestyleSaved(false), 2000);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSavingLifestyle(false);
+    }
+  };
 
   useEffect(() => {
     if (profile) {
       setReminderMode(profile.reminder_mode);
       setDigestTime(profile.daily_digest_time.slice(0, 5));
+      if (profile.preferences) {
+        setCurrency((profile.preferences as any).currency || "");
+        setWeekStartsOn((profile.preferences as any).week_starts_on === 1 ? 1 : 0);
+      }
     }
   }, [profile]);
 
@@ -1248,6 +1281,85 @@ function SettingsView({
             style={{ background: saving ? "#C9B6E4AA" : "#C9B6E4", fontFamily: "Fredoka, sans-serif" }}
           >
             {saving ? "Saving..." : "Save reminder settings"}
+          </button>
+        </div>
+      </Sticker>
+
+      <Sticker className="p-4" rotate={0.1}>
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <div>
+            <h3 className="font-bold text-base flex items-center gap-2" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>
+              <span>🌱</span> Lifestyle Preferences
+            </h3>
+            <p className="text-xs opacity-60">Currency and calendar settings for Lifestyle Mode & Money tracking</p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="text-xs font-semibold opacity-70 block mb-1">Currency (ISO Code)</label>
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {["USD", "EUR", "GBP", "BDT", "PHP", "INR", "CAD", "AUD", "JPY"].map((code) => (
+                <button
+                  key={code}
+                  type="button"
+                  onClick={() => setCurrency(code)}
+                  className={`px-2.5 py-1 text-xs font-bold rounded-lg border transition-all ${
+                    currency.toUpperCase() === code
+                      ? "bg-purple-100 border-purple-400 text-purple-900 shadow-sm"
+                      : "bg-white/80 border-gray-200 text-gray-700 hover:bg-white"
+                  }`}
+                >
+                  {code}
+                </button>
+              ))}
+            </div>
+            <input
+              type="text"
+              maxLength={4}
+              placeholder="Or enter custom (e.g. SGD, MYR)"
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value.toUpperCase())}
+              className="p-2 text-xs rounded-xl border w-full max-w-xs font-mono uppercase bg-white/90"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold opacity-70 block mb-1">Week starts on</label>
+            <div className="flex gap-2 max-w-xs">
+              <button
+                type="button"
+                onClick={() => setWeekStartsOn(0)}
+                className={`flex-1 p-2.5 rounded-xl border text-xs text-center transition-all ${
+                  weekStartsOn === 0
+                    ? "bg-purple-50 border-purple-300 font-bold text-purple-900 shadow-sm"
+                    : "bg-white border-gray-200 text-gray-700 hover:bg-white"
+                }`}
+              >
+                Sunday (Default)
+              </button>
+              <button
+                type="button"
+                onClick={() => setWeekStartsOn(1)}
+                className={`flex-1 p-2.5 rounded-xl border text-xs text-center transition-all ${
+                  weekStartsOn === 1
+                    ? "bg-purple-50 border-purple-300 font-bold text-purple-900 shadow-sm"
+                    : "bg-white border-gray-200 text-gray-700 hover:bg-white"
+                }`}
+              >
+                Monday
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={saveLifestyle}
+            disabled={savingLifestyle}
+            className="w-full p-2.5 rounded-xl font-semibold text-white flex items-center justify-center gap-2"
+            style={{ background: savingLifestyle ? "#C9B6E4AA" : "#C9B6E4", fontFamily: "Fredoka, sans-serif" }}
+          >
+            {savingLifestyle ? "Saving..." : lifestyleSaved ? "Saved! ✓" : "Save Lifestyle Preferences"}
           </button>
         </div>
       </Sticker>
