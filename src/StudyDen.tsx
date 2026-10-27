@@ -28,6 +28,7 @@ const JournalView = lazy(() => import("./JournalView"));
 const FrenchView = lazy(() => import("./FrenchView").then((m) => ({ default: m.FrenchView })));
 const EntertainmentView = lazy(() => import("./EntertainmentView").then((m) => ({ default: m.EntertainmentView })));
 const GamesView = lazy(() => import("./GamesView").then((m) => ({ default: m.GamesView })));
+const LifestyleView = lazy(() => import("./LifestyleView"));
 
 /* ─────────────────────────────── types ─────────────────────────────── */
 
@@ -1559,7 +1560,7 @@ export default function StudyDen({ session }: { session: Session }) {
 
   // UI
   const [loaded, setLoaded] = useState(false);
-  const [mode, setMode] = useState<"academics" | "journal" | "french" | "entertainment" | "games" | "settings">("academics");
+  const [mode, setMode] = useState<"academics" | "journal" | "french" | "entertainment" | "games" | "lifestyle" | "settings">("academics");
   const [academicTab, setAcademicTab] = useState<"dashboard" | "calendar" | "tasks" | "routine" | "stats">("dashboard");
   const [snoozedOverdueIds, setSnoozedOverdueIds] = useState<Set<string>>(new Set());
   const [formOpen, setFormOpen] = useState(false);
@@ -1908,6 +1909,7 @@ export default function StudyDen({ session }: { session: Session }) {
                 { id: "french" as const, label: "Le Coin Français", emoji: "🥐" },
                 { id: "entertainment" as const, label: "Entertainment", emoji: "🎬" },
                 { id: "games" as const, label: "Games", emoji: "🎮" },
+                { id: "lifestyle" as const, label: "Lifestyle", emoji: "🌱" },
                 { id: "settings" as const, label: "Settings", icon: Settings },
               ].map((m) => {
                 const isActive = mode === m.id;
@@ -2342,7 +2344,32 @@ export default function StudyDen({ session }: { session: Session }) {
             </motion.div>
           )}
 
-          {/* Mode 6: SETTINGS */}
+          {/* Mode 6: LIFESTYLE */}
+          {mode === "lifestyle" && (
+            <motion.div
+              key="lifestyle"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="no-print"
+            >
+              <Suspense
+                fallback={
+                  <div className="p-12 text-center rounded-3xl bg-white/60 backdrop-blur-sm border border-white/60 shadow-sm max-w-md mx-auto my-8">
+                    <div className="animate-pulse text-3xl mb-2">✨ 🌱 ✨</div>
+                    <p className="text-xs font-bold text-gray-500" style={{ fontFamily: "Fredoka, sans-serif" }}>
+                      Opening Lifestyle...
+                    </p>
+                  </div>
+                }
+              >
+                <LifestyleView userId={userId} session={session} theme={theme} visualSettings={visualSettings} />
+              </Suspense>
+            </motion.div>
+          )}
+
+          {/* Mode 7: SETTINGS */}
           {mode === "settings" && (
             <motion.div
               key="settings"

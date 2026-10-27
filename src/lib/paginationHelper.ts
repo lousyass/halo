@@ -10,7 +10,7 @@ export interface PaginatedQueryResponse<T> {
 export type RangeQueryFn<T> = (
   from: number,
   to: number
-) => Promise<PaginatedQueryResponse<T>>;
+) => PromiseLike<PaginatedQueryResponse<T>> | Promise<PaginatedQueryResponse<T>>;
 
 export interface FetchPaginatedOptions {
   pageSize?: number;
