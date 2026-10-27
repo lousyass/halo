@@ -16,6 +16,13 @@ import {
 } from './habitScoring';
 import { addDays, compareDates, todayInTimezone } from './dateUtils';
 import { fetchPaginated } from './paginationHelper';
+import {
+  MoneyCategory,
+  MoneyTransaction,
+  MoneyBudget,
+  STARTER_CATEGORIES,
+  normalizeToMonthStart,
+} from './moneyScoring';
 
 export interface LifestyleState {
   userId: string | null;
@@ -27,6 +34,11 @@ export interface LifestyleState {
   items: HabitItem[];
   completions: HabitCompletion[];
   pauses: HabitPause[];
+  categories: MoneyCategory[];
+  transactions: MoneyTransaction[];
+  budgets: MoneyBudget[];
+  currency: string | null;
+  weekStartsOn: number;
   loading: boolean;
   revalidating: boolean;
   error: string | null;
@@ -45,6 +57,11 @@ class LifestyleStore {
     items: [],
     completions: [],
     pauses: [],
+    categories: [],
+    transactions: [],
+    budgets: [],
+    currency: null,
+    weekStartsOn: 0,
     loading: false,
     revalidating: false,
     error: null,
@@ -141,7 +158,7 @@ class LifestyleStore {
       let tz = 'Asia/Manila';
       const { data: profile } = await supabase
         .from('profiles')
-        .select('timezone')
+        .select('timezone, preferences')
         .eq('id', userId)
         .maybeSingle();
 
@@ -149,6 +166,8 @@ class LifestyleStore {
         tz = profile.timezone;
       }
       const localToday = todayInTimezone(tz);
+      const userCurrency = (profile?.preferences as any)?.currency || null;
+      const userWeekStartsOn = (profile?.preferences as any)?.week_starts_on === 1 ? 1 : 0;
 
       // 2. Fetch all collections in parallel
       const [
@@ -158,6 +177,9 @@ class LifestyleStore {
         itemsRes,
         pausesRes,
         completionsData,
+        categoriesRes,
+        transactionsData,
+        budgetsRes,
       ] = await Promise.all([
         supabase.from('goals').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
         supabase.from('habits').select('*').eq('user_id', userId).order('sort_order', { ascending: true }),
@@ -172,6 +194,18 @@ class LifestyleStore {
             .eq('user_id', userId)
             .range(from, to)
         ),
+        // Phase 2 money data
+        supabase.from('money_categories').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
+        // transactions can exceed 1000 rows -> paginate past 1000
+        fetchPaginated<MoneyTransaction>(async (from, to) =>
+          await supabase
+            .from('money_transactions')
+            .select('*')
+            .eq('user_id', userId)
+            .order('txn_date', { ascending: false })
+            .range(from, to)
+        ),
+        supabase.from('money_budgets').select('*').eq('user_id', userId),
       ]);
 
       if (goalsRes.error) throw goalsRes.error;
@@ -179,18 +213,25 @@ class LifestyleStore {
       if (schedulesRes.error) throw schedulesRes.error;
       if (itemsRes.error) throw itemsRes.error;
       if (pausesRes.error) throw pausesRes.error;
+      if (categoriesRes.error) throw categoriesRes.error;
+      if (budgetsRes.error) throw budgetsRes.error;
 
       this.state = {
         ...this.state,
         userId,
         timezone: tz,
         today: localToday,
+        currency: userCurrency,
+        weekStartsOn: userWeekStartsOn,
         goals: goalsRes.data || [],
         habits: habitsRes.data || [],
         schedules: schedulesRes.data || [],
         items: itemsRes.data || [],
         pauses: pausesRes.data || [],
         completions: completionsData || [],
+        categories: categoriesRes.data || [],
+        transactions: transactionsData || [],
+        budgets: budgetsRes.data || [],
         loading: false,
         revalidating: false,
         error: null,
@@ -993,6 +1034,282 @@ class LifestyleStore {
       habits: this.state.habits.map((h) =>
         h.id === habitId ? { ...h, goal_id: goalId } : h
       ),
+    };
+    this.notify();
+  }
+
+  // ──────────────────────── MONEY MUTATIONS (PHASE 2) ────────────────────────
+
+  public async createCategory(params: {
+    name: string;
+    kind: 'expense' | 'income';
+    color?: string | null;
+    icon?: string | null;
+  }): Promise<MoneyCategory> {
+    if (!this.state.userId) throw new Error('Not authenticated');
+
+    const { data, error } = await supabase
+      .from('money_categories')
+      .insert({
+        user_id: this.state.userId,
+        name: params.name.trim(),
+        kind: params.kind,
+        color: params.color || null,
+        icon: params.icon || null,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    this.state = {
+      ...this.state,
+      categories: [...this.state.categories, data],
+    };
+    this.notify();
+    return data;
+  }
+
+  public async updateCategory(
+    id: string,
+    params: {
+      name: string;
+      color?: string | null;
+      icon?: string | null;
+    }
+  ) {
+    const { data, error } = await supabase
+      .from('money_categories')
+      .update({
+        name: params.name.trim(),
+        color: params.color || null,
+        icon: params.icon || null,
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    this.state = {
+      ...this.state,
+      categories: this.state.categories.map((c) => (c.id === id ? data : c)),
+    };
+    this.notify();
+  }
+
+  public async archiveCategory(id: string) {
+    const { data, error } = await supabase
+      .from('money_categories')
+      .update({ archived: true })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    this.state = {
+      ...this.state,
+      categories: this.state.categories.map((c) => (c.id === id ? data : c)),
+    };
+    this.notify();
+  }
+
+  public async addStarterCategories() {
+    if (!this.state.userId) throw new Error('Not authenticated');
+
+    const rowsToInsert = STARTER_CATEGORIES.map((c) => ({
+      user_id: this.state.userId,
+      name: c.name,
+      kind: c.kind,
+      icon: c.icon,
+      color: c.color,
+    }));
+
+    const { data, error } = await supabase
+      .from('money_categories')
+      .insert(rowsToInsert)
+      .select();
+
+    if (error) throw error;
+
+    this.state = {
+      ...this.state,
+      categories: [...this.state.categories, ...(data || [])],
+    };
+    this.notify();
+  }
+
+  public async createTransaction(params: {
+    type: 'expense' | 'income';
+    amount: number;
+    category_id: string;
+    txn_date: string;
+    note?: string | null;
+  }): Promise<MoneyTransaction> {
+    if (!this.state.userId) throw new Error('Not authenticated');
+
+    const { data, error } = await supabase
+      .from('money_transactions')
+      .insert({
+        user_id: this.state.userId,
+        type: params.type,
+        amount: params.amount,
+        category_id: params.category_id,
+        txn_date: params.txn_date,
+        note: params.note?.trim() || null,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    const nextTxns = [data, ...this.state.transactions];
+    nextTxns.sort((a, b) => compareDates(b.txn_date, a.txn_date));
+
+    this.state = {
+      ...this.state,
+      transactions: nextTxns,
+    };
+    this.notify();
+    return data;
+  }
+
+  public async updateTransaction(
+    id: string,
+    params: {
+      type: 'expense' | 'income';
+      amount: number;
+      category_id: string;
+      txn_date: string;
+      note?: string | null;
+    }
+  ) {
+    const { data, error } = await supabase
+      .from('money_transactions')
+      .update({
+        type: params.type,
+        amount: params.amount,
+        category_id: params.category_id,
+        txn_date: params.txn_date,
+        note: params.note?.trim() || null,
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    const nextTxns = this.state.transactions.map((t) => (t.id === id ? data : t));
+    nextTxns.sort((a, b) => compareDates(b.txn_date, a.txn_date));
+
+    this.state = {
+      ...this.state,
+      transactions: nextTxns,
+    };
+    this.notify();
+  }
+
+  public async deleteTransaction(id: string) {
+    const { error } = await supabase.from('money_transactions').delete().eq('id', id);
+    if (error) throw error;
+
+    this.state = {
+      ...this.state,
+      transactions: this.state.transactions.filter((t) => t.id !== id),
+    };
+    this.notify();
+  }
+
+  public async setBudget(params: {
+    effective_month: string;
+    category_id?: string | null;
+    amount: number;
+  }): Promise<MoneyBudget> {
+    if (!this.state.userId) throw new Error('Not authenticated');
+
+    const monthStart = normalizeToMonthStart(params.effective_month);
+    const catId = params.category_id || null;
+
+    const existing = this.state.budgets.find(
+      (b) => normalizeToMonthStart(b.effective_month) === monthStart && (b.category_id || null) === catId
+    );
+
+    let resultBudget: MoneyBudget;
+
+    if (existing) {
+      const { data, error } = await supabase
+        .from('money_budgets')
+        .update({ amount: params.amount })
+        .eq('id', existing.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      resultBudget = data;
+
+      this.state = {
+        ...this.state,
+        budgets: this.state.budgets.map((b) => (b.id === existing.id ? data : b)),
+      };
+    } else {
+      const { data, error } = await supabase
+        .from('money_budgets')
+        .insert({
+          user_id: this.state.userId,
+          effective_month: monthStart,
+          category_id: catId,
+          amount: params.amount,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      resultBudget = data;
+
+      this.state = {
+        ...this.state,
+        budgets: [...this.state.budgets, data],
+      };
+    }
+
+    this.notify();
+    return resultBudget;
+  }
+
+  public async updateLifestylePreferences(params: {
+    currency?: string;
+    week_starts_on?: number;
+  }) {
+    if (!this.state.userId) throw new Error('Not authenticated');
+
+    // Rule 2.10: profiles.preferences is shared jsonb - must merge, never overwrite
+    const { data: prof, error: readErr } = await supabase
+      .from('profiles')
+      .select('preferences')
+      .eq('id', this.state.userId)
+      .maybeSingle();
+
+    if (readErr) throw readErr;
+
+    const currentPrefs = (prof?.preferences as Record<string, any>) || {};
+    const nextPrefs = {
+      ...currentPrefs,
+      ...(params.currency !== undefined ? { currency: params.currency } : {}),
+      ...(params.week_starts_on !== undefined ? { week_starts_on: params.week_starts_on } : {}),
+    };
+
+    const { error: updateErr } = await supabase
+      .from('profiles')
+      .update({ preferences: nextPrefs })
+      .eq('id', this.state.userId);
+
+    if (updateErr) throw updateErr;
+
+    this.state = {
+      ...this.state,
+      currency: params.currency !== undefined ? params.currency : this.state.currency,
+      weekStartsOn: params.week_starts_on !== undefined ? params.week_starts_on : this.state.weekStartsOn,
     };
     this.notify();
   }
