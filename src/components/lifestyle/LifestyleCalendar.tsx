@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChevronLeft,
@@ -28,12 +28,23 @@ import {
 } from '../../lib/moneyScoring';
 import { compareDates, formatDisplayDate } from '../../lib/dateUtils';
 import { useLifestyle } from '../../lib/useLifestyle';
+import {
+  getCalendarMonthImage,
+  preloadCalendarAround,
+  VisualCustomizationSettings,
+} from '../../lib/decorativeImages';
 
 interface LifestyleCalendarProps {
   userId: string;
+  visualSettings?: VisualCustomizationSettings | null;
+  theme?: string;
 }
 
-export const LifestyleCalendar: React.FC<LifestyleCalendarProps> = ({ userId }) => {
+export const LifestyleCalendar: React.FC<LifestyleCalendarProps> = ({
+  userId,
+  visualSettings,
+  theme,
+}) => {
   const { state, scoringContext, store } = useLifestyle(userId);
   const { today, currency, weekStartsOn, transactions, categories } = state;
 

@@ -107,7 +107,7 @@ export const LifestyleView: React.FC<LifestyleViewProps> = ({
           )}
 
           {activeTab === 'calendar' && (
-            <LifestyleCalendar userId={userId} />
+            <LifestyleCalendar userId={userId} visualSettings={visualSettings} theme={theme} />
           )}
 
           {activeTab === 'habits' && (
