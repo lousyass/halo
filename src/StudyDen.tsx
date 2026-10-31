@@ -15,6 +15,11 @@ import {
 import { supabase } from "./lib/supabase";
 import { SUPPORT_CONTACT } from "./lib/contact";
 import { SyllabusView } from "./SyllabusView";
+import { useCustomThemes } from "./lib/customThemesStore";
+import { deriveThemeTokens, applyThemeTokensToDOM, CustomThemeRecord, CustomThemeImageRecord } from "./lib/customThemeTokens";
+import { ThemesSettingsCard } from "./components/theme/ThemesSettingsCard";
+const CustomThemeEditor = lazy(() => import("./components/theme/CustomThemeEditor"));
+
 import {
   getDecorativeImage,
   getCalendarMonthImage,
@@ -360,7 +365,7 @@ function TaskCountdown({
   status: string;
   urgency: "red" | "yellow" | "green" | null;
   overdue: boolean;
-  theme?: keyof typeof THEMES;
+  theme?: string;
 }) {
   const [timeLeft, setTimeLeft] = useState<{
     d: string;
@@ -410,7 +415,7 @@ function TaskCountdown({
   if (status === "completed" || !timeLeft) return null;
 
   const isUrgent = timeLeft.overdue || timeLeft.totalHours < 24;
-  const tStyle = THEME_TIMER_STYLES[theme] || THEME_TIMER_STYLES.bloom;
+  const tStyle = (THEME_TIMER_STYLES as Record<string, typeof THEME_TIMER_STYLES.bloom>)[theme] || THEME_TIMER_STYLES.bloom;
 
   // Visual style strictly matching the selected theme
   const badgeClass = timeLeft.overdue
@@ -479,7 +484,7 @@ function TaskCard({
 }: {
   task: FrontendTask;
   subject: Subject | undefined;
-  theme?: keyof typeof THEMES;
+  theme?: string;
   onToggle: (id: string) => void;
   onEdit: (t: FrontendTask) => void;
   onDelete: (id: string) => void;
@@ -1029,12 +1034,28 @@ function SettingsView({
   profile,
   visualSettings,
   onUpdateVisualSettings,
+  customThemes,
+  customThemeImages,
+  activeTheme,
+  onSelectTheme,
+  onOpenCreate,
+  onOpenEdit,
+  onDuplicate,
+  onDelete,
   onSave,
   onSignOut,
 }: {
   profile: UserProfile | null;
   visualSettings: VisualCustomizationSettings;
   onUpdateVisualSettings: (updates: Partial<VisualCustomizationSettings>) => Promise<void>;
+  customThemes: CustomThemeRecord[];
+  customThemeImages: CustomThemeImageRecord[];
+  activeTheme: string;
+  onSelectTheme: (themeKey: string) => void;
+  onOpenCreate: () => void;
+  onOpenEdit: (theme: CustomThemeRecord) => void;
+  onDuplicate: (themeId: string) => Promise<void>;
+  onDelete: (themeId: string) => Promise<void>;
   onSave: (updates: { reminder_mode: string; daily_digest_time: string }) => Promise<void>;
   onSignOut: () => void;
 }) {
@@ -1238,6 +1259,18 @@ function SettingsView({
         )}
       </Sticker>
 
+      {/* Themes Settings Card */}
+      <ThemesSettingsCard
+        customThemes={customThemes}
+        customThemeImages={customThemeImages}
+        activeTheme={activeTheme}
+        onSelectTheme={onSelectTheme}
+        onOpenCreate={onOpenCreate}
+        onOpenEdit={onOpenEdit}
+        onDuplicate={onDuplicate}
+        onDelete={onDelete}
+      />
+
       <Sticker className="p-4" rotate={-0.2}>
         <h3 className="font-bold mb-3" style={{ fontFamily: "Fredoka, sans-serif", color: "#5B4B6D" }}>⚙️ Reminder Settings</h3>
         <p className="text-xs opacity-60 mb-3">Chose how and when you want to receive reminder emails to your inbox</p>
@@ -1412,6 +1445,7 @@ function CalendarView({
   onToggle,
   onDelete,
   onEdit,
+  theme,
   isCustomVisual = false,
 }: {
   tasks: FrontendTask[];
@@ -1421,6 +1455,7 @@ function CalendarView({
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
   onEdit: (t: FrontendTask) => void;
+  theme?: string;
   isCustomVisual?: boolean;
 }) {
   const [cursor, setCursor] = useState(new Date());
@@ -1459,7 +1494,7 @@ function CalendarView({
   return (
     <div className="relative overflow-hidden rounded-3xl p-1">
       {/* Decorative Calendar Background */}
-      <CalendarBackdrop monthIndex={month} isCustomVisual={isCustomVisual} />
+      <CalendarBackdrop monthIndex={month} theme={theme} isCustomVisual={isCustomVisual} />
 
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-4">
@@ -1647,8 +1682,60 @@ export default function StudyDen({ session }: { session: Session }) {
 
   // localStorage-only
   const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [theme, setTheme] = useState<keyof typeof THEMES>("bloom");
+  const [theme, setTheme] = useState<string>("bloom");
   const [taskExtras, setTaskExtras] = useState<Record<string, { completedAt: string | null; topics: Topic[]; rescheduledFrom: string | null }>>({});
+
+  // Custom themes management
+  const {
+    themes: customThemes,
+    images: customThemeImages,
+    loading: loadingCustomThemes,
+    createTheme: createCustomTheme,
+    updateTheme: updateCustomTheme,
+    duplicateTheme: duplicateCustomTheme,
+    deleteTheme: deleteCustomTheme,
+  } = useCustomThemes(userId);
+
+  const [themeEditorOpen, setThemeEditorOpen] = useState(false);
+  const [editingCustomTheme, setEditingCustomTheme] = useState<CustomThemeRecord | null>(null);
+
+  // Active custom theme and derived tokens
+  const activeCustomTheme = useMemo(() => {
+    if (theme.startsWith("custom:")) {
+      const id = theme.replace("custom:", "");
+      return customThemes.find((t) => t.id === id) || null;
+    }
+    return null;
+  }, [theme, customThemes]);
+
+  const customThemeTokens = useMemo(() => {
+    if (!activeCustomTheme) return null;
+    return deriveThemeTokens(
+      activeCustomTheme.primary_color,
+      activeCustomTheme.background_color,
+      activeCustomTheme.mode
+    );
+  }, [activeCustomTheme]);
+
+  // Apply CSS variables at runtime
+  useEffect(() => {
+    applyThemeTokensToDOM(customThemeTokens);
+  }, [customThemeTokens]);
+
+  // If selected custom theme was deleted, fall back to default theme
+  useEffect(() => {
+    if (theme.startsWith("custom:") && !loadingCustomThemes) {
+      const id = theme.replace("custom:", "");
+      const exists = customThemes.some((t) => t.id === id);
+      if (!exists) {
+        setTheme("bloom");
+      }
+    }
+  }, [theme, customThemes, loadingCustomThemes]);
+
+  const activeBgCss = activeCustomTheme
+    ? customThemeTokens?.backgroundCss || THEMES.bloom.css
+    : (THEMES as any)[theme]?.css || THEMES.bloom.css;
 
   // Supabase-backed
   const [tasks, setTasks] = useState<FrontendTask[]>([]);
@@ -1939,7 +2026,7 @@ export default function StudyDen({ session }: { session: Session }) {
 
   if (!loaded) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden" style={{ background: THEMES[theme].css, fontFamily: "Quicksand, sans-serif" }}>
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden" style={{ background: activeBgCss, fontFamily: "Quicksand, sans-serif" }}>
         <motion.div
           animate={{ y: [-8, 8, -8], rotate: [-2, 2, -2] }}
           transition={{ repeat: Infinity, duration: 2.6, ease: "easeInOut" }}
@@ -1972,7 +2059,7 @@ export default function StudyDen({ session }: { session: Session }) {
 
   /* ─── render ─── */
   return (
-    <div className="min-h-screen p-3 md:p-6 relative overflow-x-hidden" style={{ background: THEMES[theme].css, fontFamily: "Quicksand, sans-serif" }}>
+    <div className="min-h-screen p-3 md:p-6 relative overflow-x-hidden" style={{ background: activeBgCss, fontFamily: "Quicksand, sans-serif" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@400;500;600;700&display=swap'); @media print { .no-print { display: none !important; } .print-only { display: block !important; } } .print-only { display: none; }`}</style>
 
       {/* Decorative Full-Page Theme Wallpaper */}
@@ -1999,8 +2086,29 @@ export default function StudyDen({ session }: { session: Session }) {
                 <p className="text-[11px] font-semibold text-gray-500 truncate max-w-[180px] mt-0.5">{session.user.email}</p>
               </div>
               <div className="md:hidden flex items-center gap-1.5">
-                <select value={theme} onChange={(e) => setTheme(e.target.value as keyof typeof THEMES)} className="text-[11px] p-1.5 rounded-xl border bg-white/80">
-                  {Object.entries(THEMES).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                <select
+                  value={theme}
+                  onChange={(e) => {
+                    if (e.target.value === "__create__") {
+                      setEditingCustomTheme(null);
+                      setThemeEditorOpen(true);
+                    } else {
+                      setTheme(e.target.value);
+                    }
+                  }}
+                  className="text-[11px] p-1.5 rounded-xl border bg-white/80"
+                >
+                  <optgroup label="Themes">
+                    {Object.entries(THEMES).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                  </optgroup>
+                  {customThemes.length > 0 && (
+                    <optgroup label="My themes">
+                      {customThemes.map((ct) => (
+                        <option key={ct.id} value={`custom:${ct.id}`}>{ct.name}</option>
+                      ))}
+                    </optgroup>
+                  )}
+                  <option value="__create__">+ Make your own theme</option>
                 </select>
                 <button onClick={() => window.print()} className="p-1.5 rounded-xl bg-white/80 hover:bg-white"><Printer size={14} /></button>
               </div>
@@ -2082,12 +2190,29 @@ export default function StudyDen({ session }: { session: Session }) {
                 <span className="text-xs font-bold text-gray-500">Theme:</span>
                 <select
                   value={theme}
-                  onChange={(e) => setTheme(e.target.value as keyof typeof THEMES)}
+                  onChange={(e) => {
+                    if (e.target.value === "__create__") {
+                      setEditingCustomTheme(null);
+                      setThemeEditorOpen(true);
+                    } else {
+                      setTheme(e.target.value);
+                    }
+                  }}
                   className="text-xs p-1 rounded-xl border bg-white/80 focus:outline-none"
                 >
-                  {Object.entries(THEMES).map(([k, v]) => (
-                    <option key={k} value={k}>{v.label}</option>
-                  ))}
+                  <optgroup label="Themes">
+                    {Object.entries(THEMES).map(([k, v]) => (
+                      <option key={k} value={k}>{v.label}</option>
+                    ))}
+                  </optgroup>
+                  {customThemes.length > 0 && (
+                    <optgroup label="My themes">
+                      {customThemes.map((ct) => (
+                        <option key={ct.id} value={`custom:${ct.id}`}>{ct.name}</option>
+                      ))}
+                    </optgroup>
+                  )}
+                  <option value="__create__">+ Make your own theme</option>
                 </select>
               </div>
               <button
@@ -2279,6 +2404,7 @@ export default function StudyDen({ session }: { session: Session }) {
                       onToggle={toggleTask}
                       onDelete={deleteTask}
                       onEdit={(t) => { setEditingTask(t); setFormOpen(true); }}
+                      theme={theme}
                       isCustomVisual={isCustomMode && visualSettings.calendar}
                     />
                   </Sticker>
@@ -2488,6 +2614,24 @@ export default function StudyDen({ session }: { session: Session }) {
                 profile={profile}
                 visualSettings={visualSettings}
                 onUpdateVisualSettings={updateVisualSettings}
+                customThemes={customThemes}
+                customThemeImages={customThemeImages}
+                activeTheme={theme}
+                onSelectTheme={setTheme}
+                onOpenCreate={() => {
+                  setEditingCustomTheme(null);
+                  setThemeEditorOpen(true);
+                }}
+                onOpenEdit={(t) => {
+                  setEditingCustomTheme(t);
+                  setThemeEditorOpen(true);
+                }}
+                onDuplicate={async (themeId) => {
+                  await duplicateCustomTheme(themeId);
+                }}
+                onDelete={async (themeId) => {
+                  await deleteCustomTheme(themeId);
+                }}
                 onSave={saveProfile}
                 onSignOut={() => {
                   resetSessionCalendar();
@@ -2561,6 +2705,48 @@ export default function StudyDen({ session }: { session: Session }) {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Custom Theme Editor Modal */}
+      <Suspense fallback={null}>
+        {themeEditorOpen && (
+          <CustomThemeEditor
+            userId={userId}
+            themeToEdit={editingCustomTheme}
+            existingImages={customThemeImages.filter((img) => img.theme_id === editingCustomTheme?.id)}
+            onSave={async ({ name, mode, primaryColor, backgroundColor, newImages, deletedImageIds }) => {
+              if (editingCustomTheme) {
+                const updated = await updateCustomTheme(
+                  editingCustomTheme.id,
+                  {
+                    name,
+                    mode,
+                    primaryColor,
+                    backgroundColor,
+                  },
+                  newImages,
+                  deletedImageIds
+                );
+                setTheme(`custom:${updated.id}`);
+              } else {
+                const created = await createCustomTheme({
+                  name,
+                  mode,
+                  primaryColor,
+                  backgroundColor,
+                  imageFiles: newImages,
+                });
+                setTheme(`custom:${created.id}`);
+              }
+              setThemeEditorOpen(false);
+              setEditingCustomTheme(null);
+            }}
+            onClose={() => {
+              setThemeEditorOpen(false);
+              setEditingCustomTheme(null);
+            }}
+          />
+        )}
+      </Suspense>
     </div>
   );
 }

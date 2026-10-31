@@ -1,3 +1,92 @@
 @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Fredoka:wght@400;500;600;700&family=Patrick+Hand&family=Quicksand:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Custom Themes Dynamic Tokens & Dark Mode Adaptations
+ * Active ONLY when .theme-custom or .theme-dark is present on <html>.
+ * Built-in themes (Bloom, Meadow, Dusk, Lilac, Baby Blue, Monochrome) remain
+ * 100% pixel-identical with zero changes.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+.theme-dark {
+  color-scheme: dark;
+}
+
+.theme-dark .bg-white\/95,
+.theme-dark .bg-white\/90,
+.theme-dark .bg-white\/85,
+.theme-dark .bg-white\/80,
+.theme-dark .bg-white\/70,
+.theme-dark .bg-white\/60,
+.theme-dark .bg-white\/50,
+.theme-dark .bg-white\/40 {
+  background-color: var(--theme-surface, rgba(28, 29, 36, 0.88)) !important;
+  border-color: var(--theme-surface-border, rgba(255, 255, 255, 0.12)) !important;
+}
+
+.theme-dark .bg-white {
+  background-color: var(--theme-surface-solid, #1c1d24) !important;
+  border-color: var(--theme-surface-border, rgba(255, 255, 255, 0.12)) !important;
+}
+
+.theme-dark .bg-gray-50\/40,
+.theme-dark .bg-gray-50\/50,
+.theme-dark .bg-gray-50\/60,
+.theme-dark .bg-gray-50\/70,
+.theme-dark .bg-gray-50 {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border-color: var(--theme-surface-border, rgba(255, 255, 255, 0.10)) !important;
+}
+
+.theme-dark .bg-black\/5 {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.theme-dark .border-white\/60,
+.theme-dark .border-white\/70,
+.theme-dark .border-white\/80,
+.theme-dark .border-white\/50,
+.theme-dark .border-gray-100,
+.theme-dark .border-gray-200 {
+  border-color: var(--theme-surface-border, rgba(255, 255, 255, 0.12)) !important;
+}
+
+.theme-dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--theme-surface-border, rgba(255, 255, 255, 0.12)) !important;
+}
+
+.theme-dark .text-gray-900,
+.theme-dark .text-gray-800,
+.theme-dark .text-zinc-900 {
+  color: var(--theme-text-heading, #ffffff) !important;
+}
+
+.theme-dark .text-gray-700,
+.theme-dark .text-gray-600,
+.theme-dark .text-zinc-700 {
+  color: var(--theme-text-body, #f3f4f6) !important;
+}
+
+.theme-dark .text-gray-500,
+.theme-dark .text-gray-400,
+.theme-dark .text-zinc-500 {
+  color: var(--theme-text-secondary, #9ca3af) !important;
+}
+
+.theme-dark [style*="#5B4B6D"] {
+  color: var(--theme-text-heading, #ffffff) !important;
+}
+
+.theme-dark input:not([type="color"]):not([type="checkbox"]):not([type="radio"]),
+.theme-dark select,
+.theme-dark textarea {
+  background-color: var(--theme-surface-solid, #1c1d24) !important;
+  color: var(--theme-text-body, #f3f4f6) !important;
+  border-color: var(--theme-surface-border, rgba(255, 255, 255, 0.15)) !important;
+}
+
+.theme-dark .shadow-sm,
+.theme-dark .shadow-md,
+.theme-dark .shadow-xl {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45) !important;
+}
