@@ -218,6 +218,28 @@ export function getCalendarMonthImage(monthIndex: number): string | null {
   return list[idx] || null;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Custom Themes Dynamic Pool Registry
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface CustomThemePools {
+  background: string[];
+  dashboard: string[];
+  routine: string[];
+  calendar: string[];
+  diary: string[];
+}
+
+const customThemePools: Record<string, CustomThemePools> = {};
+
+export function registerCustomThemePools(themeId: string, pools: CustomThemePools) {
+  customThemePools[themeId] = pools;
+}
+
+export function unregisterCustomThemePools(themeId: string) {
+  delete customThemePools[themeId];
+}
+
 /**
  * Retrieves the session-scoped decorative image for a specific theme and category.
  * If not already rolled this session, picks randomly from the matching pool and caches it.
@@ -227,6 +249,82 @@ export function getDecorativeImage(
   themeKey: string = "bloom",
   sameDashboardImage: boolean = true
 ): string | null {
+  // ── Custom User Themes ──
+  if (themeKey.startsWith("custom:")) {
+    const customId = themeKey.replace("custom:", "");
+    const pools = customThemePools[customId];
+
+    if (category === "calendar") {
+      if (pools?.calendar && pools.calendar.length > 0) {
+        const key = `custom-cal-${customId}`;
+        if (sessionPicks[key] === undefined) {
+          sessionPicks[key] = pickRandom(pools.calendar);
+        }
+        return sessionPicks[key];
+      }
+      // Fallback to shared global calendar pool as built-in themes do
+      return getCalendarMonthImage(new Date().getMonth());
+    }
+
+    if (category === "diary") {
+      if (!pools?.diary || pools.diary.length === 0) return null;
+      const key = `custom-diary-${customId}`;
+      if (sessionPicks[key] === undefined) {
+        sessionPicks[key] = pickRandom(pools.diary);
+      }
+      return sessionPicks[key];
+    }
+
+    if (category === "background") {
+      if (!pools?.background || pools.background.length === 0) return null;
+      const key = `custom-bg-${customId}`;
+      if (sessionPicks[key] === undefined) {
+        sessionPicks[key] = pickRandom(pools.background);
+      }
+      return sessionPicks[key];
+    }
+
+    if (category === "routine") {
+      if (!pools?.routine || pools.routine.length === 0) return null;
+      const key = `custom-routine-${customId}`;
+      if (sessionPicks[key] === undefined) {
+        sessionPicks[key] = pickRandom(pools.routine);
+      }
+      return sessionPicks[key];
+    }
+
+    if (category === "dashboard-upper" || category === "dashboard-lower") {
+      const dashPool = pools?.dashboard || [];
+      if (dashPool.length === 0) return null;
+
+      if (sameDashboardImage) {
+        const key = `custom-dash-same-${customId}`;
+        if (sessionPicks[key] === undefined) {
+          sessionPicks[key] = pickRandom(dashPool);
+        }
+        return sessionPicks[key];
+      } else {
+        const keyUpper = `custom-dash-upper-${customId}`;
+        const keyLower = `custom-dash-lower-${customId}`;
+        if (sessionPicks[keyUpper] === undefined || sessionPicks[keyLower] === undefined) {
+          if (dashPool.length === 1) {
+            sessionPicks[keyUpper] = dashPool[0];
+            sessionPicks[keyLower] = dashPool[0];
+          } else {
+            const firstIdx = Math.floor(Math.random() * dashPool.length);
+            let secondIdx = Math.floor(Math.random() * (dashPool.length - 1));
+            if (secondIdx >= firstIdx) secondIdx += 1;
+            sessionPicks[keyUpper] = dashPool[firstIdx];
+            sessionPicks[keyLower] = dashPool[secondIdx];
+          }
+        }
+        return category === "dashboard-upper" ? sessionPicks[keyUpper] : sessionPicks[keyLower];
+      }
+    }
+
+    return null;
+  }
+
   const folder = THEME_FOLDER_MAP[themeKey] || "blush-bloom";
 
   if (category === "calendar") {

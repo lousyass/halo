@@ -243,7 +243,7 @@ export const LifestyleCalendar: React.FC<LifestyleCalendarProps> = ({
       {/* 2. Combined Calendar Grid with Shared Backdrop */}
       <div className="relative overflow-hidden rounded-3xl p-4 bg-white/70 backdrop-blur-md border border-white/60 shadow-sm">
         {/* Shared Calendar Backdrop matching Academics */}
-        <CalendarBackdrop monthIndex={currentMonth} isCustomVisual={isCustomVisual} />
+        <CalendarBackdrop monthIndex={currentMonth} theme={theme} isCustomVisual={isCustomVisual} />
 
         <div className="relative z-10 space-y-2">
           {/* Weekday headers */}

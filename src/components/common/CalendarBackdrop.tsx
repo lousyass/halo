@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
-import { getCalendarMonthImage, preloadCalendarAround } from '../../lib/decorativeImages';
+import { getCalendarMonthImage, getDecorativeImage, preloadCalendarAround } from '../../lib/decorativeImages';
 
 export interface CalendarBackdropProps {
   monthIndex: number;
+  theme?: string;
   isCustomVisual?: boolean;
   opacity?: number;
   className?: string;
@@ -11,21 +12,26 @@ export interface CalendarBackdropProps {
 /**
  * Shared calendar decorative backdrop used across Academics, Memory Wall (Journal),
  * and Lifestyle Calendar. Ensures 100% visual parity, deterministic monthly mapping,
- * and idle preloading without duplicated implementations.
+ * and idle preloading without duplicated implementations. Supports custom themes.
  */
 export const CalendarBackdrop: React.FC<CalendarBackdropProps> = ({
   monthIndex,
+  theme,
   isCustomVisual = false,
   opacity = 0.42,
   className = '',
 }) => {
-  const calBg = isCustomVisual ? getCalendarMonthImage(monthIndex) : null;
+  const calBg = isCustomVisual
+    ? theme?.startsWith('custom:')
+      ? getDecorativeImage('calendar', theme)
+      : getCalendarMonthImage(monthIndex)
+    : null;
 
   useEffect(() => {
-    if (isCustomVisual) {
+    if (isCustomVisual && !theme?.startsWith('custom:')) {
       preloadCalendarAround(monthIndex);
     }
-  }, [monthIndex, isCustomVisual]);
+  }, [monthIndex, isCustomVisual, theme]);
 
   if (!calBg) return null;
 

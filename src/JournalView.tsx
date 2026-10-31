@@ -940,11 +940,13 @@ function MemoryWallCalendar({
   photosByEntry,
   onOpenEntry,
   isCustomVisual = false,
+  theme,
 }: {
   entries: JournalEntry[];
   photosByEntry: Record<string, JournalPhoto[]>;
   onOpenEntry: (entry: JournalEntry | null, date: string) => void;
   isCustomVisual?: boolean;
+  theme?: string;
 }) {
   const [cursor, setCursor] = useState(new Date());
   const year = cursor.getFullYear(), month = cursor.getMonth();
@@ -973,7 +975,7 @@ function MemoryWallCalendar({
   return (
     <div className="relative overflow-hidden bg-white/75 rounded-3xl p-5 border border-white/60 shadow-lg">
       {/* Decorative Calendar Background */}
-      <CalendarBackdrop monthIndex={month} isCustomVisual={isCustomVisual} />
+      <CalendarBackdrop monthIndex={month} theme={theme} isCustomVisual={isCustomVisual} />
 
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-4">
@@ -1678,6 +1680,7 @@ export default function JournalView({
         <MemoryWallCalendar
           entries={entries}
           photosByEntry={photosByEntry}
+          theme={theme}
           isCustomVisual={isCustom && visualSettings.calendar}
           onOpenEntry={(entry, date) => {
             if (entry) {
