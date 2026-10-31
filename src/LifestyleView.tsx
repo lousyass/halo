@@ -102,12 +102,17 @@ export const LifestyleView: React.FC<LifestyleViewProps> = ({
             <LifestyleToday
               userId={userId}
               theme={theme}
+              visualSettings={visualSettings}
               onNavigateToHabits={() => setActiveTab('habits')}
             />
           )}
 
           {activeTab === 'calendar' && (
-            <LifestyleCalendar userId={userId} />
+            <LifestyleCalendar
+              userId={userId}
+              theme={theme}
+              visualSettings={visualSettings}
+            />
           )}
 
           {activeTab === 'habits' && (

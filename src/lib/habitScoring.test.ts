@@ -386,4 +386,142 @@ describe('habitScoring', () => {
     expect(review.previousAverage).toBeCloseTo(5 / 7, 5);
     expect(review.change).toBeGreaterThan(0);
   });
+
+  describe('Part 1 - Ring value and toggle idempotency tests', () => {
+    it('ring value calculates exact percentages: 1/1=100%, 1/2=50%, 0/2=0%', () => {
+      const h1: Habit = { id: 'h1', name: 'Workout', start_date: '2026-03-01', sort_order: 0 };
+      const h2: Habit = { id: 'h2', name: 'Read', start_date: '2026-03-01', sort_order: 1 };
+      const schedules: HabitSchedule[] = [
+        { habit_id: 'h1', effective_from: '2026-03-01', weekdays: [0, 1, 2, 3, 4, 5, 6] },
+        { habit_id: 'h2', effective_from: '2026-03-01', weekdays: [0, 1, 2, 3, 4, 5, 6] },
+      ];
+
+      // Case A: 1 habit scheduled, 1 completed -> 100%
+      const ctx1: ScoringContext = {
+        habits: [h1],
+        schedules: [schedules[0]],
+        items: [],
+        completions: [{ habit_id: 'h1', log_date: '2026-03-01', status: 'done' }],
+        pauses: [],
+      };
+      const score1 = getDayScore('2026-03-01', ctx1);
+      expect(score1).toBe(1.0);
+      expect(Math.round(score1! * 100)).toBe(100);
+
+      // Case B: 2 habits scheduled, 1 completed -> 50%
+      const ctx2: ScoringContext = {
+        habits: [h1, h2],
+        schedules,
+        items: [],
+        completions: [{ habit_id: 'h1', log_date: '2026-03-01', status: 'done' }],
+        pauses: [],
+      };
+      const score2 = getDayScore('2026-03-01', ctx2);
+      expect(score2).toBe(0.5);
+      expect(Math.round(score2! * 100)).toBe(50);
+
+      // Case C: 2 habits scheduled, 0 completed -> 0%
+      const ctx3: ScoringContext = {
+        habits: [h1, h2],
+        schedules,
+        items: [],
+        completions: [],
+        pauses: [],
+      };
+      const score3 = getDayScore('2026-03-01', ctx3);
+      expect(score3).toBe(0.0);
+      expect(Math.round(score3! * 100)).toBe(0);
+    });
+
+    it('ring value handles routine items partial credit correctly', () => {
+      const hWithItems: Habit = { id: 'h-items', name: 'Morning Routine', start_date: '2026-03-01', sort_order: 0 };
+      const schedules: HabitSchedule[] = [
+        { habit_id: 'h-items', effective_from: '2026-03-01', weekdays: [0, 1, 2, 3, 4, 5, 6] },
+      ];
+      const items: HabitItem[] = [
+        { id: 'i1', habit_id: 'h-items', title: 'Hydrate', sort_order: 0, start_date: '2026-03-01' },
+        { id: 'i2', habit_id: 'h-items', title: 'Stretch', sort_order: 1, start_date: '2026-03-01' },
+        { id: 'i3', habit_id: 'h-items', title: 'Meditate', sort_order: 2, start_date: '2026-03-01' },
+      ];
+
+      // 1 of 3 items done: credit = 1/3
+      const ctx1: ScoringContext = {
+        habits: [hWithItems],
+        schedules,
+        items,
+        completions: [{ habit_id: 'h-items', item_id: 'i1', log_date: '2026-03-01', status: 'done' }],
+        pauses: [],
+      };
+      const credit1 = getHabitCreditOnDate(hWithItems, '2026-03-01', ctx1);
+      expect(credit1).toBeCloseTo(1 / 3, 4);
+      expect(Math.round(getDayScore('2026-03-01', ctx1)! * 100)).toBe(33);
+
+      // 2 of 3 items done: credit = 2/3
+      const ctx2: ScoringContext = {
+        habits: [hWithItems],
+        schedules,
+        items,
+        completions: [
+          { habit_id: 'h-items', item_id: 'i1', log_date: '2026-03-01', status: 'done' },
+          { habit_id: 'h-items', item_id: 'i2', log_date: '2026-03-01', status: 'done' },
+        ],
+        pauses: [],
+      };
+      const credit2 = getHabitCreditOnDate(hWithItems, '2026-03-01', ctx2);
+      expect(credit2).toBeCloseTo(2 / 3, 4);
+      expect(Math.round(getDayScore('2026-03-01', ctx2)! * 100)).toBe(67);
+
+      // 3 of 3 items done: credit = 1
+      const ctx3: ScoringContext = {
+        habits: [hWithItems],
+        schedules,
+        items,
+        completions: [
+          { habit_id: 'h-items', item_id: 'i1', log_date: '2026-03-01', status: 'done' },
+          { habit_id: 'h-items', item_id: 'i2', log_date: '2026-03-01', status: 'done' },
+          { habit_id: 'h-items', item_id: 'i3', log_date: '2026-03-01', status: 'done' },
+        ],
+        pauses: [],
+      };
+      expect(getHabitCreditOnDate(hWithItems, '2026-03-01', ctx3)).toBe(1.0);
+      expect(Math.round(getDayScore('2026-03-01', ctx3)! * 100)).toBe(100);
+    });
+
+    it('toggle idempotency: duplicate completion writes do not alter score or cause inconsistent state', () => {
+      const h: Habit = { id: 'h1', name: 'Workout', start_date: '2026-03-01', sort_order: 0 };
+      const schedules: HabitSchedule[] = [
+        { habit_id: 'h1', effective_from: '2026-03-01', weekdays: [0, 1, 2, 3, 4, 5, 6] },
+      ];
+
+      // Simulate idempotent list where duplicate done records for the same day collapse cleanly
+      const completionsSingle: HabitCompletion[] = [
+        { habit_id: 'h1', log_date: '2026-03-01', status: 'done' },
+      ];
+      const completionsDuplicate: HabitCompletion[] = [
+        { habit_id: 'h1', log_date: '2026-03-01', status: 'done' },
+        { habit_id: 'h1', log_date: '2026-03-01', status: 'done' },
+      ];
+
+      const ctxSingle: ScoringContext = {
+        habits: [h],
+        schedules,
+        items: [],
+        completions: completionsSingle,
+        pauses: [],
+      };
+      const ctxDup: ScoringContext = {
+        habits: [h],
+        schedules,
+        items: [],
+        completions: completionsDuplicate,
+        pauses: [],
+      };
+
+      // Both must yield exact same credit and score
+      expect(getHabitCreditOnDate(h, '2026-03-01', ctxSingle)).toBe(1.0);
+      expect(getHabitCreditOnDate(h, '2026-03-01', ctxDup)).toBe(1.0);
+      expect(getDayScore('2026-03-01', ctxSingle)).toBe(1.0);
+      expect(getDayScore('2026-03-01', ctxDup)).toBe(1.0);
+    });
+  });
 });

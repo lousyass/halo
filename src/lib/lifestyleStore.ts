@@ -75,6 +75,11 @@ class LifestyleStore {
     this.setupMidnightRollover();
   }
 
+  public clearError() {
+    this.state = { ...this.state, error: null };
+    this.notify();
+  }
+
   public getState(): LifestyleState {
     return this.state;
   }
@@ -337,7 +342,15 @@ class LifestyleStore {
           this.state = { ...this.state, completions: [...filtered, ...newRows] };
           this.notify();
 
-          // Upsert to Supabase
+          // Delete-then-insert (idempotent with partial index)
+          const itemIds = scheduledItems.map((si) => si.id);
+          await supabase
+            .from('habit_completions')
+            .delete()
+            .eq('habit_id', habitId)
+            .eq('log_date', date)
+            .in('item_id', itemIds);
+
           const rowsToInsert = scheduledItems.map((si) => ({
             user_id: this.state.userId,
             habit_id: habitId,
@@ -347,8 +360,8 @@ class LifestyleStore {
           }));
           const { error } = await supabase
             .from('habit_completions')
-            .upsert(rowsToInsert, { onConflict: 'item_id,log_date' });
-          if (error) throw error;
+            .insert(rowsToInsert);
+          if (error && error.code !== '23505') throw error;
         }
       } else {
         // Habit-level toggle
@@ -385,19 +398,24 @@ class LifestyleStore {
           this.state = { ...this.state, completions: nextCompletions };
           this.notify();
 
+          // Delete any existing completion for this habit on this date (delete-then-insert)
+          await supabase
+            .from('habit_completions')
+            .delete()
+            .eq('habit_id', habitId)
+            .is('item_id', null)
+            .eq('log_date', date);
+
           const { error } = await supabase
             .from('habit_completions')
-            .upsert(
-              {
-                user_id: this.state.userId,
-                habit_id: habitId,
-                item_id: null,
-                log_date: date,
-                status: 'done',
-              },
-              { onConflict: 'habit_id,log_date' }
-            );
-          if (error) throw error;
+            .insert({
+              user_id: this.state.userId,
+              habit_id: habitId,
+              item_id: null,
+              log_date: date,
+              status: 'done',
+            });
+          if (error && error.code !== '23505') throw error;
         }
       }
     } catch (err: any) {
@@ -449,19 +467,23 @@ class LifestyleStore {
         this.state = { ...this.state, completions: nextCompletions };
         this.notify();
 
+        // Delete-then-insert
+        await supabase
+          .from('habit_completions')
+          .delete()
+          .eq('item_id', itemId)
+          .eq('log_date', date);
+
         const { error } = await supabase
           .from('habit_completions')
-          .upsert(
-            {
-              user_id: this.state.userId,
-              habit_id: habitId,
-              item_id: itemId,
-              log_date: date,
-              status: 'done',
-            },
-            { onConflict: 'item_id,log_date' }
-          );
-        if (error) throw error;
+          .insert({
+            user_id: this.state.userId,
+            habit_id: habitId,
+            item_id: itemId,
+            log_date: date,
+            status: 'done',
+          });
+        if (error && error.code !== '23505') throw error;
       }
     } catch (err: any) {
       this.state = { ...this.state, completions: prevCompletions, error: err.message };
@@ -530,7 +552,7 @@ class LifestyleStore {
             log_date: date,
             status: 'skipped',
           });
-        if (error) throw error;
+        if (error && error.code !== '23505') throw error;
       }
     } catch (err: any) {
       this.state = { ...this.state, completions: prevCompletions, error: err.message };
