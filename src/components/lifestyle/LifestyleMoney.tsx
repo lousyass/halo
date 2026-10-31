@@ -28,6 +28,7 @@ import {
   normalizeToMonthStart,
 } from '../../lib/moneyScoring';
 import { formatDisplayDate, compareDates } from '../../lib/dateUtils';
+import { InlineCategoryCreator } from './InlineCategoryCreator';
 import { useLifestyle } from '../../lib/useLifestyle';
 
 interface LifestyleMoneyProps {
@@ -91,6 +92,8 @@ export const LifestyleMoney: React.FC<LifestyleMoneyProps> = ({ userId }) => {
   const [txnDate, setTxnDate] = useState(today);
   const [txnNote, setTxnNote] = useState('');
   const [txnError, setTxnError] = useState('');
+  const [showInlineCatCreator, setShowInlineCatCreator] = useState(false);
+  const [categoryNotice, setCategoryNotice] = useState('');
 
   // Category Modal State
   const [catModalOpen, setCatModalOpen] = useState(false);
@@ -966,12 +969,43 @@ export const LifestyleMoney: React.FC<LifestyleMoneyProps> = ({ userId }) => {
                   </div>
                 </div>
 
-                {/* Category Picker */}
+                {/* Category Picker with + New category button */}
                 <div>
-                  <label className="text-xs font-bold text-gray-700 block mb-1">Category</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-bold text-gray-700">Category</label>
+                    <button
+                      type="button"
+                      onClick={() => setShowInlineCatCreator(!showInlineCatCreator)}
+                      className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-0.5 cursor-pointer"
+                    >
+                      <Plus size={12} />
+                      New category
+                    </button>
+                  </div>
+
+                  {categoryNotice && (
+                    <div className="text-[11px] text-emerald-700 bg-emerald-50 p-1.5 rounded-lg mb-1.5 flex items-center gap-1">
+                      <Check size={12} />
+                      {categoryNotice}
+                    </div>
+                  )}
+
+                  <InlineCategoryCreator
+                    isOpen={showInlineCatCreator}
+                    onClose={() => setShowInlineCatCreator(false)}
+                    kind={txnType}
+                    existingCategories={categories}
+                    onSelectCategory={(id, notice) => {
+                      setTxnCategoryId(id);
+                      if (notice) setCategoryNotice(notice);
+                      setTimeout(() => setCategoryNotice(''), 3500);
+                    }}
+                    createCategory={(params) => store.createCategory(params)}
+                  />
+
                   {eligibleCategoriesForTxn.length === 0 ? (
                     <div className="text-xs text-rose-600 p-2 bg-rose-50 rounded-xl">
-                      No active {txnType} categories available. Please create one in Categories & Budget first.
+                      No active {txnType} categories available. Click "+ New category" above to create one.
                     </div>
                   ) : (
                     <select
@@ -986,61 +1020,6 @@ export const LifestyleMoney: React.FC<LifestyleMoneyProps> = ({ userId }) => {
                       ))}
                     </select>
                   )}
-                </div>
-
-                {/* Date */}
-                <div>
-                  <label className="text-xs font-bold text-gray-700 block mb-1">Date</label>
-                  <input
-                    type="date"
-                    value={txnDate}
-                    onChange={(e) => setTxnDate(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-
-                {/* Note */}
-                <div>
-                  <label className="text-xs font-bold text-gray-700 block mb-1">
-                    Note <span className="text-gray-400 font-normal">(Optional)</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Weekly grocery run"
-                    value={txnNote}
-                    onChange={(e) => setTxnNote(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-
-                {/* Buttons */}
-                <div className="flex items-center justify-between pt-2">
-                  {editingTxn ? (
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteTxn(editingTxn.id)}
-                      className="px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"
-                    >
-                      Delete
-                    </button>
-                  ) : <div />}
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setTxnModalOpen(false)}
-                      className="px-4 py-2 text-xs font-bold text-gray-500 hover:bg-gray-100 rounded-xl transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={eligibleCategoriesForTxn.length === 0}
-                      className="px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 rounded-xl shadow-xs transition-all cursor-pointer"
-                    >
-                      Save Transaction
-                    </button>
-                  </div>
                 </div>
               </form>
             </motion.div>
