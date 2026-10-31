@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, Suspense, lazy } from "react";
+import { CalendarBackdrop } from "./components/common/CalendarBackdrop";
 import { Session } from "@supabase/supabase-js";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -1458,15 +1459,7 @@ function CalendarView({
   return (
     <div className="relative overflow-hidden rounded-3xl p-1">
       {/* Decorative Calendar Background */}
-      {calBg && (
-        <div
-          className="absolute inset-0 pointer-events-none z-0 bg-cover bg-center rounded-3xl transition-opacity duration-300"
-          style={{
-            backgroundImage: `url("${calBg}")`,
-            opacity: 0.42,
-          }}
-        />
-      )}
+      <CalendarBackdrop monthIndex={month} isCustomVisual={isCustomVisual} />
 
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-4">

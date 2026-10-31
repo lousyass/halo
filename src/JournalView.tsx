@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { CalendarBackdrop } from "./components/common/CalendarBackdrop";
 import { Session } from "@supabase/supabase-js";
 import { motion } from "framer-motion";
 import { supabase } from "./lib/supabase";
@@ -972,15 +973,7 @@ function MemoryWallCalendar({
   return (
     <div className="relative overflow-hidden bg-white/75 rounded-3xl p-5 border border-white/60 shadow-lg">
       {/* Decorative Calendar Background */}
-      {calBg && (
-        <div
-          className="absolute inset-0 pointer-events-none z-0 bg-cover bg-center rounded-3xl transition-opacity duration-300"
-          style={{
-            backgroundImage: `url("${calBg}")`,
-            opacity: 0.42,
-          }}
-        />
-      )}
+      <CalendarBackdrop monthIndex={month} isCustomVisual={isCustomVisual} />
 
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-4">
